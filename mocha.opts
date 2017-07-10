@@ -1,0 +1,4 @@
+--compilers ts:ts-node/register
+--reporter dot
+--watch-extensions ts
+src/**/*.spec.ts

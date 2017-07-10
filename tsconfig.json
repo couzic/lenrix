@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.ide.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "target": "es5",
+    "outDir": "lib",
+    "declaration": true,
+    "sourceMap": true
+  },
+  "files": [
+    "src/index.ts"
+  ]
+}
