@@ -1,5 +1,6 @@
 import {UpdateSpec} from './update'
 import {Observable} from 'rxjs/Observable'
+import {Lens} from './Lens'
 
 export interface Store<State> {
 
@@ -15,9 +16,13 @@ export interface Store<State> {
 
     focusOn<K extends keyof State>(key: K): Store<State[K]>
 
-    update(specBuilder: (state: State) => Partial<UpdateSpec<State>>)
+    update(specBuilder: (state: State) => State | Partial<UpdateSpec<State>>)
 
-    updateState(spec: Partial<UpdateSpec<State>>)
+    updateState(spec: State | Partial<UpdateSpec<State>>)
+
+    updateAt<Target>(lens: Lens<State, Target>, project: (target: Target) => Target | Partial<UpdateSpec<Target>>)
+
+    updateStateAt<Target>(lens: Lens<State, Target>, spec: Target | Partial<UpdateSpec<Target>>)
 
 }
 

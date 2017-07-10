@@ -1,6 +1,7 @@
 import {add} from 'ramda'
 import {Observable} from 'rxjs'
 import {createRootStore, Store} from './Store'
+import {Lens} from './Lens'
 
 export type State = {
     counter: number
@@ -20,6 +21,11 @@ export const actions = {
         store.updateState({counter: add(1)}) // Using Ramda's automatically curryied functions
         store.focus(state => state.counter).update(add(1))
         store.focusOn('counter').update(add(1))
+    },
+
+    incrementWithLens() {
+        const counter: Lens<State, number> = {} as any
+        store.updateAt(counter, add(1))
     }
 }
 

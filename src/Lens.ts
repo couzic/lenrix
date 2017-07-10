@@ -1,4 +1,4 @@
-export interface Lens<T extends object, TT> {
+export interface Lens<T, TT> {
 
     focus<K extends keyof TT>(key: K): Lens<T, TT[K]>
 
