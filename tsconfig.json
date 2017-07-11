@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.ide",
+  "extends": "./tsconfig.ide.json",
   "compilerOptions": {
     "strict": true,
     "noUnusedLocals": false,

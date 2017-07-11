@@ -1,28 +1,39 @@
-import {UpdateSpec} from './update'
+import {UpdateCommand, UpdateSpec, ValueUpdater} from './update'
 import {Observable} from 'rxjs/Observable'
-import {Lens} from './Lens'
+import {Lens, UnfocusedLens} from './Lens'
 
 export interface Store<State> {
 
     readonly currentState: State
 
+    // TODO: .distinctUntilChange()
     readonly state$: Observable<State>
 
-    map<SubState>(project: (state: State) => SubState): Observable<SubState>
+    readonly lens: UnfocusedLens<State>
 
     select<K extends keyof State>(key: K): Observable<State[K]>
 
-    focus<SubState>(project: (state: State) => SubState): Store<SubState>
+    pick<K extends keyof State>(...keys: K[]): Observable<Pick<State, K>>
 
     focusOn<K extends keyof State>(key: K): Store<State[K]>
 
-    update(specBuilder: (state: State) => State | Partial<UpdateSpec<State>>)
+    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
 
-    updateState(spec: State | Partial<UpdateSpec<State>>)
+    setValue(newValue: State)
 
-    updateAt<Target>(lens: Lens<State, Target>, project: (target: Target) => Target | Partial<UpdateSpec<Target>>)
+    update(updater: ValueUpdater<State>)
 
-    updateStateAt<Target>(lens: Lens<State, Target>, spec: Target | Partial<UpdateSpec<Target>>)
+    // TODO runtime check : Not a function
+    updateState(spec: UpdateSpec<State>)
+
+    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
+    execute<K extends keyof State, T, L extends Lens<State, T>>(...commands: UpdateCommand<State, K, T, L>[])
+
+    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
+    executeAll<K extends keyof State, T, L extends Lens<State, T>>(commands: UpdateCommand<State, K, T, L>[])
+
+    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
+    executeFromBuilder<K extends keyof State, T, L extends Lens<State, T>>(builder: (State) => UpdateCommand<State, K, T, L> | UpdateCommand<State, K, T, L>[])
 
 }
 
