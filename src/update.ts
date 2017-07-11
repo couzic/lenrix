@@ -4,24 +4,20 @@ export type ValueUpdater<V> = (V) => V
 
 export type UpdateSpec<T> = object & { [K in keyof T]?: T[K] | ValueUpdater<T[K]> }
 
-export type FocusOnKeyAndSetValueCommand<T, K extends keyof T> = { focusOn: K, setValue: T[K] }
+export type SetValueCommand<T> = { setValue: T }
 
-export type FocusOnKeyAndUpdateCommand<T, K extends keyof T> = { focusOn: K, update: ValueUpdater<T[K]> }
+export type UpdateCommand<T> = { update: ValueUpdater<T> }
 
-export type FocusOnKeyAndUpdateStateCommand<T, K extends keyof T> = { focusOn: K, updateState: UpdateSpec<T> }
+export type UpdateStateCommand<T> = { updateState: UpdateSpec<T> }
 
-export type FocusWithLensAndSetValueCommand<T, TT, L extends Lens<T, TT>> = { focusWith: L, setValue: TT }
+export type Command<T> = SetValueCommand<T> | UpdateCommand<T> | UpdateStateCommand<T>
 
-export type FocusWithLensAndUpdateCommand<T, TT, L extends Lens<T, TT>> = { focusWith: L, update: ValueUpdater<TT> }
+export type FocusOnKeyCommand<State, K extends keyof State> = { focusOn: K, command: Command<State[K]> }
 
-export type FocusWithLensAndUpdateStateCommand<T, TT, L extends Lens<T, TT>> = { focusWith: L, updateState: UpdateSpec<TT> }
+export type FocusWithLensCommand<State, Target, L extends Lens<State, Target>> = { focusWith: L, command: Command<Target> }
 
-export type UpdateCommand<T, K extends keyof T, TT, L extends Lens<T, TT>> = FocusOnKeyAndSetValueCommand<T, K>
-    | FocusOnKeyAndUpdateStateCommand<T, K>
-    | FocusOnKeyAndUpdateCommand<T, K>
-    | FocusWithLensAndSetValueCommand<T, TT, L>
-    | FocusWithLensAndUpdateStateCommand<T, TT, L>
-    | FocusWithLensAndUpdateCommand<T, TT, L>
+export type FocusedUpdateCommand<State, K extends keyof State, Target, L extends Lens<State, Target>> =
+    FocusOnKeyCommand<State, K> | FocusWithLensCommand<State, Target, L>
 
 export type UpdateSpecBuilder<T> = (T) => UpdateSpec<T>
 

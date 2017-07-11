@@ -1,12 +1,15 @@
 import {add} from 'ramda'
 import {Observable} from 'rxjs'
 import {createRootStore, Store} from './Store'
+import {Lens} from './Lens'
+import {Command, UpdateSpec} from './update'
 
 export type State = {
     counter: number
     todo: {
         input: string
         list: string[]
+        count: number
     }
 }
 
@@ -14,14 +17,22 @@ const initialState: State = {
     counter: 0,
     todo: {
         input: '',
-        list: []
+        list: [],
+        count: 0
     }
 }
 
 export const store: Store<State> = createRootStore(initialState)
 const counterStore = store.focusOn('counter')
-const counterLens = store.lens.focusOn('counter')
+const counterLens: Lens<State, number> = store.lens.focusOn('counter')
 const todoStore = store.focusOn('todo')
+const todoLens = store.lens.focusOn('todo')
+const todoInputLens: Lens<State, string> = todoLens.focusOn('input')
+
+store.execute(
+    {focusWith: counterLens, command: {setValue: {}}},
+    {focusWith: todoInputLens, command: {setValue: 44}}
+)
 
 const store1 = store.focusOn('counter')
 const store2 = store.focusWith(counterLens)
@@ -36,9 +47,11 @@ todoStore.updateState({
     input: 'new value'
 })
 todoStore.execute(
-    {focusOn: 'input', setValue: ''},
-    {focusOn: 'list', setValue: []}
+    {focusOn: 'input', command: {setValue: ''}},
+    {focusOn: 'list', command: {setValue: ['']}}
 )
+
+todoStore.updateState({input: ''})
 
 const lens1 = store.lens.focusOn('counter')
 const lens2 = store.lens.focusWith(lens1)
@@ -47,30 +60,37 @@ store.focusOn('counter').update(add(1))
 store.focusWith(lens1).update(add(1))
 store.focusWith(lens2).update(add(1))
 
-store.execute({focusOn: 'counter', setValue: 42})
-store.execute({focusOn: 'counter', update: add(1)})
+const spec: UpdateSpec<{ input: string }> = {input: ''}
+const command: Command<{ input: string }> = {updateState: {input: '', sisjsjisj: 44}} // TODO file TypeScript bug ?
+
+store.execute({focusOn: 'counter', command: {setValue: 42}})
+store.execute({focusOn: 'counter', command: {update: add(1)}})
+store.execute({focusOn: 'todo', command: {updateState: {input: ''}}})
 
 store.execute(
-    {focusOn: 'counter', setValue: 42},
-    {focusOn: 'counter', update: add(1)},
-    {focusWith: counterLens, setValue: 42},
-    {focusWith: counterLens, update: add(1)}
+    {focusOn: 'counter', command: {setValue: 42}},
+    {focusOn: 'counter', command: {update: add(1)}},
+    {focusWith: counterLens, command: {setValue: 42}},
+    {focusWith: counterLens, command: {update: add(1)}}
 )
 
 store.executeAll([
-    {focusOn: 'counter', setValue: 42},
-    {focusOn: 'counter', update: add(1)},
-    {focusWith: counterLens, setValue: 42},
-    {focusWith: counterLens, update: add(1)}
+    {focusOn: 'counter', command: {setValue: 42}},
+    {focusOn: 'counter', command: {update: add(1)}},
+    {focusWith: counterLens, command: {setValue: 42}},
+    {focusWith: counterLens, command: {update: add(1)}}
 ])
 
-store.executeFromBuilder(state => ({focusOn: 'counter', updateState: state.counter + 1}))
+store.executeFromBuilder(state => ({
+    focusOn: 'counter',
+    command: {updateState: state.counter + 1}
+}))
 
 store.executeFromBuilder(state => [
-    {focusOn: 'counter', updateState: state.counter + 1},
-    {focusOn: 'counter', update: add(1)},
-    {focusWith: counterLens, updateState: state.counter + 1},
-    {focusWith: counterLens, update: add(1)}
+    {focusOn: 'counter', command: {setValue: state.counter + 1}},
+    {focusOn: 'counter', command: {update: add(1)}},
+    {focusWith: counterLens, command: {setValue: state.counter + 1}},
+    {focusWith: counterLens, command: {update: add(1)}}
 ])
 
 export const actions = {
