@@ -12,15 +12,8 @@ export type UpdateStateCommand<T> = { updateState: UpdateSpec<T> }
 
 export type Command<T> = SetValueCommand<T> | UpdateCommand<T> | UpdateStateCommand<T>
 
-export type FocusOnKeyCommand<State, K extends keyof State> = { focusOn: K, command: Command<State[K]> }
+export type FocusedCommand<State, Target> = { focus: Lens<State, Target> } & Command<Target>
 
-export type FocusWithLensCommand<State, Target, L extends Lens<State, Target>> = { focusWith: L, command: Command<Target> }
-
-export type FocusedUpdateCommand<State, K extends keyof State, Target, L extends Lens<State, Target>> =
-    FocusOnKeyCommand<State, K> | FocusWithLensCommand<State, Target, L>
-
-export type UpdateSpecBuilder<T> = (T) => UpdateSpec<T>
-
-export function update<T>(value: T, spec: UpdateSpec<T>): T {
-    return value
-}
+// export function update<T>(value: T, spec: UpdateSpec<T>): T {
+//     return value
+// }

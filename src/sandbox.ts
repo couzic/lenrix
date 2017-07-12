@@ -29,9 +29,26 @@ const todoStore = store.focusOn('todo')
 const todoLens = store.lens.focusOn('todo')
 const todoInputLens: Lens<State, string> = todoLens.focusOn('input')
 
+// const comm: FocusedCommand<State, number, Lens<State, number>> = {focus: counterLens, setValue: 11}
+// const comm1 = store.buildSetValueCommand(counterLens, '11')
+// const comm2 = store.buildSetValueCommand(todoInputLens, {dhs: {}})
+
+// store.execute(comm1)
+// store.execute(comm2)
+// store.execute(comm1, comm2)
+
+store.execute({focus: counterLens, setValue: 11})
+store.execute(store.commands.setValue(counterLens, 11))
+// @shouldNotCompile
+// store.execute({focus: counterLens, setValue: '11'})
+store.execute({focus: counterLens, update: () => 11})
+// @shouldNotCompile
+// store.execute({focus: counterLens, update: () => '11'})
+store.execute({focus: todoLens, updateState: {input: 'whatever'}})
+
 store.execute(
-    {focusWith: counterLens, command: {setValue: {}}},
-    {focusWith: todoInputLens, command: {setValue: 44}}
+    {focus: counterLens, setValue: 11},
+    {focus: todoInputLens, setValue: ''}
 )
 
 const store1 = store.focusOn('counter')
@@ -46,10 +63,10 @@ counterStore.setValue(42)
 todoStore.updateState({
     input: 'new value'
 })
-todoStore.execute(
-    {focusOn: 'input', command: {setValue: ''}},
-    {focusOn: 'list', command: {setValue: ['']}}
-)
+// todoStore.execute(
+//     {focus: todoLens.focusOn('input'), setValue: () => 's'},
+//     {focus: todoLens.focusOn('list'), setValue: []}
+// )
 
 todoStore.updateState({input: ''})
 
@@ -63,35 +80,35 @@ store.focusWith(lens2).update(add(1))
 const spec: UpdateSpec<{ input: string }> = {input: ''}
 const command: Command<{ input: string }> = {updateState: {input: '', sisjsjisj: 44}} // TODO file TypeScript bug ?
 
-store.execute({focusOn: 'counter', command: {setValue: 42}})
-store.execute({focusOn: 'counter', command: {update: add(1)}})
-store.execute({focusOn: 'todo', command: {updateState: {input: ''}}})
-
-store.execute(
-    {focusOn: 'counter', command: {setValue: 42}},
-    {focusOn: 'counter', command: {update: add(1)}},
-    {focusWith: counterLens, command: {setValue: 42}},
-    {focusWith: counterLens, command: {update: add(1)}}
-)
-
-store.executeAll([
-    {focusOn: 'counter', command: {setValue: 42}},
-    {focusOn: 'counter', command: {update: add(1)}},
-    {focusWith: counterLens, command: {setValue: 42}},
-    {focusWith: counterLens, command: {update: add(1)}}
-])
-
-store.executeFromBuilder(state => ({
-    focusOn: 'counter',
-    command: {updateState: state.counter + 1}
-}))
-
-store.executeFromBuilder(state => [
-    {focusOn: 'counter', command: {setValue: state.counter + 1}},
-    {focusOn: 'counter', command: {update: add(1)}},
-    {focusWith: counterLens, command: {setValue: state.counter + 1}},
-    {focusWith: counterLens, command: {update: add(1)}}
-])
+// store.execute({focusOn: 'counter', command: {setValue: 42}})
+// store.execute({focusOn: 'counter', command: {update: add(1)}})
+// store.execute({focusOn: 'todo', command: {updateState: {input: ''}}})
+//
+// store.execute(
+//     {focusOn: 'counter', command: {setValue: 42}},
+//     {focusOn: 'counter', command: {update: add(1)}},
+//     {focusWith: counterLens, command: {setValue: 42}},
+//     {focusWith: counterLens, command: {update: add(1)}}
+// )
+//
+// store.executeAll([
+//     {focusOn: 'counter', command: {setValue: 42}},
+//     {focusOn: 'counter', command: {update: add(1)}},
+//     {focusWith: counterLens, command: {setValue: 42}},
+//     {focusWith: counterLens, command: {update: add(1)}}
+// ])
+//
+// store.executeFromBuilder(state => ({
+//     focusOn: 'counter',
+//     command: {updateState: state.counter + 1}
+// }))
+//
+// store.executeFromBuilder(state => [
+//     {focusOn: 'counter', command: {setValue: state.counter + 1}},
+//     {focusOn: 'counter', command: {update: add(1)}},
+//     {focusWith: counterLens, command: {setValue: state.counter + 1}},
+//     {focusWith: counterLens, command: {update: add(1)}}
+// ])
 
 export const actions = {
 
