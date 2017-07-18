@@ -1,6 +1,6 @@
 import {add} from 'ramda'
 import {Observable} from 'rxjs'
-import {createRootStore, StateCommand, Store} from './Store'
+import {createRootStore, Store} from './Store'
 import {FieldsUpdater, Lens} from './Lens'
 
 export type State = {
@@ -80,7 +80,9 @@ const spec: FieldsUpdater<{ input: string }> = {input: ''}
 
 store.execute({focus: counterLens, setValue: 42})
 store.execute({focus: counterLens, update: add(1)})
-store.execute({focus: todoLens, updateFields: {input: '', toto: 42}})
+store.focusOn('todo').updateFields({input: '', toto: 42, list: [], count: 0})
+store.execute(store.commands.updateFields({input: '', toto: 42, list: [], count: 0}))
+store.execute(store.commands.updateFieldsAt(todoLens, {input: '', toto: 42, list: [], count: 0}))
 //
 // store.execute(
 //     {focusOn: 'counter', command: {setValue: 42}},

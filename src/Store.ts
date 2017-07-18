@@ -1,40 +1,54 @@
 import {Observable} from 'rxjs/Observable'
 import {FieldsUpdater, Lens, UnfocusedLens, ValueUpdater} from './Lens'
 
-interface WithFocus<T, Target> {
-    focus: Lens<T, Target>
-}
+// interface WithFocus<T, Target> {
+//     focus: Lens<T, Target>
+// }
 
-export interface SetValueCommand<T, Target> extends WithFocus<T, Target> {
-    setValue: Target
-}
+// export interface SetValueCommand<T, Target> extends WithFocus<T, Target> {
+//     setValue: Target
+// }
+//
+// export interface UpdateValueCommand<T, Target> {
+//     update: ValueUpdater<Target>
+// }
+//
+// export interface UpdateFieldsCommand<T, Target> {
+//     updateFields: FieldsUpdater<Target>
+// }
 
-export interface UpdateValueCommand<T, Target> {
-    update: ValueUpdater<Target>
-}
-
-export interface UpdateFieldsCommand<T, Target> {
-    updateFields: FieldsUpdater<Target>
-}
-
-export type StateCommand<State, FocusedState> =
-    SetValueCommand<State, FocusedState>
-    | UpdateValueCommand<State, FocusedState>
-    | UpdateFieldsCommand<State, FocusedState>
+// export type StateCommand<State, FocusedState> =
+//     SetValueCommand<State, FocusedState>
+//     | UpdateValueCommand<State, FocusedState>
+//     | UpdateFieldsCommand<State, FocusedState>
 
 const fieldsUpdater: { input: number; toto: number } = {input: 42, toto: 42}
 // const command: StateCommand<{ input: number }> = {updateFields: fieldsUpdater}
 
-export type FocusedCommand<State, FocusedState> =
-    { focus: Lens<State, FocusedState> } & StateCommand<State, FocusedState>
+// export type FocusedCommand<State, FocusedState> =
+//     { focus: Lens<State, FocusedState>, setValue: FocusedState }
+//     | { focus: Lens<State, FocusedState>, update: ValueUpdater<FocusedState> }
+//     | { focus: Lens<State, FocusedState>, updateFields: object & { [K in keyof FocusedState]: FocusedState[K] | ValueUpdater<FocusedState[K]> } }
 
-// export interface StateCommands<State> {
-//     setValue<Target>(lens: Lens<State, Target>, newValue: Target): FocusedCommand<State, Target>
-//
-//     update<Target>(lens: Lens<State, Target>, updater: ValueUpdater<Target>): FocusedCommand<State, Target>
-//
-//     updateFields<Target extends object>(spec: FieldsUpdater<Target>): FocusedCommand<State, Target>
-// }
+export interface FocusedCommand<State, FocusedState> {
+}
+
+export interface StateCommand<State> extends FocusedCommand<State, State> {
+}
+
+export interface StateCommands<State> {
+    setValue(newValue: State): StateCommand<State>
+
+    update(updater: ValueUpdater<State>): StateCommand<State>
+
+    updateFields(fields: object & FieldsUpdater<State>): StateCommand<State>
+
+    setValue<FocusedState>(focus: Lens<State, FocusedState>, newValue: FocusedState): FocusedCommand<State, FocusedState>
+
+    update<FocusedState>(focus: Lens<State, FocusedState>, updater: ValueUpdater<FocusedState>): FocusedCommand<State, FocusedState>
+
+    updateFieldsAt<FocusedState extends object>(focus: Lens<State, FocusedState>, fields: FieldsUpdater<FocusedState>): FocusedCommand<State, FocusedState>
+}
 
 export interface Store<State> {
 
@@ -45,7 +59,7 @@ export interface Store<State> {
 
     readonly lens: UnfocusedLens<State>
 
-    // readonly commands: StateCommands<State>
+    readonly commands: StateCommands<State>
 
     select<K extends keyof State>(key: K): Observable<State[K]>
 
@@ -63,25 +77,9 @@ export interface Store<State> {
 
     buildSetValueCommand<Target>(lens: Lens<State, Target>, value: Target): FocusedCommand<State, Target>
 
-    execute<T1>(command: FocusedCommand<State, T1>)
+    execute<FocusedState>(...commands: FocusedCommand<State, FocusedState>[])
 
-    execute<T1, T2>(command1: FocusedCommand<State, T1>,
-                    command2: FocusedCommand<State, T2>)
-
-    execute<T1, T2, T3>(command1: FocusedCommand<State, T1>,
-                        command2: FocusedCommand<State, T2>,
-                        command3: FocusedCommand<State, T3>)
-
-    execute<T1, T2, T3, T4>(command1: FocusedCommand<State, T1>,
-                            command2: FocusedCommand<State, T2>,
-                            command3: FocusedCommand<State, T3>,
-                            command4: FocusedCommand<State, T4>)
-
-    execute<T1, T2, T3, T4, T5>(command1: FocusedCommand<State, T1>,
-                                command2: FocusedCommand<State, T2>,
-                                command3: FocusedCommand<State, T3>,
-                                command4: FocusedCommand<State, T4>,
-                                command5: FocusedCommand<State, T5>)
+    executeAll<FocusedState>(commands: FocusedCommand<State, FocusedState>[])
 
 }
 
