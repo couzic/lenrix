@@ -1,17 +1,39 @@
-import {FocusedCommand, UpdateSpec, ValueUpdater} from './update'
 import {Observable} from 'rxjs/Observable'
-import {Lens, UnfocusedLens} from './Lens'
+import {FieldsUpdater, Lens, UnfocusedLens, ValueUpdater} from './Lens'
 
-export interface StateCommands<State> {
-    setValue<Target>(lens: Lens<State, Target>, newValue: Target): FocusedCommand<State, Target>
-    update<Target>(lens: Lens<State, Target>, updater: ValueUpdater<Target>): FocusedCommand<State, Target>
-    updateState<Target extends object>(spec: UpdateSpec<Target>): FocusedCommand<State, Target>
+interface WithFocus<T, Target> {
+    focus: Lens<T, Target>
 }
 
-// export interface StateCommandsFromBuilder<State> {
-//     setValue<Target>(builder: (state: State) => lens: Lens<State, Target>, newValue: Target): FocusedCommand<State, Target>
+export interface SetValueCommand<T, Target> extends WithFocus<T, Target> {
+    setValue: Target
+}
+
+export interface UpdateValueCommand<T, Target> {
+    update: ValueUpdater<Target>
+}
+
+export interface UpdateFieldsCommand<T, Target> {
+    updateFields: FieldsUpdater<Target>
+}
+
+export type StateCommand<State, FocusedState> =
+    SetValueCommand<State, FocusedState>
+    | UpdateValueCommand<State, FocusedState>
+    | UpdateFieldsCommand<State, FocusedState>
+
+const fieldsUpdater: { input: number; toto: number } = {input: 42, toto: 42}
+// const command: StateCommand<{ input: number }> = {updateFields: fieldsUpdater}
+
+export type FocusedCommand<State, FocusedState> =
+    { focus: Lens<State, FocusedState> } & StateCommand<State, FocusedState>
+
+// export interface StateCommands<State> {
+//     setValue<Target>(lens: Lens<State, Target>, newValue: Target): FocusedCommand<State, Target>
+//
 //     update<Target>(lens: Lens<State, Target>, updater: ValueUpdater<Target>): FocusedCommand<State, Target>
-//     updateState<Target extends object>(spec: UpdateSpec<Target>): FocusedCommand<State, Target>
+//
+//     updateFields<Target extends object>(spec: FieldsUpdater<Target>): FocusedCommand<State, Target>
 // }
 
 export interface Store<State> {
@@ -23,7 +45,7 @@ export interface Store<State> {
 
     readonly lens: UnfocusedLens<State>
 
-    readonly commands: StateCommands<State>
+    // readonly commands: StateCommands<State>
 
     select<K extends keyof State>(key: K): Observable<State[K]>
 
@@ -31,19 +53,17 @@ export interface Store<State> {
 
     focusOn<K extends keyof State>(key: K): Store<State[K]>
 
-    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
+    focus<FocusedState>(lens: Lens<State, FocusedState>): Store<FocusedState>
 
     setValue(newValue: State)
 
     update(updater: ValueUpdater<State>)
 
-    // TODO runtime check : Not a function
-    updateState(spec: UpdateSpec<State>)
+    updateFields(spec: FieldsUpdater<State>)
 
     buildSetValueCommand<Target>(lens: Lens<State, Target>, value: Target): FocusedCommand<State, Target>
 
-    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
-    execute<T1>(command1: FocusedCommand<State, T1>)
+    execute<T1>(command: FocusedCommand<State, T1>)
 
     execute<T1, T2>(command1: FocusedCommand<State, T1>,
                     command2: FocusedCommand<State, T2>)
@@ -62,15 +82,6 @@ export interface Store<State> {
                                 command3: FocusedCommand<State, T3>,
                                 command4: FocusedCommand<State, T4>,
                                 command5: FocusedCommand<State, T5>)
-
-    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
-    // executeAll<K extends keyof State, Target>(commands: FocusedCommand<State, Target>[])
-
-    // TODO runtime check : either 'at' or 'focusWith', either 'updateState' or 'update'
-    // executeFromBuilder<K extends keyof State, Target, L extends Lens<State, Target>>(builder: (State) =>
-    //     FocusedCommand<State, Target, L> | FocusedCommand<State, Target, L>[])
-
-    // TODO handle command builder use case (state branch state required for building commands for another branch)
 
 }
 

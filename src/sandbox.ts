@@ -1,8 +1,7 @@
 import {add} from 'ramda'
 import {Observable} from 'rxjs'
-import {createRootStore, Store} from './Store'
-import {Lens} from './Lens'
-import {Command, UpdateSpec} from './update'
+import {createRootStore, StateCommand, Store} from './Store'
+import {FieldsUpdater, Lens} from './Lens'
 
 export type State = {
     counter: number
@@ -38,13 +37,13 @@ const todoInputLens: Lens<State, string> = todoLens.focusOn('input')
 // store.execute(comm1, comm2)
 
 store.execute({focus: counterLens, setValue: 11})
-store.execute(store.commands.setValue(counterLens, 11))
+// store.execute(store.commands.setValue(counterLens, 11))
 // @shouldNotCompile
 // store.execute({focus: counterLens, setValue: '11'})
 store.execute({focus: counterLens, update: () => 11})
 // @shouldNotCompile
 // store.execute({focus: counterLens, update: () => '11'})
-store.execute({focus: todoLens, updateState: {input: 'whatever'}})
+store.execute({focus: todoLens, updateFields: {input: 'whatever'}})
 
 store.execute(
     {focus: counterLens, setValue: 11},
@@ -52,15 +51,14 @@ store.execute(
 )
 
 const store1 = store.focusOn('counter')
-const store2 = store.focusWith(counterLens)
-const store3 = store.focusWith(counterStore.lens)
+const store2 = store.focus(counterLens)
 
 counterStore.setValue(42)
 counterStore.update(counter => counter + 1)
 counterStore.update(add(1))
 counterStore.setValue(42)
 
-todoStore.updateState({
+todoStore.updateFields({
     input: 'new value'
 })
 // todoStore.execute(
@@ -68,21 +66,21 @@ todoStore.updateState({
 //     {focus: todoLens.focusOn('list'), setValue: []}
 // )
 
-todoStore.updateState({input: ''})
+todoStore.updateFields({input: ''})
 
 const lens1 = store.lens.focusOn('counter')
-const lens2 = store.lens.focusWith(lens1)
+const lens2 = store.lens.focus(lens1)
 
 store.focusOn('counter').update(add(1))
-store.focusWith(lens1).update(add(1))
-store.focusWith(lens2).update(add(1))
+store.focus(lens1).update(add(1))
+store.focus(lens2).update(add(1))
 
-const spec: UpdateSpec<{ input: string }> = {input: ''}
-const command: Command<{ input: string }> = {updateState: {input: '', sisjsjisj: 44}} // TODO file TypeScript bug ?
+const spec: FieldsUpdater<{ input: string }> = {input: ''}
+// const command: StateCommand<{ input: string }> = {updateFields: {input: '', sisjsjisj: 44}} // TODO file TypeScript bug ?
 
-// store.execute({focusOn: 'counter', command: {setValue: 42}})
-// store.execute({focusOn: 'counter', command: {update: add(1)}})
-// store.execute({focusOn: 'todo', command: {updateState: {input: ''}}})
+store.execute({focus: counterLens, setValue: 42})
+store.execute({focus: counterLens, update: add(1)})
+store.execute({focus: todoLens, updateFields: {input: '', toto: 42}})
 //
 // store.execute(
 //     {focusOn: 'counter', command: {setValue: 42}},
@@ -114,10 +112,10 @@ export const actions = {
 
     increment() {
         // All these are equivalent and type-safe
-        store.updateState({counter: val => val + 1})
-        store.updateState({counter: add(1)}) // Using Ramda's automatically curryied functions
+        store.updateFields({counter: val => val + 1})
+        store.updateFields({counter: add(1)}) // Using Ramda's automatically curryied functions
         store.focusOn('counter').update(add(1))
-        store.focusWith(counterLens).update(add(1))
+        store.focus(counterLens).update(add(1))
     }
 
 }
@@ -127,7 +125,7 @@ const counter1$: Observable<number> = store.state$.map(state => state.counter)
 const counter2$: Observable<number> = store.select('counter')
 const counter3$: Observable<number> = store.pick('counter').map(({counter}) => counter)
 const counter5$: Observable<number> = store.focusOn('counter').state$
-const counter4$: Observable<number> = store.focusWith(counterLens).state$
+const counter4$: Observable<number> = store.focus(counterLens).state$
 
 // Alternative way (useful for testing)
 // expect(store.currentState.counter).toEqual(0)

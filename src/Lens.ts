@@ -1,20 +1,25 @@
-export interface Lens<State, Target> {
+export type ValueUpdater<V> = (V) => V
 
-    focusOn<K extends keyof Target>(key: K): Lens<State, Target[K]>
+export type FieldsUpdater<T> = object & { [K in keyof T]?: T[K] | ValueUpdater<T[K]> }
 
-    focusWith<NewTarget>(lens: Lens<Target, NewTarget>): Lens<State, NewTarget>
+export interface Lens<T, Target> {
 
-}
+    focusOn<K extends keyof Target>(key: K): Lens<T, Target[K]>
 
-export interface Lens1<State, K extends keyof State, T extends State[K]> {
-}
-export interface Lens2<State, K1 extends keyof State, T1 extends State[K1], K2 extends keyof T1, T2 extends T1[K2]> {
-}
-export interface Lens3<State, K1 extends keyof State, T1 extends State[K1], K2 extends keyof T1, T2 extends T1[K2], K3 extends keyof T2, T3 extends T2[K3]> {
+    focus<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
+
+    read(source: T): Target
+
+    setValue(source: T, newValue: Target): T
+
+    update(source: T, updater: ValueUpdater<T>)
+
+    // TODO runtime check : spec NOT a function
+    updateFields(source: T & object, updater: FieldsUpdater<T>)
 }
 
 export type UnfocusedLens<T> = Lens<T, T>
 
-// export function createLens<T>(): Lens<T, T> {
-//     return {} as any
-// }
+export function createLens<T>(instance?: T): UnfocusedLens<T> {
+    return {} as any
+}
