@@ -1,4 +1,6 @@
-export type ValueUpdater<V> = (V) => V
+export interface ValueUpdater<V> {
+    (value: V): V
+}
 
 export type FieldsUpdater<T> = object & { [K in keyof T]?: T[K] | ValueUpdater<T[K]> }
 
@@ -6,7 +8,7 @@ export interface Lens<T, Target> {
 
     focusOn<K extends keyof Target>(key: K): Lens<T, Target[K]>
 
-    focus<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
+    focusAt<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
 
     read(source: T): Target
 
