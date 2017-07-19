@@ -28,6 +28,8 @@ const todoStore = store.focusOn('todo')
 const todoLens = store.lens.focusOn('todo')
 const todoInputLens: Lens<State, string> = todoLens.focusOn('input')
 
+todoStore.focusOn('list').focusIndex(74).setValue('TOTO')
+
 store.execute({setValue: initialState})
 store.execute({at: counterLens, setValue: 11})
 store.execute({update: (state) => state})

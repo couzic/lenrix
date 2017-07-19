@@ -10,6 +10,8 @@ export interface Lens<T, Target> {
 
     focusAt<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
 
+    focusIndex<Item>(this: Lens<T, Item[]>, index: number): Lens<T, Item | undefined>
+
     read(source: T): Target
 
     setValue(source: T, newValue: Target): T

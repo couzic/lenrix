@@ -76,6 +76,8 @@ export interface Store<State> {
 
     focusAt<FocusedState>(lens: Lens<State, FocusedState>): Store<FocusedState>
 
+    focusIndex<Item>(this: Store<Item[]>, index: number): Store<Item | undefined>
+
     setValue(newValue: State)
 
     update(updater: ValueUpdater<State>)
