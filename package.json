@@ -26,6 +26,7 @@
   "scripts": {
     "prebuild": "shx rm -rf ./lib",
     "build": "tsc",
+    "type-test": "node test/testCompilationErrors.js",
     "test": "mocha --opts mocha.opts",
     "tdd": "mocha --opts mocha.opts --watch"
   },
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@types/ramda": "^0.24.2",
+    "chalk": "^2.0.1",
     "ramda": "^0.24.1",
     "rxjs": "^5.4.2",
     "typescript": "^2.4.1"

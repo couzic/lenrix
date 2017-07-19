@@ -4,21 +4,21 @@ import {createRootStore, Store} from './Store'
 import {FieldsUpdater, Lens} from './Lens'
 
 export type State = {
-    counter: number
-    todo: {
-        input: string
-        list: string[]
-        count: number
-    }
+   counter: number
+   todo: {
+      input: string
+      list: string[]
+      count: number
+   }
 }
 
 const initialState: State = {
-    counter: 0,
-    todo: {
-        input: '',
-        list: [],
-        count: 0
-    }
+   counter: 0,
+   todo: {
+      input: '',
+      list: [],
+      count: 0
+   }
 }
 
 export const store: Store<State> = createRootStore(initialState)
@@ -49,8 +49,8 @@ store.execute({at: counterLens, update: () => 11})
 // store.execute({at: todoLens, updateFields: {input: 'whatever'}})
 
 store.execute(
-    {at: counterLens, setValue: 11},
-    {at: todoInputLens, setValue: ''}
+   {at: counterLens, setValue: 11},
+   {at: todoInputLens, setValue: ''}
 )
 
 const store1 = store.focusOn('counter')
@@ -62,7 +62,7 @@ counterStore.update(add(1))
 counterStore.setValue(42)
 
 todoStore.updateFields({
-    input: 'new value'
+   input: 'new value'
 })
 // todoStore.execute(
 //     {at: todoLens.focusOn('input'), setValue: () => 's'},
@@ -122,13 +122,13 @@ store.execute({at: counterLens, update: add(1)})
 
 export const actions = {
 
-    increment() {
-        // All these are equivalent and type-safe
-        store.updateFields({counter: val => val + 1})
-        store.updateFields({counter: add(1)}) // Using Ramda's automatically curryied functions
-        store.focusOn('counter').update(add(1))
-        store.focusAt(counterLens).update(add(1))
-    }
+   increment() {
+      // All these are equivalent and type-safe
+      store.updateFields({counter: val => val + 1})
+      store.updateFields({counter: add(1)}) // Using Ramda's automatically curryied functions
+      store.focusOn('counter').update(add(1))
+      store.focusAt(counterLens).update(add(1))
+   }
 
 }
 

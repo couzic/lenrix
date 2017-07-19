@@ -1,29 +1,29 @@
 export interface ValueUpdater<V> {
-    (value: V): V
+   (value: V): V
 }
 
 export type FieldsUpdater<T> = object & { [K in keyof T]?: T[K] | ValueUpdater<T[K]> }
 
 export interface Lens<T, Target> {
 
-    focusOn<K extends keyof Target>(key: K): Lens<T, Target[K]>
+   focusOn<K extends keyof Target>(key: K): Lens<T, Target[K]>
 
-    focusAt<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
+   focusAt<NewTarget>(lens: Lens<Target, NewTarget>): Lens<T, NewTarget>
 
-    focusIndex<Item>(this: Lens<T, Item[]>, index: number): Lens<T, Item | undefined>
+   focusIndex<Item>(this: Lens<T, Item[]>, index: number): Lens<T, Item | undefined>
 
-    read(source: T): Target
+   read(source: T): Target
 
-    setValue(source: T, newValue: Target): T
+   setValue(source: T, newValue: Target): T
 
-    update(source: T, updater: ValueUpdater<T>)
+   update(source: T, updater: ValueUpdater<Target>)
 
-    // TODO runtime check : spec NOT a function
-    updateFields(source: T & object, updater: FieldsUpdater<T>)
+   // TODO runtime check : fields NOT a function
+   updateFields(this: Lens<T, Target & object>, source: T, fields: FieldsUpdater<Target>)
 }
 
 export type UnfocusedLens<T> = Lens<T, T>
 
 export function createLens<T>(instance?: T): UnfocusedLens<T> {
-    return {} as any
+   return {} as any
 }
