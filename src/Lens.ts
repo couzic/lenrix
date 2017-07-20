@@ -16,10 +16,10 @@ export interface Lens<T, Target> {
 
    setValue(source: T, newValue: Target): T
 
-   update(source: T, updater: ValueUpdater<Target>)
+   update(source: T, updater: ValueUpdater<Target>): T
 
    // TODO runtime check : fields NOT a function
-   updateFields(this: Lens<T, Target & object>, source: T, fields: FieldsUpdater<Target>)
+   updateFields(this: Lens<T, Target & object>, source: T, fields: FieldsUpdater<Target>): T
 }
 
 export type UnfocusedLens<T> = Lens<T, T>

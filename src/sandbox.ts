@@ -1,6 +1,6 @@
 import {add} from 'ramda'
 import {Observable} from 'rxjs'
-import {createRootStore, Store} from './Store'
+import {createStore, Store} from './Store'
 import {FieldsUpdater, Lens} from './Lens'
 
 export type State = {
@@ -21,7 +21,7 @@ const initialState: State = {
    }
 }
 
-export const store: Store<State> = createRootStore(initialState)
+export const store: Store<State> = createStore(initialState)
 const counterStore = store.focusOn('counter')
 const counterLens: Lens<State, number> = store.lens.focusOn('counter')
 const todoStore = store.focusOn('todo')
