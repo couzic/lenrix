@@ -1,21 +1,17 @@
 import {Observable} from 'rxjs/Observable'
 import {FieldsUpdater, Lens, UnfocusedLens, ValueUpdater} from './Lens'
 
-export interface FocusAt<T, Target> {
+export interface HasFocus<T, Target> {
    at: Lens<T, Target>
 }
 
-export interface SetValue<Target> {
+export interface SetValueCommand<T, Target> extends HasFocus<T, Target> {
    setValue: Target
 }
 
-export type LensFocusedSetValue<T, Target> = FocusAt<T, Target> & SetValue<Target>
-
-export interface UpdateValue<Target> {
+export interface UpdateCommand<T, Target> extends HasFocus<T, Target> {
    update: ValueUpdater<Target>
 }
-
-export type LensFocusedUpdateValue<T, Target> = FocusAt<T, Target> & UpdateValue<Target>
 
 // export interface UpdateFields<Target> {
 //    updateFields: FieldsUpdater<Target>
@@ -23,19 +19,12 @@ export type LensFocusedUpdateValue<T, Target> = FocusAt<T, Target> & UpdateValue
 
 // export type FocusedUpdateFields<T, Target> = UpdateFields<Target> & FocusAt<T, Target>
 
-export type SetValueCommand<T, Target> = SetValue<Target> | LensFocusedSetValue<T, Target>
-export type UpdateValueCommand<T, Target> = UpdateValue<Target> | LensFocusedUpdateValue<T, Target>
 // export type UpdateFieldsCommand<T, Target> = UpdateFields<Target> | FocusedUpdateFields<T, Target>
 
 export type StoreCommand<State, FocusedState> =
    SetValueCommand<State, FocusedState>
-   | UpdateValueCommand<State, FocusedState>
+   | UpdateCommand<State, FocusedState>
 // | UpdateFieldsCommand<State, FocusedState> TODO Submit github issue to catch compilation errors
-
-const c: StoreCommand<{ a: number, b: number }, { a: number, b: number }> = {
-   setValue: {a: 1, b: 2},
-   update: (v) => v
-}
 
 export type UnfocusedStoreCommand<State> = StoreCommand<State, State>
 

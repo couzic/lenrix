@@ -1,13 +1,13 @@
 {
   "name": "lenrix",
   "version": "0.0.1",
-  "description": "Lens-focused, reactive state management",
+  "description": "Type-safe, reactive, lens-focused, immutable state management",
   "keywords": [
-    "lens",
     "typescript",
-    "state",
     "rxjs",
-    "immutable"
+    "lens",
+    "immutable",
+    "state"
   ],
   "license": "MIT",
   "repository": {
@@ -36,14 +36,12 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
-    "rxjs": "^5.4.2",
-    "typescript": "^2.4.1"
+    "rxjs": "^5.4.2"
   },
   "devDependencies": {
-    "@types/ramda": "^0.24.2",
     "chalk": "^2.0.1",
-    "ramda": "^0.24.1",
     "rxjs": "^5.4.2",
+    "shx": "^0.2.2",
     "typescript": "^2.4.1"
   }
 }

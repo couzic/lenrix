@@ -1,6 +1,8 @@
+# WIP - API Design
+
 # lenrix
 
-#### Lens-focused, type-safe, reactive state management
+#### Type-safe, reactive, lens-focused, immutable state management
 
 ### Introduction
 lenrix is a Reactive alternative to Redux
