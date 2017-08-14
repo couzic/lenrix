@@ -26,6 +26,7 @@
   "scripts": {
     "prebuild": "shx rm -rf ./lib",
     "build": "tsc",
+    "prepare": "npm run build",
     "type-test": "node test/testCompilationErrors.js",
     "test": "mocha --opts mocha.opts",
     "tdd": "mocha --opts mocha.opts --watch"
@@ -36,12 +37,19 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
+    "immutable-lens": "^0.0.3",
     "rxjs": "^5.4.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.1",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.1.0",
     "chalk": "^2.0.1",
+    "immutable-lens": "^0.0.3",
+    "mocha": "^3.4.2",
     "rxjs": "^5.4.2",
     "shx": "^0.2.2",
+    "ts-node": "^3.2.1",
     "typescript": "^2.4.1"
   }
 }
