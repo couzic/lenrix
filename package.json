@@ -37,7 +37,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
-    "immutable-lens": "^0.0.6",
+    "immutable-lens": "^0.0.8",
     "rxjs": "^5.4.2"
   },
   "devDependencies": {
