@@ -19,5 +19,6 @@ else {
 }
 
 function errors(arr) {
+   // console.log(arr.filter(diag => diag.file.path !== '/home/mcouzic/WebstormProjects/immutable-lens/test/shouldNotCompile.ts').map(diag => diag.file.path + ', line ' + diag.file.getLineAndCharacterOfPosition(diag.start).line + ', message: ' + diag.messageText))
    return arr.map(diag => ({line: diag.file.getLineAndCharacterOfPosition(diag.start).line + 1}))
 }

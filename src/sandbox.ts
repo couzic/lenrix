@@ -1,10 +1,11 @@
-import {Observable} from 'rxjs'
-import {createStore, Store} from './Store'
-import {FieldValues, Lens} from 'immutable-lens'
+import { Observable } from 'rxjs'
+import { FieldValues, Lens, Update } from 'immutable-lens'
+import { Store } from './Store'
+import { createStore } from './createStore'
 
-const add = (i: number) => (j: number) => i + j
+const add = (i: number): Update<number> => (j: number) => i + j
 
-export type State = {
+type State = {
    counter: number
    todo: {
       input: string
@@ -22,7 +23,7 @@ const initialState: State = {
    }
 }
 
-export const store: Store<State> = createStore(initialState)
+const store: Store<State> = createStore(initialState)
 const counterStore = store.focusOn('counter')
 const counterLens: Lens<State, number> = store.lens.focusOn('counter')
 const todoStore = store.focusOn('todo')
@@ -42,20 +43,20 @@ todoStore.setFieldValues({
    input: 'new value'
 })
 
-todoStore.setFieldValues({input: ''})
+todoStore.setFieldValues({ input: '' })
 
 const lens1 = store.lens.focusOn('counter')
 
 store.focusOn('counter').update(add(1))
 
-const spec: FieldValues<{ input: string }> = {input: ''}
+const spec: FieldValues<{ input: string }> = { input: '' }
 
-export const actions = {
+const actions = {
 
    increment() {
       // All these are equivalent and type-safe
-      store.updateFields({counter: val => val + 1})
-      store.updateFields({counter: add(1)}) // Using Ramda's automatically curryied functions
+      store.updateFields({ counter: val => val + 1 })
+      store.updateFields({ counter: add(1) }) // Using Ramda's automatically curryied functions
       store.focusOn('counter').update(add(1))
    }
 
@@ -64,7 +65,7 @@ export const actions = {
 // Recommended ways (all equivalent and all type-safe)
 const counter1$: Observable<number> = store.state$.map(state => state.counter)
 const counter2$: Observable<number> = store.select('counter')
-const counter3$: Observable<number> = store.pick('counter').map(({counter}) => counter)
+const counter3$: Observable<number> = store.pick('counter').map(({ counter }) => counter)
 const counter5$: Observable<number> = store.focusOn('counter').state$
 
 // Alternative way (useful for testing)

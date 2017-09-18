@@ -1,4 +1,4 @@
-import {createStore} from '../src/Store' // @shouldNotCompile Because of compilation error in Observable.d.ts
+import { createStore } from '../src/createStore' // @shouldNotCompile for some obscure reason
 
 type State = {
    counter: number
@@ -19,9 +19,6 @@ const todoListStore = todoStore.focusOn('list')
 const lens = store.lens
 const counterLens = lens.focusOn('counter')
 const todoLens = lens.focusOn('todo')
-
-// Mutating currentState @shouldNotCompile
-store.currentState = store.currentState
 
 // Mutating state$ @shouldNotCompile
 store.state$ = store.state$
@@ -50,6 +47,9 @@ store.focusOn(() => 'counter')
 
 // Focusing on unknown key @shouldNotCompile
 store.focusOn('unknown')
+
+// Focusing key on array-focused store @shouldNotCompile
+todoListStore.focusOn('length')
 
 // Focusing null index @shouldNotCompile
 todoListStore.focusIndex(null)
@@ -91,6 +91,9 @@ store.select(() => 'counter')
 // Selecting unknown key @shouldNotCompile
 store.select('unknown')
 
+// Selecting key on array-focused store @shouldNotCompile
+todoListStore.select('length')
+
 // Picking null key @shouldNotCompile
 store.pick(null)
 
@@ -106,6 +109,9 @@ store.pick(() => 'counter')
 // Picking unknown key @shouldNotCompile
 store.pick('unknown')
 
+// Picking keys on array-focused store @shouldNotCompile
+todoListStore.pick('length')
+
 /////////////
 // UPDATE //
 ///////////
@@ -120,16 +126,16 @@ counterStore.update((counter: string) => 42)
 counterStore.update((counter: number) => '42')
 
 // Setting unknown fields values @shouldNotCompile
-store.setFieldValues({unknown: 'unknown'})
+store.setFieldValues({ unknown: 'unknown' })
 
 // Updating unknown fields @shouldNotCompile
-store.updateFields({unknown: (v) => v})
+store.updateFields({ unknown: (v) => v })
 
 // Setting field values with wrong type @shouldNotCompile
-store.setFieldValues({counter: '42'})
+store.setFieldValues({ counter: '42' })
 
 // Updating fields with wrong field type @shouldNotCompile
-store.updateFields({counter: () => '42'})
+store.updateFields({ counter: () => '42' })
 
 // Piping wrong input type update @shouldNotCompile
 counterStore.pipe((counter: string) => 42)
