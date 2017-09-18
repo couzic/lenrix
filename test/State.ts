@@ -1,12 +1,14 @@
 export interface State {
    counter: number
-   todo: {
-      input: string
-      list: TodoItem[]
-      count: number
-   }
+   todo: TodoState
    user: User | undefined
    flag: boolean
+}
+
+export interface TodoState {
+   input: string
+   list: TodoItem[]
+   count: number
 }
 
 export interface TodoItem {

@@ -7,10 +7,10 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import { Store } from './Store'
 import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { shallowEquals } from './shallowEquals'
 import { FocusedStore } from './FocusedStore'
+import { ReadableStore } from './ReadableStore'
 
-export class RootStore<State extends object> implements Store<State> {
+export class RootStore<State extends object> extends ReadableStore<State> implements Store<State> {
 
    private readonly updaters$ = new Subject<Updater<State>>()
    public readonly state$: Observable<State>
@@ -18,6 +18,7 @@ export class RootStore<State extends object> implements Store<State> {
    public readonly lens: UnfocusedLens<State> = createLens<State>()
 
    constructor(private readonly initialState: State) {
+      super()
       const stateSubject = new BehaviorSubject(initialState)
       this.updaters$
          .scan((state, updater) => updater(state), initialState)
@@ -26,25 +27,8 @@ export class RootStore<State extends object> implements Store<State> {
    }
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
-      return new FocusedStore(this, this.select(key))
-   }
-
-   select<K extends keyof State>(key: K): Observable<State[K]> {
-      return this.map(state => state[key])
-   }
-
-   map<T>(selector: (state: State) => T): Observable<T> {
-      return this.state$
-         .map(selector)
-         .distinctUntilChanged()
-   }
-
-   pick<K extends keyof State>(...keys: K[]): Observable<Pick<State, K>> {
-      return this.map(state => {
-         const subset = {} as any
-         keys.forEach(key => subset[key] = state[key])
-         return subset
-      }).distinctUntilChanged(shallowEquals)
+      const focusedLens = this.lens.focusOn(key)
+      return new FocusedStore(this.select(key), updater => this.update(focusedLens.update(updater)))
    }
 
    setValue(newValue: State) {

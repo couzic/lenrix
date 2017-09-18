@@ -1,49 +1,41 @@
 import { Store } from './Store'
 import { createLens, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
+import { ReadableStore } from './ReadableStore'
 import { Observable } from 'rxjs/Observable'
 
-export class FocusedStore<ParentState, State extends object> implements Store<State> {
+export class FocusedStore<ParentState, K extends keyof ParentState, State extends ParentState[K] & object>
+   extends ReadableStore<State> implements Store<State> {
 
    lens: UnfocusedLens<State> = createLens<State>()
 
-   constructor(private readonly parentStore: Store<ParentState>,
-               public readonly state$: Observable<State>) {
+   constructor(public readonly state$: Observable<State>,
+               private readonly updateOnParent: (updater: Updater<State>) => void) {
+      super()
    }
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
-      throw new Error('Method not implemented.')
+      const focusedLens = this.lens.focusOn(key)
+      return new FocusedStore(this.select(key), updater => this.update(focusedLens.update(updater)))
    }
 
-   select<K extends keyof State>(key: K): Observable<State[K]> {
-      throw new Error('Method not implemented.')
+   setValue(newValue: State) {
+      this.updateOnParent(() => newValue)
    }
 
-   map<T>(selector: (state: State) => T): Observable<T> {
-      throw new Error('Method not implemented.')
+   update(updater: Updater<State>) {
+      this.updateOnParent(updater)
    }
 
-   pick<K extends keyof State>(...keys: K[]): Observable<Pick<State, K>> {
-      throw new Error('Method not implemented.')
+   setFieldValues(newValues: FieldValues<State>) {
+      this.updateOnParent(this.lens.setFieldValues(newValues))
    }
 
-   setValue(newValue: State): void {
-      throw new Error('Method not implemented.')
+   updateFields(updaters: FieldUpdaters<State>) {
+      this.updateOnParent(this.lens.updateFields(updaters))
    }
 
-   update(updater: Updater<State>): void {
-      throw new Error('Method not implemented.')
-   }
-
-   setFieldValues(newValues: FieldValues<State>): void {
-      throw new Error('Method not implemented.')
-   }
-
-   updateFields(updaters: FieldUpdaters<State>): void {
-      throw new Error('Method not implemented.')
-   }
-
-   pipe(...updaters: Updater<State>[]): void {
-      throw new Error('Method not implemented.')
+   pipe(...updaters: Updater<State>[]) {
+      this.updateOnParent(this.lens.pipe(...updaters))
    }
 
 }
