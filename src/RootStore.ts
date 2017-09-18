@@ -8,6 +8,7 @@ import { Store } from './Store'
 import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { shallowEquals } from './shallowEquals'
+import { FocusedStore } from './FocusedStore'
 
 export class RootStore<State extends object> implements Store<State> {
 
@@ -25,11 +26,7 @@ export class RootStore<State extends object> implements Store<State> {
    }
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
-      throw Error('TO IMPLEMENT')
-   }
-
-   focusIndex<Item>(index: number): Store<any | Item> {
-      throw Error('TO IMPLEMENT')
+      return new FocusedStore(this, this.select(key))
    }
 
    select<K extends keyof State>(key: K): Observable<State[K]> {

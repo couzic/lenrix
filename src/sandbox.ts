@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs'
-import { FieldValues, Lens, Update } from 'immutable-lens'
+import { FieldValues, Lens, Updater } from 'immutable-lens'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
-const add = (i: number): Update<number> => (j: number) => i + j
+const add = (i: number): Updater<number> => (j: number) => i + j
 
 type State = {
    counter: number

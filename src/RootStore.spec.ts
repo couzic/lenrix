@@ -182,9 +182,9 @@ describe('Store', () => {
    // FOCUSED STORE //
    //////////////////
 
-   xit('can focus on field', () => {
-      const result = store.focusOn('counter')
-      expect(result).to.equal(42)
+   it('can focus on field', () => {
+      let counter = 0
+      store.focusOn('counter').state$.subscribe(value => counter = value)
+      expect(counter).to.equal(42)
    })
-
 })

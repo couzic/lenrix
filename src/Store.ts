@@ -12,8 +12,6 @@ export interface Store<State> {
 
    focusOn<K extends keyof State>(this: Store<State & NotAnArray>, key: K): Store<State[K]>
 
-   focusIndex<Item>(this: Store<Item[]>, index: number): Store<Item | undefined>
-
    ///////////
    // READ //
    /////////
