@@ -45,6 +45,6 @@ import {store, actions} from './store'
 // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
 const counter1$: Observable<number> = store.state$.map(state => state.counter)
 const counter2$: Observable<number> = store.map(state => state.counter)
-const counter3$: Observable<number> = store.select('counter')
+const counter3$: Observable<number> = store.pluck('counter')
 const counter4$: Observable<number> = store.focusOn('counter').state$
 ```

@@ -73,25 +73,25 @@ todoStore.focusIndex(4)
 // READ //
 /////////
 
-// Selecting null key @shouldNotCompile
+// Plucking null key @shouldNotCompile
 store.pluck(null)
 
-// Selecting undefined key @shouldNotCompile
+// Plucking undefined key @shouldNotCompile
 store.pluck(undefined)
 
-// Selecting non-string primitive key @shouldNotCompile
+// Plucking non-string primitive key @shouldNotCompile
 store.pluck(42)
 
-// Selecting object key @shouldNotCompile
+// Plucking object key @shouldNotCompile
 store.pluck({})
 
-// Selecting function key @shouldNotCompile
+// Plucking function key @shouldNotCompile
 store.pluck(() => 'counter')
 
-// Selecting unknown key @shouldNotCompile
+// Plucking unknown key @shouldNotCompile
 store.pluck('unknown')
 
-// Selecting key on array-focused store @shouldNotCompile
+// Plucking key on array-focused store @shouldNotCompile
 todoListStore.pluck('length')
 
 // Picking null key @shouldNotCompile
