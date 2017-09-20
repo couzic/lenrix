@@ -27,8 +27,8 @@
     "prebuild": "shx rm -rf ./lib",
     "build": "tsc",
     "prepare": "npm run build",
+    "test": "mocha --opts mocha.opts & npm run type-test",
     "type-test": "node test/testCompilationErrors.js",
-    "test": "mocha --opts mocha.opts",
     "tdd": "mocha --opts mocha.opts --watch"
   },
   "files": [
