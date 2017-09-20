@@ -16,8 +16,7 @@ export interface Store<State> {
    // READ //
    /////////
 
-   // TODO Allow array fields selection ? (length)
-   select<K extends keyof State>(this: Store<State & NotAnArray>, key: K): Observable<State[K]>
+   pluck<K extends keyof State>(this: Store<State & NotAnArray>, key: K): Observable<State[K]>
 
    map<T>(selector: (state: State) => T): Observable<T>
 

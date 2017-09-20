@@ -5,7 +5,7 @@ export abstract class ReadableStore<State> {
 
    readonly state$: Observable<State>
 
-   select<K extends keyof State>(key: K): Observable<State[K]> {
+   pluck<K extends keyof State>(key: K): Observable<State[K]> {
       return this.map(state => state[key])
    }
 

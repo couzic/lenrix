@@ -32,8 +32,8 @@ describe('Store', () => {
       expect(counterValue).to.equal(42)
    })
 
-   it('can select field', () => {
-      const counter$ = store.select('counter')
+   it('can pluck field', () => {
+      const counter$ = store.pluck('counter')
       let counterValue = 0
       counter$.subscribe(counter => counterValue = counter)
       expect(counterValue).to.equal(42)
@@ -56,8 +56,8 @@ describe('Store', () => {
          expect(transitions).to.equal(1)
       })
 
-      it('does not trigger .select() returned Observables to emit', () => {
-         const counter$ = store.select('counter')
+      it('does not trigger .pluck() returned Observables to emit', () => {
+         const counter$ = store.pluck('counter')
          let transitions = 0
          counter$.subscribe(() => ++transitions)
 

@@ -62,7 +62,7 @@ const actions = {
 
 // Recommended ways (all equivalent and all type-safe)
 const counter1$: Observable<number> = store.state$.map(state => state.counter)
-const counter2$: Observable<number> = store.select('counter')
+const counter2$: Observable<number> = store.pluck('counter')
 const counter3$: Observable<number> = store.pick('counter').map(({ counter }) => counter)
 const counter5$: Observable<number> = store.focusOn('counter').state$
 

@@ -28,7 +28,7 @@ export class RootStore<State extends object> extends ReadableStore<State> implem
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
-      return new FocusedStore(this.select(key), updater => this.update(focusedLens.update(updater)))
+      return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
    }
 
    setValue(newValue: State) {
