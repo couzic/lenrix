@@ -1,4 +1,4 @@
-import { Store } from './Store'
+import { FieldLenses, Store } from './Store'
 import { createLens, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { Observable } from 'rxjs/Observable'
@@ -16,6 +16,10 @@ export class FocusedStore<ParentState, K extends keyof ParentState, State extend
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
+   }
+
+   recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
+      throw Error('Not implemented yet')
    }
 
    setValue(newValue: State) {

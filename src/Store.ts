@@ -24,8 +24,8 @@ export interface Store<State> {
 
    // TODO API Design
    // focusWith<U>(this: Store<State & object & NotAnArray>, lens: Lens<State, U>): Store<U> // Maybe unnecessary, store can already focus
-   // focusFields<K extends keyof State>(this: Store<State & object & NotAnArray>, ...keys: K[]): Store<Pick<State, K>>
-   // recompose<RecomposedState>(this: Store<State & object & NotAnArray>, fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
+   // focusFields<K extends keyof State>(this: Store<State & object & NotAnArray>, ...keys: K[]): Store<Pick<State, K>> // Syntactic sugar for recompose
+   recompose<RecomposedState>(this: Store<State & object & NotAnArray>, fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
 
    ///////////
    // READ //

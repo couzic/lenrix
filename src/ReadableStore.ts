@@ -23,6 +23,7 @@ export abstract class ReadableStore<State> {
    }
 
    extract<E>(fields: FieldExtractors<State, E>): Observable<E> {
+      if (typeof fields === 'function') throw Error('extract() does not accept functions as arguments. You should try map() instead')
       const keys = Object.keys(fields)
       return this.state$.map(state => {
          const extraction = {} as any

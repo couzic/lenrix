@@ -105,6 +105,9 @@ describe('Store', () => {
 
          expect(transitions).to.equal(1)
       })
+      it('throws error when given a function', () => {
+         expect(() => store.extract(() => null)).to.throw()
+      })
    })
 
 })

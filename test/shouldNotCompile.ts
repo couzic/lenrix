@@ -1,6 +1,7 @@
 import { createStore } from '../src/createStore'
 // @shouldNotCompile
 import { Observable } from 'rxjs/Observable'
+import { Store } from '../src/Store'
 
 type State = {
    counter: number
@@ -70,6 +71,27 @@ counterStore.focusIndex(4)
 
 // Focusing index on object-focused store @shouldNotCompile
 todoStore.focusIndex(4)
+
+// Recomposing null @shouldNotCompile
+store.recompose(null)
+
+// Recomposing undefined @shouldNotCompile
+store.recompose(undefined)
+
+// Recomposing number @shouldNotCompile
+store.recompose(42)
+
+// Recomposing string @shouldNotCompile
+store.recompose('counter')
+
+// Recomposing array @shouldNotCompile
+store.recompose([])
+
+// Recomposing with wrong source type Lens @shouldNotCompile
+store.recompose({ todoList: todoListStore.lens })
+
+// Recomposing with wrong source type Lens @shouldNotCompile
+const recoomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoList: todoLens.focusOn('list') })
 
 ///////////
 // READ //
@@ -201,13 +223,7 @@ counterStore.pipe((counter: number) => '42')
 //////////////////////////////////////////////////////
 
 // Extracting function @shouldNotButDoesCompile
-store.extract(() => 'counter') // TODO Implement runtime check
+store.extract(() => 'counter')
 
-
-
-
-
-
-
-
-
+// Recomposing function @shouldNotButDoesCompile
+store.recompose(() => null) // TODO Implement runtime check

@@ -2,17 +2,17 @@
 
 #### Type-safe, reactive, lens-focused, immutable state management
 
-### Introduction
+## Introduction
 lenrix is a Reactive alternative to Redux
 
-### Quickstart
+## Quickstart
 
-#### Install
+### Install
 ```sh
 $ npm i -S lenrix immutable-lens rxjs
 ```
 
-#### Create a store and define actions
+### Create a store and define actions
 ```ts
 import {createStore} from 'lenrix'
 import {add} from 'ramda'
@@ -38,7 +38,7 @@ export const actions = {
 }
 ```
 
-#### Consume the store's state
+### Consume the store's state
 ```ts
 import {store, actions} from './store'
 
@@ -48,3 +48,27 @@ const counter2$: Observable<number> = store.map(state => state.counter)
 const counter3$: Observable<number> = store.pluck('counter')
 const counter4$: Observable<number> = store.focusOn('counter').state$
 ```
+
+## API
+
+### Create
+
+#### `createStore()`
+
+### Focus
+
+#### `focusOn()`
+
+#### `recompose()`
+
+### Read
+
+#### `pluck()`
+
+#### `map()`
+
+#### `pick()`
+
+#### `extract()`
+
+### Update

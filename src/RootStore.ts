@@ -4,7 +4,7 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/publishReplay'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { Store } from './Store'
+import { FieldLenses, Store } from './Store'
 import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { FocusedStore } from './FocusedStore'
@@ -29,6 +29,10 @@ export class RootStore<State extends object> extends ReadableStore<State> implem
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
+   }
+
+   recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
+      return this as any
    }
 
    setValue(newValue: State) {

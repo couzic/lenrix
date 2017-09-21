@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { UnfocusedLens } from 'immutable-lens'
-import { initialState, State } from '../test/State'
+import { initialState, State, TodoItem } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
@@ -36,7 +36,7 @@ describe('Store', () => {
    // UPDATE //
    ///////////
 
-   describe('setValue()', () => {
+   describe('.setValue()', () => {
       it('can set new state', () => {
          store.setValue({
             ...initialState,
@@ -51,7 +51,7 @@ describe('Store', () => {
       })
    })
 
-   describe('update()', () => {
+   describe('.update()', () => {
       it('can update state', () => {
          store.update(state => ({
             ...state,
@@ -66,7 +66,7 @@ describe('Store', () => {
       })
    })
 
-   describe('setFieldValues', () => {
+   describe('.setFieldValues()', () => {
       it('can set new field values', () => {
          store.setFieldValues({
             counter: 24
@@ -82,7 +82,7 @@ describe('Store', () => {
       })
    })
 
-   describe('updateFields', () => {
+   describe('.updateFields()', () => {
       it('can update fields', () => {
          store.updateFields({
             counter: value => ++value
@@ -98,7 +98,7 @@ describe('Store', () => {
       })
    })
 
-   describe('pipe()', () => {
+   describe('.pipe()', () => {
       it('can pipe updaters', () => {
          const increment = lens.focusOn('counter').update(value => ++value)
          store.pipe(
@@ -131,4 +131,19 @@ describe('Store', () => {
       store.focusOn('counter').state$.subscribe(value => counter = value)
       expect(counter).to.equal(42)
    })
+
+   describe('.recompose()', () => {
+      let recomposedStore: Store<{ todoList: TodoItem[] }>
+      beforeEach(() => {
+         recomposedStore = store.recompose({
+            todoList: lens.focusOn('todo').focusOn('list')
+         })
+      })
+      it('composes new state', () => {
+         recomposedStore.state$.subscribe(recomposedState => {
+            expect(recomposedState.todoList).to.deep.equal({ todoList: state.todo.list })
+         })
+      })
+   })
+
 })
