@@ -156,8 +156,14 @@ store.extract({ a: (state: { counter: string }) => null })
 // Extracting with wrong selection path @shouldNotCompile
 store.extract({ a: (state: State) => state.unknownProp })
 
-// Assigning extract to wrong variable type @shouldNotCompile
-const extract$: Observable<{ todoList: number[] }> = store.extract({ todoList: (state: State) => state.todo.list })
+// Assigning extract to wrong selector-extracted variable type @shouldNotCompile
+const selectorExtractedState$: Observable<{ todoList: number[] }> = store.extract({ todoList: (state: State) => state.todo.list })
+
+// Assigning extract to wrong lens-extracted variable type @shouldNotCompile
+const lensExtractedState$: Observable<{ todoList: number[] }> = store.extract({ todoList: todoLens.focusOn('list') })
+
+// Extracting with wrong lens source type @shouldNotCompile
+store.extract({ a: todoStore.lens.focusOn('list') })
 
 /////////////
 // UPDATE //

@@ -39,11 +39,6 @@ describe('Store', () => {
       expect(counterValue).to.equal(42)
    })
 
-   it('can pick fields', () => {
-      const counterPick$ = store.pick('counter')
-      counterPick$.subscribe(counterPick => expect(counterPick).to.deep.equal({ counter: 42 }))
-   })
-
    describe('when updating unrelated slice of State', () => {
 
       it('does not trigger .map() returned Observables to emit', () => {
@@ -67,13 +62,49 @@ describe('Store', () => {
       })
    })
 
-   it('.pick() returned Observables do not emit when updating omitted keys', () => {
-      const counter$ = store.pick('counter')
-      let transitions = 0
-      counter$.subscribe(() => ++transitions)
+   describe('.pick()', () => {
+      it('picks fields', () => {
+         const counterPick$ = store.pick('counter')
+         counterPick$.subscribe(counterPick => expect(counterPick).to.deep.equal({ counter: 42 }))
+      })
+      it('returns Observables that do not emit when omitted keys are updated', () => {
+         const counter$ = store.pick('counter')
+         let transitions = 0
+         counter$.subscribe(() => ++transitions)
 
-      store.updateFields({ flag: value => !value })
+         store.updateFields({ flag: value => !value })
 
-      expect(transitions).to.equal(1)
+         expect(transitions).to.equal(1)
+      })
    })
+
+   describe('.extract()', () => {
+      it('extracts field by selector', () => {
+         const extracted$ = store.extract({ todoList: (state: State) => state.todo.list })
+         extracted$.subscribe(extracted => {
+            expect(extracted).to.deep.equal({ todoList: state.todo.list })
+            expect(extracted.todoList).to.equal(state.todo.list)
+         })
+      })
+      it('extracts field by Lens', () => {
+         const todoListLens = lens.focusOn('todo').focusOn('list')
+         const extracted$ = store.extract({ todoList: todoListLens })
+         extracted$.subscribe(extracted => {
+            expect(extracted).to.deep.equal({ todoList: state.todo.list })
+            expect(extracted.todoList).to.equal(state.todo.list)
+         })
+      })
+      it('returns Observables that do not emit when non-extracted slices are updated', () => {
+         const todoList$ = store.extract({
+            todoList: (state: State) => state.todo.list
+         })
+         let transitions = 0
+         todoList$.subscribe(() => ++transitions)
+
+         store.updateFields({ flag: value => !value })
+
+         expect(transitions).to.equal(1)
+      })
+   })
+
 })
