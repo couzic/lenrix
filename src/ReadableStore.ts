@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs/Observable'
 import { shallowEquals } from './shallowEquals'
+import { ExtractedFields } from './Store'
 
 export abstract class ReadableStore<State> {
 
@@ -19,6 +20,10 @@ export abstract class ReadableStore<State> {
          keys.forEach(key => subset[key] = state[key])
          return subset
       }).distinctUntilChanged(shallowEquals)
+   }
+
+   extract<E>(selectors: ExtractedFields<State, E>): Observable<E> {
+      throw Error('Not implemented yet')
    }
 
 }

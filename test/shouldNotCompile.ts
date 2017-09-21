@@ -1,4 +1,6 @@
-import { createStore } from '../src/createStore' // @shouldNotCompile for some obscure reason
+import { createStore } from '../src/createStore'
+// @shouldNotCompile
+import { Observable } from 'rxjs/Observable'
 
 type State = {
    counter: number
@@ -112,6 +114,51 @@ store.pick('unknown')
 // Picking keys on array-focused store @shouldNotCompile
 todoListStore.pick('length')
 
+// Extracting null @shouldNotCompile
+store.extract(null)
+
+// Extracting undefined @shouldNotCompile
+store.extract(undefined)
+
+// Extracting number @shouldNotCompile
+store.extract(42)
+
+// Extracting string @shouldNotCompile
+store.extract('counter')
+
+// Extracting array @shouldNotCompile
+store.extract([])
+
+// Extracting with null @shouldNotCompile
+store.extract({ a: null })
+
+// Extracting with undefined @shouldNotCompile
+store.extract({ a: undefined })
+
+// Extracting with number @shouldNotCompile
+store.extract({ a: 42 })
+
+// Extracting with string @shouldNotCompile
+store.extract({ a: 'counter' })
+
+// Extracting with object @shouldNotCompile
+store.extract({ a: {} })
+
+// Extracting with array @shouldNotCompile
+store.extract({ a: [] })
+
+// Extracting with implicit any input type selector @shouldNotCompile
+store.extract({ a: state => state.whatever })
+
+// Extracting with wrong input type selector @shouldNotCompile
+store.extract({ a: (state: { counter: string }) => null })
+
+// Extracting with wrong selection path @shouldNotCompile
+store.extract({ a: (state: State) => state.unknownProp })
+
+// Assigning extract to wrong variable type @shouldNotCompile
+const extract$: Observable<{ todoList: number[] }> = store.extract({ todoList: (state: State) => state.todo.list })
+
 /////////////
 // UPDATE //
 ///////////
@@ -129,7 +176,7 @@ counterStore.update((counter: number) => '42')
 store.setFieldValues({ unknown: 'unknown' })
 
 // Updating unknown fields @shouldNotCompile
-store.updateFields({ unknown: (v) => v })
+store.updateFields({ unknown: {} as any })
 
 // Setting field values with wrong type @shouldNotCompile
 store.setFieldValues({ counter: '42' })
@@ -143,7 +190,12 @@ counterStore.pipe((counter: string) => 42)
 // Piping wrong output type update @shouldNotCompile
 counterStore.pipe((counter: number) => '42')
 
+////////////////////////////////////////////////////////
+// @shouldNotButDoesCompile - Require runtime checks //
+//////////////////////////////////////////////////////
 
+// Extracting function @shouldNotButDoesCompile
+store.extract(() => 'counter') // TODO Implement runtime check
 
 
 

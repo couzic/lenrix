@@ -5,7 +5,7 @@ const ts = require('typescript')
 const chalk = require('chalk')
 const fs = require('fs')
 
-const tsOptions = {noImplicitAny: false, noEmit: true, strictNullChecks: true}
+const tsOptions = {noImplicitAny: true, noEmit: true, strictNullChecks: true}
 const expectedErrorCount = (fs.readFileSync('test/shouldNotCompile.ts', 'utf8').match(/@shouldNotCompile/g) || []).length
 const program = ts.createProgram(['test/shouldNotCompile'], tsOptions)
 const diagnostics = ts.getPreEmitDiagnostics(program)
