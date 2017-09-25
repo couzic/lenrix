@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs/Observable'
 import { FieldLenses, Store } from './Store'
-import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { shallowEquals } from './shallowEquals'
 
@@ -27,18 +27,6 @@ export class RecomposedStore<ParentState extends object, State> extends Readable
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
-      throw Error('Not implemented yet')
-   }
-
-   pluck<K extends keyof State>(key: K): Observable<State[K]> {
-      throw Error('Not implemented yet')
-   }
-
-   pick<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Observable<Pick<State, K>> {
-      throw Error('Not implemented yet')
-   }
-
-   extract<ExtractedState>(fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState> {
       throw Error('Not implemented yet')
    }
 
