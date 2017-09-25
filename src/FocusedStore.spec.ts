@@ -38,6 +38,13 @@ describe('FocusedStore', () => {
       expect(stateTransitions).to.equal(1)
    })
 
+   it('does not trigger state transitions when unrelated slice of ParentState is updated', () => {
+      rootStore.updateFields({ flag: value => !value })
+
+      expect(rootStateTransitions).to.equal(2)
+      expect(stateTransitions).to.equal(1)
+   })
+
    it('has Lens', () => {
       const result = lens.updateFields({ count: (v) => v + 1 })(state)
       expect(result.count).to.equal(43)
@@ -47,11 +54,22 @@ describe('FocusedStore', () => {
    // READ //
    /////////
 
-   it('does not trigger state transitions when unrelated slice of ParentState is updated', () => {
-      rootStore.updateFields({ flag: value => !value })
+   describe('.map()', () => {
+      it('returns selected state Observable', () => {
+         const count$ = store.map(state => state.count)
+         let countValue = 0
+         count$.subscribe(count => countValue = count)
+         expect(countValue).to.equal(42)
+      })
+      it('returns Observables that do not emit when unrelated slice of state is updated', () => {
+         const count$ = store.map(state => state.count)
+         let transitions = 0
+         count$.subscribe(() => ++transitions)
 
-      expect(rootStateTransitions).to.equal(2)
-      expect(stateTransitions).to.equal(1)
+         store.setFieldValues({ input: 'New input value' })
+
+         expect(transitions).to.equal(1)
+      })
    })
 
    /////////////

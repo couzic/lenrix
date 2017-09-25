@@ -26,13 +26,6 @@ describe('ReadableStore', () => {
    // READ //
    /////////
 
-   it('can map state', () => {
-      const counter$ = store.map(state => state.counter)
-      let counterValue = 0
-      counter$.subscribe(counter => counterValue = counter)
-      expect(counterValue).to.equal(42)
-   })
-
    it('can pluck field', () => {
       const counter$ = store.pluck('counter')
       let counterValue = 0

@@ -10,7 +10,8 @@ describe('RecomposedStore', () => {
    let sourceStateTransitions: number
 
    type RecomposedState = {
-      todoList: TodoItem[]
+      todoList: TodoItem[],
+      flag: boolean
    }
 
    let store: Store<RecomposedState>
@@ -20,7 +21,8 @@ describe('RecomposedStore', () => {
    beforeEach(() => {
       sourceStore = createStore(initialState)
       store = sourceStore.recompose({
-         todoList: sourceStore.lens.focusOn('todo').focusOn('list')
+         todoList: sourceStore.lens.focusOn('todo').focusOn('list'),
+         flag: sourceStore.lens.focusOn('flag')
       })
       sourceStore.state$.subscribe(newState => {
          sourceState = newState
@@ -41,8 +43,38 @@ describe('RecomposedStore', () => {
    })
 
    it('holds initial state as state stream', () => {
-      expect(state).to.deep.equal({ todoList: sourceState.todo.list })
+      expect(state).to.deep.equal({ todoList: sourceState.todo.list, flag: false })
       expect(state.todoList).to.equal(sourceState.todo.list)
+   })
+
+   it('does not trigger state transitions when unrelated slice of ParentState is updated', () => {
+      sourceStore.updateFields({ counter: i => ++i })
+
+      expect(sourceStateTransitions).to.equal(1)
+      expect(stateTransitions).to.equal(0)
+   })
+
+   ///////////
+   // READ //
+   /////////
+
+   describe('.map()', () => {
+      it('returns selected state Observable', () => {
+         const todoList$ = store.map(state => state.todoList)
+         let todoList: TodoItem[] = []
+         todoList$.subscribe(value => todoList = value)
+         expect(todoList).to.equal(state.todoList)
+      })
+      it('returns Observables that do not emit when unrelated slice of state is updated', () => {
+         const todoList$ = store.map(state => state.todoList)
+         let transitions: number
+         todoList$.subscribe(() => ++transitions)
+         transitions = 0
+
+         store.updateFields({ flag: value => !value })
+
+         expect(transitions).to.equal(0)
+      })
    })
 
    /////////////
@@ -52,14 +84,14 @@ describe('RecomposedStore', () => {
    it('can set field values', () => {
       const newList: TodoItem[] = []
       store.setFieldValues({ todoList: newList })
-      expect(state).to.deep.equal({ todoList: newList })
+      expect(state).to.deep.equal({ todoList: newList, flag: false })
       expect(state.todoList).to.equal(newList)
       expect(stateTransitions).to.equal(1)
    })
 
    it('can set state', () => {
       const newList: TodoItem[] = []
-      const newState: RecomposedState = { todoList: newList }
+      const newState: RecomposedState = { todoList: newList, flag: false }
       store.setValue(newState)
       expect(state).to.deep.equal(newState)
       expect(state.todoList).to.equal(newList)
@@ -69,15 +101,15 @@ describe('RecomposedStore', () => {
    it('can update fields', () => {
       const newList: TodoItem[] = []
       store.updateFields({ todoList: () => newList })
-      expect(state).to.deep.equal({ todoList: newList })
+      expect(state).to.deep.equal({ todoList: newList, flag: false })
       expect(state.todoList).to.equal(newList)
       expect(stateTransitions).to.equal(1)
    })
 
    it('can update state', () => {
       const newList: TodoItem[] = []
-      store.update(() => ({ todoList: newList }))
-      expect(state).to.deep.equal({ todoList: newList })
+      store.update(() => ({ todoList: newList, flag: false }))
+      expect(state).to.deep.equal({ todoList: newList, flag: false })
       expect(state.todoList).to.equal(newList)
       expect(stateTransitions).to.equal(1)
    })

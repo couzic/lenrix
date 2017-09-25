@@ -1,8 +1,10 @@
 import { Observable } from 'rxjs/Observable'
 import { FieldLenses, Store } from './Store'
 import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { ReadableStore } from './ReadableStore'
+import { shallowEquals } from './shallowEquals'
 
-export class RecomposedStore<ParentState extends object, State> implements Store<State> {
+export class RecomposedStore<ParentState extends object, State> extends ReadableStore<State> implements Store<State> {
 
    public readonly lens: UnfocusedLens<State> = createLens<State>()
    public readonly state$: Observable<State>
@@ -11,13 +13,13 @@ export class RecomposedStore<ParentState extends object, State> implements Store
 
    constructor(private readonly parentStore: Store<ParentState>,
                private fields: FieldLenses<ParentState, State>) {
+      super()
       this.state$ = parentStore.extract(fields)
       this.recomposedLens = createComposedLens<ParentState>().withFields(fields)
    }
 
    map<T>(selector: (state: State) => T): Observable<T> {
-      // return this.state$.map(selector).distinctUntilChanged()
-      throw Error('Not implemented yet')
+      return this.state$.map(selector).distinctUntilChanged(shallowEquals)
    }
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {

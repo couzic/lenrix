@@ -27,6 +27,10 @@ export class RootStore<State extends object> extends ReadableStore<State> implem
       this.state$ = stateSubject.distinctUntilChanged()
    }
 
+   map<T>(selector: (state: State) => T): Observable<T> {
+      return this.state$.map(selector).distinctUntilChanged()
+   }
+
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))

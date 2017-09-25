@@ -14,11 +14,11 @@ describe('RootStore', () => {
    beforeEach(() => {
       store = createStore(initialState)
       lens = store.lens
-      stateTransitions = 0
       store.state$.subscribe(newState => {
          state = newState
          ++stateTransitions
       })
+      stateTransitions = 1
    })
 
    it('holds initial state as state stream', () => {
@@ -30,6 +30,34 @@ describe('RootStore', () => {
    it('has Lens', () => {
       const result = lens.updateFields({ counter: (v) => v + 1 })(state)
       expect(result.counter).to.equal(43)
+   })
+
+   it('does not trigger state transitions when an update does not change any value', () => {
+      store.updateFields({ flag: value => value })
+
+      expect(stateTransitions).to.equal(1)
+   })
+
+   ///////////
+   // READ //
+   /////////
+
+   describe('.map()', () => {
+      it('returns selected state Observable', () => {
+         const counter$ = store.map(state => state.counter)
+         let counterValue = 0
+         counter$.subscribe(counter => counterValue = counter)
+         expect(counterValue).to.equal(42)
+      })
+      it('returns Observables that do not emit when unrelated slice of state is updated', () => {
+         const counter$ = store.map(state => state.counter)
+         let transitions = 0
+         counter$.subscribe(() => ++transitions)
+
+         store.updateFields({ flag: value => !value })
+
+         expect(transitions).to.equal(1)
+      })
    })
 
    /////////////
