@@ -2,6 +2,7 @@ import { FieldLenses, Store } from './Store'
 import { createLens, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { Observable } from 'rxjs/Observable'
+import { RecomposedStore } from './RecomposedStore'
 
 export class FocusedStore<ParentState, K extends keyof ParentState, State extends ParentState[K] & object>
    extends ReadableStore<State> implements Store<State> {
@@ -19,7 +20,7 @@ export class FocusedStore<ParentState, K extends keyof ParentState, State extend
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
-      throw Error('Not implemented yet')
+      return new RecomposedStore(this, fields)
    }
 
    setValue(newValue: State) {

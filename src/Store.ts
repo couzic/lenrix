@@ -3,12 +3,6 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
 import { FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 
-export type Selector<State, FieldType> = (state: State) => FieldType
-
-export type FieldExtractor<State, FieldType> = Selector<State, FieldType> | Lens<State, FieldType>
-
-export type FieldExtractors<State, ExtractedState> = object & NotAnArray & {[K in keyof ExtractedState]: FieldExtractor<State, ExtractedState[K]>}
-
 export type FieldLenses<State, RecomposedState> = object & NotAnArray & {[K in keyof RecomposedState]: Lens<State, RecomposedState[K]>}
 
 export interface Store<State> {
@@ -41,8 +35,8 @@ export interface Store<State> {
    pick<K extends keyof State>(this: Store<State & NotAnArray>,
                                ...keys: K[]): Observable<Pick<State, K>>
 
-   extract<ExtractedState>(this: Store<State>,
-                           fields: FieldExtractors<State, ExtractedState>): Observable<ExtractedState>
+   extract<ExtractedState>(this: Store<State & object>,
+                           fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState>
 
    /////////////
    // UPDATE //

@@ -1,19 +1,20 @@
 import { expect } from 'chai'
-import { UnfocusedLens } from 'immutable-lens'
+import { createLens } from 'immutable-lens'
 import { initialState, State } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
-describe('Store', () => {
+describe('ReadableStore', () => {
+
+   const lens = createLens<State>()
+   const todoListLens = lens.focusOn('todo').focusOn('list')
 
    let store: Store<State>
-   let lens: UnfocusedLens<State>
    let state: State
    let stateTransitions: number
 
    beforeEach(() => {
       store = createStore(initialState)
-      lens = store.lens
       stateTransitions = 0
       store.state$.subscribe(newState => {
          state = newState
@@ -79,15 +80,10 @@ describe('Store', () => {
    })
 
    describe('.extract()', () => {
-      it('extracts field by selector', () => {
-         const extracted$ = store.extract({ todoList: (state: State) => state.todo.list })
-         extracted$.subscribe(extracted => {
-            expect(extracted).to.deep.equal({ todoList: state.todo.list })
-            expect(extracted.todoList).to.equal(state.todo.list)
-         })
+      it('throws error when given a function', () => {
+         expect(() => store.extract(() => null)).to.throw()
       })
       it('extracts field by Lens', () => {
-         const todoListLens = lens.focusOn('todo').focusOn('list')
          const extracted$ = store.extract({ todoList: todoListLens })
          extracted$.subscribe(extracted => {
             expect(extracted).to.deep.equal({ todoList: state.todo.list })
@@ -96,7 +92,7 @@ describe('Store', () => {
       })
       it('returns Observables that do not emit when non-extracted slices are updated', () => {
          const todoList$ = store.extract({
-            todoList: (state: State) => state.todo.list
+            todoList: todoListLens
          })
          let transitions = 0
          todoList$.subscribe(() => ++transitions)
@@ -104,9 +100,6 @@ describe('Store', () => {
          store.updateFields({ flag: value => !value })
 
          expect(transitions).to.equal(1)
-      })
-      it('throws error when given a function', () => {
-         expect(() => store.extract(() => null)).to.throw()
       })
    })
 

@@ -159,4 +159,14 @@ describe('FocusedStore', () => {
       store.focusOn('count').state$.subscribe(value => count = value)
       expect(count).to.equal(state.count)
    })
+
+   it('can recompose', () => {
+      const recomposedStore = store.recompose({
+         todoList: lens.focusOn('list')
+      })
+      recomposedStore.state$.subscribe(recomposedState => {
+         expect(recomposedState).to.deep.equal({ todoList: state.list })
+         expect(recomposedState.todoList).to.equal(state.list)
+      })
+   })
 })

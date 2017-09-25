@@ -1,15 +1,17 @@
 import { Observable } from 'rxjs/Observable'
-import { FieldExtractors, FieldLenses, Store } from './Store'
-import { FieldUpdaters, FieldValues, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { FieldLenses, Store } from './Store'
+import { createComposedLens, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 
-export class RecomposedStore<SourceState, State> implements Store<State> {
+export class RecomposedStore<ParentState extends object, State> implements Store<State> {
 
    public readonly state$: Observable<State>
    public readonly lens: UnfocusedLens<State>
+   private recomposedLens: Lens<ParentState, State>
 
-   constructor(private readonly sourceStore: Store<SourceState>,
-               private fieldLenses: FieldLenses<SourceState, State>) {
-      this.state$ = sourceStore.extract(fieldLenses)
+   constructor(private readonly parentStore: Store<ParentState>,
+               private fields: FieldLenses<ParentState, State>) {
+      this.recomposedLens = createComposedLens<ParentState>().withFields(fields)
+      this.state$ = parentStore.extract(fields)
    }
 
    map<T>(selector: (state: State) => T): Observable<T> {
@@ -33,51 +35,24 @@ export class RecomposedStore<SourceState, State> implements Store<State> {
       throw Error('Not implemented yet')
    }
 
-   extract<ExtractedState>(fields: FieldExtractors<State, ExtractedState>): Observable<ExtractedState> {
+   extract<ExtractedState>(fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState> {
       throw Error('Not implemented yet')
    }
 
    setValue(newValue: State) {
-      this.setFieldValues(newValue)
+      this.parentStore.update(this.recomposedLens.setValue(newValue))
    }
 
    update(updater: Updater<State>) {
-      this.sourceStore.update(sourceState => {
-         const state = {} as any
-         const updatedKeys = Object.keys(this.fieldLenses)
-         updatedKeys.forEach(key => {
-            const lens = (this.fieldLenses as any)[key]
-            state[key] = lens.read(sourceState)
-         })
-         const newState = updater(state)
-         const keys = Object.keys(newState)
-         const updaters = keys.map(key => {
-            const newValue = (newState as any)[key]
-            const lens = (this.fieldLenses as any)[key]
-            return lens.setValue(newValue)
-         })
-         return this.sourceStore.lens.pipe(...updaters)(sourceState)
-      })
+      this.parentStore.update(this.recomposedLens.update(updater))
    }
 
    setFieldValues(newValues: FieldValues<State>) {
-      const keys = Object.keys(newValues)
-      const updaters = keys.map(key => {
-         const newValue = (newValues as any)[key]
-         const lens = (this.fieldLenses as any)[key]
-         return lens.setValue(newValue)
-      })
-      this.sourceStore.pipe(...updaters)
+      this.parentStore.update(this.recomposedLens.setFieldValues(newValues))
    }
 
    updateFields(updaters: FieldUpdaters<State>) {
-      const keys = Object.keys(updaters)
-      const sourceUpdaters = keys.map(key => {
-         const updater = (updaters as any)[key]
-         const lens = (this.fieldLenses as any)[key]
-         return lens.update(updater)
-      })
-      this.sourceStore.pipe(...sourceUpdaters)
+      this.parentStore.update(this.recomposedLens.updateFields(updaters))
    }
 
    pipe(...updaters: Updater<State>[]) {
