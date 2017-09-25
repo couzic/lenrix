@@ -38,7 +38,7 @@ describe('FocusedStore', () => {
       expect(stateTransitions).to.equal(1)
    })
 
-   it('holds Lens', () => {
+   it('has Lens', () => {
       const result = lens.updateFields({ count: (v) => v + 1 })(state)
       expect(result.count).to.equal(43)
    })

@@ -1,17 +1,18 @@
 import { Observable } from 'rxjs/Observable'
 import { FieldLenses, Store } from './Store'
-import { createComposedLens, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 
 export class RecomposedStore<ParentState extends object, State> implements Store<State> {
 
+   public readonly lens: UnfocusedLens<State> = createLens<State>()
    public readonly state$: Observable<State>
-   public readonly lens: UnfocusedLens<State>
-   private recomposedLens: Lens<ParentState, State>
+
+   private readonly recomposedLens: Lens<ParentState, State>
 
    constructor(private readonly parentStore: Store<ParentState>,
                private fields: FieldLenses<ParentState, State>) {
-      this.recomposedLens = createComposedLens<ParentState>().withFields(fields)
       this.state$ = parentStore.extract(fields)
+      this.recomposedLens = createComposedLens<ParentState>().withFields(fields)
    }
 
    map<T>(selector: (state: State) => T): Observable<T> {
@@ -56,6 +57,7 @@ export class RecomposedStore<ParentState extends object, State> implements Store
    }
 
    pipe(...updaters: Updater<State>[]) {
+      this.parentStore.update(this.recomposedLens.pipe(...updaters))
    }
 
 }

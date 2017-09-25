@@ -27,7 +27,7 @@ describe('RootStore', () => {
       expect(stateTransitions).to.equal(1)
    })
 
-   it('holds Lens', () => {
+   it('has Lens', () => {
       const result = lens.updateFields({ counter: (v) => v + 1 })(state)
       expect(result.counter).to.equal(43)
    })
