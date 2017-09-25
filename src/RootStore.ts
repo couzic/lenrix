@@ -9,12 +9,13 @@ import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { FocusedStore } from './FocusedStore'
 import { ReadableStore } from './ReadableStore'
+import { RecomposedStore } from './RecomposedStore'
 
 export class RootStore<State extends object> extends ReadableStore<State> implements Store<State> {
 
    private readonly updaters$ = new Subject<Updater<State>>()
-   public readonly state$: Observable<State>
 
+   public readonly state$: Observable<State>
    public readonly lens: UnfocusedLens<State> = createLens<State>()
 
    constructor(private readonly initialState: State) {
@@ -32,7 +33,7 @@ export class RootStore<State extends object> extends ReadableStore<State> implem
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
-      return this as any
+      return new RecomposedStore<State, RecomposedState>(this, fields)
    }
 
    setValue(newValue: State) {

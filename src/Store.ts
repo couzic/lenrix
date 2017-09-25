@@ -20,24 +20,29 @@ export interface Store<State> {
    // FOCUS //
    //////////
 
-   focusOn<K extends keyof State>(this: Store<State & NotAnArray>, key: K): Store<State[K]>
+   focusOn<K extends keyof State>(this: Store<State & NotAnArray>,
+                                  key: K): Store<State[K]>
 
    // TODO API Design
    // focusWith<U>(this: Store<State & object & NotAnArray>, lens: Lens<State, U>): Store<U> // Maybe unnecessary, store can already focus
    // focusFields<K extends keyof State>(this: Store<State & object & NotAnArray>, ...keys: K[]): Store<Pick<State, K>> // Syntactic sugar for recompose
-   recompose<RecomposedState>(this: Store<State & object & NotAnArray>, fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
+   recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
+                              fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
 
    ///////////
    // READ //
    /////////
 
-   pluck<K extends keyof State>(this: Store<State & NotAnArray>, key: K): Observable<State[K]>
+   pluck<K extends keyof State>(this: Store<State & NotAnArray>,
+                                key: K): Observable<State[K]>
 
    map<T>(selector: (state: State) => T): Observable<T>
 
-   pick<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Observable<Pick<State, K>>
+   pick<K extends keyof State>(this: Store<State & NotAnArray>,
+                               ...keys: K[]): Observable<Pick<State, K>>
 
-   extract<ExtractedState>(this: Store<State>, fields: FieldExtractors<State, ExtractedState>): Observable<ExtractedState>
+   extract<ExtractedState>(this: Store<State>,
+                           fields: FieldExtractors<State, ExtractedState>): Observable<ExtractedState>
 
    /////////////
    // UPDATE //
@@ -47,9 +52,11 @@ export interface Store<State> {
 
    update(updater: Updater<State>): void
 
-   setFieldValues(this: Store<State & NotAnArray>, newValues: FieldValues<State>): void
+   setFieldValues(this: Store<State & NotAnArray>,
+                  newValues: FieldValues<State>): void
 
-   updateFields(this: Store<State & NotAnArray>, updaters: FieldUpdaters<State>): void
+   updateFields(this: Store<State & NotAnArray>,
+                updaters: FieldUpdaters<State>): void
 
    pipe(...updaters: Updater<State>[]): void
 

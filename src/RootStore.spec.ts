@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { UnfocusedLens } from 'immutable-lens'
-import { initialState, State, TodoItem } from '../test/State'
+import { initialState, State } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
-describe('Store', () => {
+describe('RootStore', () => {
 
    let store: Store<State>
    let lens: UnfocusedLens<State>
@@ -132,17 +132,13 @@ describe('Store', () => {
       expect(counter).to.equal(42)
    })
 
-   describe('.recompose()', () => {
-      let recomposedStore: Store<{ todoList: TodoItem[] }>
-      beforeEach(() => {
-         recomposedStore = store.recompose({
-            todoList: lens.focusOn('todo').focusOn('list')
-         })
+   it('can recompose', () => {
+      const recomposedStore = store.recompose({
+         todoList: lens.focusOn('todo').focusOn('list')
       })
-      it('composes new state', () => {
-         recomposedStore.state$.subscribe(recomposedState => {
-            expect(recomposedState.todoList).to.deep.equal({ todoList: state.todo.list })
-         })
+      recomposedStore.state$.subscribe(recomposedState => {
+         expect(recomposedState).to.deep.equal({ todoList: state.todo.list })
+         expect(recomposedState.todoList).to.equal(state.todo.list)
       })
    })
 
