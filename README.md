@@ -54,10 +54,33 @@ const counter4$: Observable<number> = store.focusOn('counter').state$
 ### Create
 
 #### `createStore()`
+```typescript
+import {createStore} from 'lib'
+
+type State = {
+   user: {
+      id:number
+      name: string
+   }
+}
+
+const initialState: State = {
+   user: {
+      id: 123,
+      name: 'John Doe'
+   }
+}
+
+const store = createStore(initialState)
+```
 
 ### Focus
 
 #### `focusOn()`
+
+#### `focusWith()`
+
+#### `focusPath()`
 
 #### `recompose()`
 

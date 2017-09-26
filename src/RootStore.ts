@@ -1,4 +1,4 @@
-import { createLens, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
+import { createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
@@ -8,10 +8,10 @@ import { FieldLenses, Store } from './Store'
 import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { FocusedStore } from './FocusedStore'
-import { ReadableStore } from './ReadableStore'
+import { AbstractStore } from './AbstractStore'
 import { RecomposedStore } from './RecomposedStore'
 
-export class RootStore<State extends object> extends ReadableStore<State> implements Store<State> {
+export class RootStore<State extends object> extends AbstractStore<State> implements Store<State> {
 
    private readonly updaters$ = new Subject<Updater<State>>()
 
@@ -34,6 +34,10 @@ export class RootStore<State extends object> extends ReadableStore<State> implem
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
+   }
+
+   focusWith<Target>(lens: Lens<State, Target>): Store<Target> {
+      return new FocusedStore(this.map(state => lens.read(state)), updater => this.update(lens.update(updater)))
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {

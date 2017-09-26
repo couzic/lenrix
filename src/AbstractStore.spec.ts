@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { createLens } from 'immutable-lens'
-import { initialState, State } from '../test/State'
+import { initialState, State, TodoItem } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
-describe('ReadableStore', () => {
+describe('AbstractStore', () => {
 
    const lens = createLens<State>()
-   const todoListLens = lens.focusOn('todo').focusOn('list')
+   const todoListLens = lens.focusPath('todo', 'list')
 
    let store: Store<State>
    let state: State
@@ -96,4 +96,13 @@ describe('ReadableStore', () => {
       })
    })
 
+   ////////////
+   // FOCUS //
+   //////////
+
+   it('can focus path', () => {
+      let todoList: TodoItem[] = []
+      store.focusPath('todo', 'list').state$.subscribe(val => todoList = val)
+      expect(todoList).to.equal(state.todo.list)
+   })
 })

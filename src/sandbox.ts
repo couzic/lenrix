@@ -66,6 +66,8 @@ const counter2$: Observable<number> = store.pluck('counter')
 const counter3$: Observable<number> = store.pick('counter').map(({ counter }) => counter)
 const counter5$: Observable<number> = store.focusOn('counter').state$
 
+
+const s = store.focusPath('todo', 'list')
 // Alternative way (useful for testing)
 // expect(store.currentState.counter).toEqual(0)
 // actions.increment()

@@ -160,9 +160,15 @@ describe('RootStore', () => {
       expect(counter).to.equal(42)
    })
 
+   it('can focus with lens', () => {
+      let counter = 0
+      store.focusWith(lens.focusOn('counter')).state$.subscribe(value => counter = value)
+      expect(counter).to.equal(42)
+   })
+
    it('can recompose', () => {
       const recomposedStore = store.recompose({
-         todoList: lens.focusOn('todo').focusOn('list')
+         todoList: lens.focusPath('todo', 'list')
       })
       recomposedStore.state$.subscribe(recomposedState => {
          expect(recomposedState).to.deep.equal({ todoList: state.todo.list })

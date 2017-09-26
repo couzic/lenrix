@@ -21,7 +21,7 @@ describe('RecomposedStore', () => {
    beforeEach(() => {
       sourceStore = createStore(initialState)
       store = sourceStore.recompose({
-         todoList: sourceStore.lens.focusOn('todo').focusOn('list'),
+         todoList: sourceStore.lens.focusPath('todo', 'list'),
          flag: sourceStore.lens.focusOn('flag')
       })
       sourceStore.state$.subscribe(newState => {
@@ -132,9 +132,15 @@ describe('RecomposedStore', () => {
    //////////
 
    it('can focus on key', () => {
-      store.focusOn('todoList').state$.subscribe(todoList => {
-         expect(todoList).to.equal(state.todoList)
-      })
+      let todoList: TodoItem[] = []
+      store.focusOn('todoList').state$.subscribe(val => todoList = val)
+      expect(todoList).to.equal(state.todoList)
+   })
+
+   it('can focus with lens', () => {
+      let todoList: TodoItem[] = []
+      store.focusWith(store.lens.focusOn('todoList')).state$.subscribe(val => todoList = val)
+      expect(todoList).to.equal(state.todoList)
    })
 
    it('can recompose', () => {

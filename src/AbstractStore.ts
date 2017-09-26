@@ -1,13 +1,21 @@
 import { Observable } from 'rxjs/Observable'
 import { shallowEquals } from './shallowEquals'
 import { FieldLenses, Store } from './Store'
-import { extract } from 'immutable-lens'
+import { extract, Lens, UnfocusedLens } from 'immutable-lens'
 
-export abstract class ReadableStore<State> {
+export abstract class AbstractStore<State> {
 
    readonly state$: Observable<State>
+   readonly lens: UnfocusedLens<State>
 
    abstract map<T>(selector: (state: State) => T): Observable<T>
+
+   abstract focusWith<Target>(lens: Lens<State, Target>): Store<Target>
+
+   focusPath(...keys: any[]): Store<any> {
+      const focusedLens = (this.lens as any).focusPath(...keys)
+      return this.focusWith(focusedLens)
+   }
 
    pluck<K extends keyof State>(key: K): Observable<State[K]> {
       return this.map(state => state[key])

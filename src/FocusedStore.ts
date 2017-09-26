@@ -1,11 +1,11 @@
 import { FieldLenses, Store } from './Store'
-import { createLens, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
-import { ReadableStore } from './ReadableStore'
+import { createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 import { RecomposedStore } from './RecomposedStore'
+import { AbstractStore } from './AbstractStore'
 
 export class FocusedStore<ParentState, K extends keyof ParentState, State extends ParentState[K] & object>
-   extends ReadableStore<State> implements Store<State> {
+   extends AbstractStore<State> implements Store<State> {
 
    lens: UnfocusedLens<State> = createLens<State>()
 
@@ -21,6 +21,10 @@ export class FocusedStore<ParentState, K extends keyof ParentState, State extend
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
+   }
+
+   focusWith<Target>(lens: Lens<State, Target>): Store<Target> {
+      return new FocusedStore(this.map(state => lens.read(state)), updater => this.update(lens.update(updater)))
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
