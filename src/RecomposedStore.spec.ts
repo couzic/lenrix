@@ -137,4 +137,13 @@ describe('RecomposedStore', () => {
       })
    })
 
+   it('can recompose', () => {
+      store
+         .recompose({
+            firstTodoItem: store.lens.focusOn('todoList').focusIndex(0)
+         })
+         .state$
+         .subscribe(({ firstTodoItem }) => expect(firstTodoItem).to.equal(state.todoList[0]))
+   })
+
 })

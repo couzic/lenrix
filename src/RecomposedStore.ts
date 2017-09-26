@@ -27,8 +27,9 @@ export class RecomposedStore<ParentState extends object, State> extends Readable
       return new FocusedStore(this.pluck(key), (updater) => this.lens.focusOn(key).update(updater))
    }
 
-   recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
-      throw Error('Not implemented yet')
+   recompose<RecomposedState>(this: Store<State & object>,
+                              fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState> {
+      return new RecomposedStore(this, fields)
    }
 
    setValue(newValue: State) {
