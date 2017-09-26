@@ -3,6 +3,7 @@ import { FieldLenses, Store } from './Store'
 import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { shallowEquals } from './shallowEquals'
+import { FocusedStore } from './FocusedStore'
 
 export class RecomposedStore<ParentState extends object, State> extends ReadableStore<State> implements Store<State> {
 
@@ -23,7 +24,7 @@ export class RecomposedStore<ParentState extends object, State> extends Readable
    }
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
-      throw Error('Not implemented yet')
+      return new FocusedStore(this.pluck(key), (updater) => this.lens.focusOn(key).update(updater))
    }
 
    recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {

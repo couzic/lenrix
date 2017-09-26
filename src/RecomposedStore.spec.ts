@@ -131,4 +131,10 @@ describe('RecomposedStore', () => {
    // FOCUS //
    //////////
 
+   it('can focus on key', () => {
+      store.focusOn('todoList').state$.subscribe(todoList => {
+         expect(todoList).to.equal(state.todoList)
+      })
+   })
+
 })
