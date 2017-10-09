@@ -1,4 +1,4 @@
-import { createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
+import { createLens, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
@@ -58,6 +58,10 @@ export class RootStore<State extends object> extends AbstractStore<State> implem
 
    updateFields(updaters: FieldUpdaters<State>) {
       this.updaters$.next(this.lens.updateFields(updaters))
+   }
+
+   updateFieldValues(fieldsUpdater: FieldsUpdater<State>) {
+      this.updaters$.next(this.lens.updateFieldValues(fieldsUpdater))
    }
 
    pipe(...updaters: Updater<State>[]) {

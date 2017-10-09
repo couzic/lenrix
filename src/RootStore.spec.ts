@@ -126,6 +126,22 @@ describe('RootStore', () => {
       })
    })
 
+   describe('.updateFieldValues()', () => {
+      it('can update field values', () => {
+         store.updateFieldValues(state => ({
+            counter: state.counter + 1
+         }))
+         expect(state.counter).to.equal(43)
+      })
+
+      it('does not trigger state transition when fields updater returns same value', () => {
+         store.updateFieldValues(state => ({
+            counter: state.counter
+         }))
+         expect(stateTransitions).to.equal(1)
+      })
+   })
+
    describe('.pipe()', () => {
       it('can pipe updaters', () => {
          const increment = lens.focusOn('counter').update(value => ++value)

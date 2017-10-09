@@ -114,6 +114,14 @@ describe('RecomposedStore', () => {
       expect(stateTransitions).to.equal(1)
    })
 
+   it('can update field values', () => {
+      const newList: TodoItem[] = []
+      store.updateFieldValues(state => ({ todoList: newList }))
+      expect(state).to.deep.equal({ todoList: newList, flag: false })
+      expect(state.todoList).to.equal(newList)
+      expect(stateTransitions).to.equal(1)
+   })
+
    it('can pipe updaters', () => {
       const initialListLength = state.todoList.length
       const addTodo = store.lens.updateFields({

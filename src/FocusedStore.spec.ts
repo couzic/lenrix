@@ -76,7 +76,7 @@ describe('FocusedStore', () => {
    // UPDATE //
    ///////////
 
-   describe('setValue()', () => {
+   describe('.setValue()', () => {
       it('can set new state', () => {
          store.setValue({
             ...initialState.todo,
@@ -91,7 +91,7 @@ describe('FocusedStore', () => {
       })
    })
 
-   describe('update()', () => {
+   describe('.update()', () => {
       it('can update state', () => {
          store.update(state => ({
             ...state,
@@ -106,7 +106,7 @@ describe('FocusedStore', () => {
       })
    })
 
-   describe('setFieldValues', () => {
+   describe('.setFieldValues()', () => {
       it('can set new field values', () => {
          store.setFieldValues({
             count: 24
@@ -122,7 +122,7 @@ describe('FocusedStore', () => {
       })
    })
 
-   describe('updateFields', () => {
+   describe('.updateFields()', () => {
       it('can update fields', () => {
          store.updateFields({
             count: value => ++value
@@ -138,7 +138,23 @@ describe('FocusedStore', () => {
       })
    })
 
-   describe('pipe()', () => {
+   describe('.updateFieldValues()', () => {
+      it('can update field values', () => {
+         store.updateFieldValues(state => ({
+            count: state.count + 1
+         }))
+         expect(state.count).to.equal(43)
+      })
+
+      it('does not trigger state transition when fields updater returns same value', () => {
+         store.updateFieldValues(state => ({
+            count: state.count
+         }))
+         expect(stateTransitions).to.equal(1)
+      })
+   })
+
+   describe('.pipe()', () => {
       it('can pipe updaters', () => {
          const increment = lens.focusOn('count').update(value => ++value)
          store.pipe(

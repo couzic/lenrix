@@ -1,8 +1,8 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 import { initialState, State, TodoItem } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
+import { createLens } from 'immutable-lens'
 
 describe('AbstractStore', () => {
 

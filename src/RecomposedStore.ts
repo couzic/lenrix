@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs/Observable'
 import { FieldLenses, Store } from './Store'
-import { createComposedLens, createLens, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
+import { createComposedLens, createLens, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
 import { FocusedStore } from './FocusedStore'
 import { AbstractStore } from './AbstractStore'
@@ -50,6 +50,10 @@ export class RecomposedStore<ParentState extends object, State> extends Abstract
 
    updateFields(updaters: FieldUpdaters<State>) {
       this.parentStore.update(this.recomposedLens.updateFields(updaters))
+   }
+
+   updateFieldValues(fieldsUpdater: FieldsUpdater<State>) {
+      this.parentStore.update(this.recomposedLens.updateFieldValues(fieldsUpdater))
    }
 
    pipe(...updaters: Updater<State>[]) {
