@@ -81,6 +81,18 @@ describe('RecomposedStore', () => {
    // UPDATE //
    ///////////
 
+   it('can reset', () => {
+      store.setFieldValues({ flag: true })
+      store.reset()
+      expect(state.flag).to.equal(initialState.flag)
+      expect(sourceState).to.deep.equal(initialState)
+   })
+
+   it('does not trigger state transition on reset when already set to initial state', () => {
+      store.reset()
+      expect(stateTransitions).to.equal(0)
+   })
+
    it('can set field values', () => {
       const newList: TodoItem[] = []
       store.setFieldValues({ todoList: newList })
@@ -143,6 +155,13 @@ describe('RecomposedStore', () => {
       let todoList: TodoItem[] = []
       store.focusOn('todoList').state$.subscribe(val => todoList = val)
       expect(todoList).to.equal(state.todoList)
+   })
+
+   it('can reset key-focused store', () => {
+      store.setFieldValues({ todoList: [] })
+      store.focusOn('todoList').reset()
+      expect(state.todoList).to.equal(initialState.todo.list)
+      expect(state.todoList).to.deep.equal(initialState.todo.list)
    })
 
    it('can focus with lens', () => {

@@ -1,15 +1,14 @@
-import { createLens, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
+import { createComposedLens, createLens, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/publishReplay'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { FieldLenses, Store } from './Store'
+import { Store } from './Store'
 import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { FocusedStore } from './FocusedStore'
 import { AbstractStore } from './AbstractStore'
-import { RecomposedStore } from './RecomposedStore'
 
 export class RootStore<State extends object> extends AbstractStore<State> implements Store<State> {
 
@@ -33,15 +32,24 @@ export class RootStore<State extends object> extends AbstractStore<State> implem
 
    focusOn<K extends keyof State>(key: K): Store<State[K]> {
       const focusedLens = this.lens.focusOn(key)
-      return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)))
+      const focusedInitialState = focusedLens.read(this.initialState)
+      return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)), focusedInitialState)
    }
 
    focusWith<Target>(lens: Lens<State, Target>): Store<Target> {
-      return new FocusedStore(this.map(state => lens.read(state)), updater => this.update(lens.update(updater)))
+      const focusedInitialState = lens.read(this.initialState)
+      return new FocusedStore(this.map(state => lens.read(state)), updater => this.update(lens.update(updater)), focusedInitialState)
    }
 
-   recompose<RecomposedState>(fields: FieldLenses<State, RecomposedState>): Store<RecomposedState> {
-      return new RecomposedStore<State, RecomposedState>(this, fields)
+   recompose<RecomposedState>(this: RootStore<State & object>, fields: any): Store<RecomposedState> {
+      const composedState$ = this.extract(fields) as Observable<RecomposedState>
+      const composedLens = createComposedLens<any>().withFields(fields)
+      const composedInitialState = composedLens.read(this.initialState) as RecomposedState
+      return new FocusedStore(composedState$, (updater) => this.update(composedLens.update(updater)), composedInitialState)
+   }
+
+   reset() {
+      this.setValue(this.initialState)
    }
 
    setValue(newValue: State) {

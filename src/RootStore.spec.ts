@@ -64,6 +64,20 @@ describe('RootStore', () => {
    // UPDATE //
    ///////////
 
+   describe('.reset()', () => {
+      it('sets state to initial state', () => {
+         store.setFieldValues({ counter: 0 })
+         store.reset()
+         expect(state).to.equal(initialState)
+         expect(state).to.deep.equal(initialState)
+      })
+
+      it('does not trigger state transition when already to initial state', () => {
+         store.reset()
+         expect(stateTransitions).to.equal(1)
+      })
+   })
+
    describe('.setValue()', () => {
       it('can set new state', () => {
          store.setValue({

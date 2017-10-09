@@ -4,7 +4,7 @@ import { UnfocusedLens } from 'immutable-lens'
 import { Store } from './Store'
 import { createStore } from './createStore'
 
-describe('FocusedStore', () => {
+describe('KeyFocusedStore', () => {
 
    let rootStore: Store<State>
    let store: Store<TodoState>
@@ -75,6 +75,19 @@ describe('FocusedStore', () => {
    /////////////
    // UPDATE //
    ///////////
+
+   describe('.reset()', () => {
+      it('sets state to initialState', () => {
+         store.setFieldValues({ count: 0 })
+         store.reset()
+         expect(state.count).to.equal(42)
+      })
+
+      it('does not trigger state transition when state already is initialState', () => {
+         store.reset()
+         expect(stateTransitions).to.equal(1)
+      })
+   })
 
    describe('.setValue()', () => {
       it('can set new state', () => {

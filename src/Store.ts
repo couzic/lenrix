@@ -96,8 +96,7 @@ export interface Store<State> {
    // TODO API Design
    // updateIndexValues()
 
-   // #6
-   // reset()
+   reset(this: Store<State>): void
 
    pipe(...updaters: Updater<State>[]): void
 
