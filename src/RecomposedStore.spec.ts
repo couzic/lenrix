@@ -36,6 +36,10 @@ describe('RecomposedStore', () => {
       stateTransitions = 0
    })
 
+   it('has path', () => {
+      expect(store.path).to.equal('root.recomposed(todoList, flag)')
+   })
+
    it('has Lens', () => {
       const newList: TodoItem[] = []
       const result = store.lens.setFieldValues({ todoList: newList })(state)

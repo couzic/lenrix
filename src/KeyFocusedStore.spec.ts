@@ -32,6 +32,10 @@ describe('KeyFocusedStore', () => {
       })
    })
 
+   it('has path', () => {
+      expect(store.path).to.equal('root.todo')
+   })
+
    it('holds initial state as state stream', () => {
       expect(state).to.equal(initialState.todo)
       expect(state).to.deep.equal(initialState.todo)
@@ -222,4 +226,5 @@ describe('KeyFocusedStore', () => {
          expect(recomposedState.todoList).to.equal(state.list)
       })
    })
+
 })

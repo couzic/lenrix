@@ -21,6 +21,10 @@ describe('RootStore', () => {
       stateTransitions = 1
    })
 
+   it('has path', () => {
+      expect(store.path).to.equal('root')
+   })
+
    it('holds initial state as state stream', () => {
       expect(state).to.equal(initialState)
       expect(state).to.deep.equal(initialState)

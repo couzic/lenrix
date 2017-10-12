@@ -9,6 +9,7 @@ export interface Store<State> {
 
    readonly state$: Observable<State>
    readonly lens: UnfocusedLens<State>
+   readonly path: string
 
    ////////////
    // FOCUS //
@@ -83,17 +84,15 @@ export interface Store<State> {
    setFieldValues(this: Store<State & NotAnArray>,
                   newValues: FieldValues<State>): void
 
-   // TODO API Design
-   // setIndexValues()
-
    updateFields(this: Store<State & NotAnArray>,
                 updaters: FieldUpdaters<State>): void
 
-   // #7
    updateFieldValues(this: Store<State & NotAnArray>,
                      fieldsUpdater: FieldsUpdater<State>): void
 
-   // TODO API Design
+   // TODO API DESIGN
+   // setIndexValues()
+   // updateIndexes()
    // updateIndexValues()
 
    reset(this: Store<State>): void
