@@ -20,6 +20,9 @@ export interface Store<State> {
 
    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
 
+   focusPath<K extends keyof State>(this: Store<State & NotAnArray>,
+                                    key: K): Store<State[K]>
+
    focusPath<K1 extends keyof State,
       K2 extends keyof State[K1]>(key1: K1, key2: K2): Store<State[K1][K2]>
 
