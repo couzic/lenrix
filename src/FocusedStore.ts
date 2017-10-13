@@ -24,6 +24,12 @@ export class FocusedStore<State> extends AbstractStore<State> implements Store<S
       return new FocusedStore(this.pluck(key), updater => this.update(focusedLens.update(updater)), this.path + '.' + key, focusedInitialState)
    }
 
+   focusFields<K extends keyof State>(this: Store<State & object>, ...keys: K[]): Store<Pick<State, K>> {
+      const fields = {} as any
+      keys.forEach(key => fields[key] = this.lens.focusOn(key))
+      return this.recompose(fields)
+   }
+
    focusWith<Target>(lens: Lens<State, Target>): Store<Target> {
       const focusedInitialState = lens.read(this.initialState)
       return new FocusedStore(this.map(state => lens.read(state)), updater => this.update(lens.update(updater)), this.path + lens.path, focusedInitialState)

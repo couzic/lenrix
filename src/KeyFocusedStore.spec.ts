@@ -211,6 +211,15 @@ describe('KeyFocusedStore', () => {
       expect(count).to.equal(state.count)
    })
 
+   it('can focus fields', () => {
+      let slice: any = {}
+      const fieldsStore = store.focusFields('input', 'count')
+      fieldsStore.state$.subscribe(value => slice = value)
+      expect(slice).to.deep.equal({ input: 'input', count: 42 })
+      fieldsStore.setFieldValues({ input: 'sliced' })
+      expect(slice).to.deep.equal({ input: 'sliced', count: 42 })
+   })
+
    it('can focus with lens', () => {
       let count = 0
       store.focusWith(lens.focusOn('count')).state$.subscribe(value => count = value)

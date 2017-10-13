@@ -168,6 +168,15 @@ describe('RecomposedStore', () => {
       expect(state.todoList).to.deep.equal(initialState.todo.list)
    })
 
+   it('can focus fields', () => {
+      let slice: any = {}
+      const fieldsStore = store.focusFields('flag')
+      fieldsStore.state$.subscribe(value => slice = value)
+      expect(slice).to.deep.equal({ flag: false })
+      fieldsStore.setFieldValues({ flag: true })
+      expect(slice).to.deep.equal({ flag: true })
+   })
+
    it('can focus with lens', () => {
       let todoList: TodoItem[] = []
       store.focusWith(store.lens.focusOn('todoList')).state$.subscribe(val => todoList = val)

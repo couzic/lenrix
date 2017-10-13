@@ -194,6 +194,15 @@ describe('RootStore', () => {
       expect(counter).to.equal(42)
    })
 
+   it('can focus fields', () => {
+      let slice: any = {}
+      const fieldsStore = store.focusFields('counter', 'flag')
+      fieldsStore.state$.subscribe(value => slice = value)
+      expect(slice).to.deep.equal({ counter: 42, flag: false })
+      fieldsStore.setFieldValues({ flag: true })
+      expect(slice).to.deep.equal({ counter: 42, flag: true })
+   })
+
    it('can focus with lens', () => {
       let counter = 0
       store.focusWith(lens.focusOn('counter')).state$.subscribe(value => counter = value)

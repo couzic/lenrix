@@ -51,6 +51,15 @@ store.focusOn(() => 'counter')
 // Focusing on unknown key @shouldNotCompile
 store.focusOn('unknown')
 
+// Focusing unknown field @shouldNotCompile
+store.focusFields('unknown')
+
+// Focusing array of fields @shouldNotCompile
+store.focusFields(['counter'])
+
+// Focusing fields on arrayFocusedStore @shouldNotCompile
+todoListStore.focusFields('length')
+
 // Focusing key on array-focused store @shouldNotCompile
 todoListStore.focusOn('length')
 
