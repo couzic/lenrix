@@ -97,6 +97,21 @@ describe('RecomposedStore', () => {
       expect(stateTransitions).to.equal(0)
    })
 
+   it('does not trigger state transition when previous and new values are the same', () => {
+      sourceStore.update(sourceStore.lens.focusPath('todo', 'list').setValue(state.todoList))
+      store.setFieldValues({
+         flag: state.flag,
+         todoList: state.todoList
+      })
+      expect(stateTransitions).to.equal(0)
+   })
+
+   it('does not trigger state transition when unrelated slice of state is updated', () => {
+      sourceStore.setFieldValues({ counter: sourceState.counter + 1 })
+      sourceStore.setFieldValues({ user: undefined })
+      expect(stateTransitions).to.equal(0)
+   })
+
    it('can set field values', () => {
       const newList: TodoItem[] = []
       store.setFieldValues({ todoList: newList })

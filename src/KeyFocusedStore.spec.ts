@@ -36,6 +36,10 @@ describe('KeyFocusedStore', () => {
       expect(store.path).to.equal('root.todo')
    })
 
+   it('has deep path', () => {
+      expect(store.focusOn('input').path).to.equal('root.todo.input')
+   })
+
    it('holds initial state as state stream', () => {
       expect(state).to.equal(initialState.todo)
       expect(state).to.deep.equal(initialState.todo)
