@@ -1,6 +1,6 @@
 import { Store } from './Store'
 import { Observable } from 'rxjs/Observable'
-import { createComposedLens, createLens, extract, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
+import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/publishBehavior'
@@ -59,14 +59,14 @@ export class LenrixStore<State> implements Store<State> {
 
    recompose<RecomposedState>(this: LenrixStore<State & object>, fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState> {
       if (typeof fields === 'function') throw Error('recompose() does not accept functions as arguments. You should try map() instead')
-      const composedLens = createComposedLens<any>().withFields(fields)
-      const composedState$ = this.extract(fields) as Observable<RecomposedState>
-      const composedInitialState = composedLens.read(this.initialState) as RecomposedState
+      const recomposedLens = this.lens.recompose(fields)
+      const recomposedState$ = this.state$.map(state => recomposedLens.read(state)).distinctUntilChanged(shallowEquals)
+      const recomposedInitialState = recomposedLens.read(this.initialState)
       return new LenrixStore(
-         composedState$,
+         recomposedState$,
          this.path + '.recomposed(' + Object.keys(fields).join(', ') + ')',
-         (updater) => this.update(composedLens.update(updater)),
-         composedInitialState)
+         (updater) => this.update(recomposedLens.update(updater)),
+         recomposedInitialState)
    }
 
    ///////////
@@ -89,10 +89,10 @@ export class LenrixStore<State> implements Store<State> {
       }).distinctUntilChanged(shallowEquals)
    }
 
-   extract<E>(this: Store<State & object>,
-              fields: FieldLenses<State & object, E>): Observable<E> {
-      if (typeof fields === 'function') throw Error('extract() does not accept functions as arguments. You should try map() instead')
-      return this.state$.map(state => extract(state, fields)).distinctUntilChanged(shallowEquals)
+   cherryPick<E>(this: Store<State & object>,
+                 fields: FieldLenses<State & object, E>): Observable<E> {
+      if (typeof fields === 'function') throw Error('cherryPick() does not accept functions as arguments. You should try map() instead')
+      return this.state$.map(state => cherryPick(state, fields)).distinctUntilChanged(shallowEquals)
    }
 
    /////////////

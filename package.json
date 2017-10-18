@@ -44,10 +44,10 @@
     "@types/chai": "^4.0.4",
     "@types/mocha": "^2.2.43",
     "chai": "^4.1.2",
-    "chalk": "^2.1.0",
-    "immutable-lens": "^0.1.1",
+    "chalk": "^2.2.0",
+    "immutable-lens": "^0.1.4",
     "mocha": "^3.5.3",
-    "rxjs": "^5.4.3",
+    "rxjs": "^5.5.0",
     "shx": "^0.2.2",
     "ts-node": "^3.2.1",
     "typescript": "^2.5.3"

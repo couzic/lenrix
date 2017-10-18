@@ -1,5 +1,5 @@
 import { createStore } from '../src/createStore'
-// @shouldNotCompile
+// @shouldNotCompile @shouldNotCompile
 import { Observable } from 'rxjs/Observable'
 import { Store } from '../src/Store'
 
@@ -145,47 +145,47 @@ store.pick('unknown')
 // Picking keys on array-focused store @shouldNotCompile
 todoListStore.pick('length')
 
-// Extracting null @shouldNotCompile
-store.extract(null)
+// Cherry-picking with null @shouldNotCompile
+store.cherryPick(null)
 
-// Extracting undefined @shouldNotCompile
-store.extract(undefined)
+// Cherry-picking with undefined @shouldNotCompile
+store.cherryPick(undefined)
 
-// Extracting number @shouldNotCompile
-store.extract(42)
+// Cherry-picking with number @shouldNotCompile
+store.cherryPick(42)
 
-// Extracting string @shouldNotCompile
-store.extract('counter')
+// Cherry-picking with string @shouldNotCompile
+store.cherryPick('counter')
 
-// Extracting array @shouldNotCompile
-store.extract([])
+// Cherry-picking with array @shouldNotCompile
+store.cherryPick([])
 
-// Extracting with null @shouldNotCompile
-store.extract({ a: null })
+// Cherry-picking with null Lens @shouldNotCompile
+store.cherryPick({ a: null })
 
-// Extracting with undefined @shouldNotCompile
-store.extract({ a: undefined })
+// Cherry-picking with undefined Lens @shouldNotCompile
+store.cherryPick({ a: undefined })
 
-// Extracting with number @shouldNotCompile
-store.extract({ a: 42 })
+// Cherry-picking with number instead of Lens @shouldNotCompile
+store.cherryPick({ a: 42 })
 
-// Extracting with string @shouldNotCompile
-store.extract({ a: 'counter' })
+// Cherry-picking with string instead of Lens @shouldNotCompile
+store.cherryPick({ a: 'counter' })
 
-// Extracting with object @shouldNotCompile
-store.extract({ a: {} })
+// Cherry-picking with object instead of Lens @shouldNotCompile
+store.cherryPick({ a: {} })
 
-// Extracting with array @shouldNotCompile
-store.extract({ a: [] })
+// Cherry-picking with array instead of Lens @shouldNotCompile
+store.cherryPick({ a: [] })
 
-// Extracting with wrong input type selector @shouldNotCompile
-store.extract({ a: (state: { counter: string }) => null })
+// Cherry-picking with wrong input type selector @shouldNotCompile
+store.cherryPick({ a: (state: { counter: string }) => null })
 
-// Assigning extract to wrong lens-extracted variable type @shouldNotCompile
-const lensExtractedState$: Observable<{ todoList: number[] }> = store.extract({ todoList: todoLens.focusOn('list') })
+// Assigning cherryPick to wrong lens-extracted variable type @shouldNotCompile
+const lensExtractedState$: Observable<{ todoList: number[] }> = store.cherryPick({ todoList: todoLens.focusOn('list') })
 
-// Extracting with wrong lens source type @shouldNotCompile
-store.extract({ a: todoStore.lens.focusOn('list') })
+// Cherry-picking with wrong lens source type @shouldNotCompile
+store.cherryPick({ a: todoStore.lens.focusOn('list') })
 
 /////////////
 // UPDATE //
@@ -222,8 +222,8 @@ counterStore.pipe((counter: number) => '42')
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////
 
-// Extracting function @shouldNotButDoesCompile
-store.extract(() => 'counter')
+// Cherry-picking function @shouldNotButDoesCompile
+store.cherryPick(() => 'counter')
 
 // Recomposing function @shouldNotButDoesCompile
 store.recompose(() => null) // TODO Implement runtime check

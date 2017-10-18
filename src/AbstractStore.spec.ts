@@ -72,19 +72,19 @@ describe('AbstractStore', () => {
       })
    })
 
-   describe('.extract()', () => {
+   describe('.cherryPick()', () => {
       it('throws error when given a function', () => {
-         expect(() => store.extract(() => null)).to.throw()
+         expect(() => store.cherryPick(() => null)).to.throw()
       })
       it('extracts field by Lens', () => {
-         const extracted$ = store.extract({ todoList: todoListLens })
+         const extracted$ = store.cherryPick({ todoList: todoListLens })
          extracted$.subscribe(extracted => {
             expect(extracted).to.deep.equal({ todoList: state.todo.list })
             expect(extracted.todoList).to.equal(state.todo.list)
          })
       })
       it('returns Observables that do not emit when non-extracted slices are updated', () => {
-         const todoList$ = store.extract({
+         const todoList$ = store.cherryPick({
             todoList: todoListLens
          })
          let transitions = 0

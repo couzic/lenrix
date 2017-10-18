@@ -74,8 +74,8 @@ export interface Store<State> {
    pick<K extends keyof State>(this: Store<State & NotAnArray>,
                                ...keys: K[]): Observable<Pick<State, K>>
 
-   extract<ExtractedState>(this: Store<State & object>,
-                           fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState>
+   cherryPick<ExtractedState>(this: Store<State & object>,
+                              fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState>
 
    /////////////
    // UPDATE //
