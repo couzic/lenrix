@@ -8,6 +8,7 @@ export type FieldLenses<State, RecomposedState> = object & NotAnArray & {[K in k
 export interface Store<State> {
 
    readonly state$: Observable<State>
+   readonly currentState: State
    readonly lens: UnfocusedLens<State>
    readonly path: string
 

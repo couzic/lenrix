@@ -3,15 +3,29 @@ import { Observable } from 'rxjs/Observable'
 import { createComposedLens, createLens, extract, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
 import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/publishBehavior'
+import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
 export class LenrixStore<State> implements Store<State> {
 
    lens: UnfocusedLens<State> = createLens<State>()
 
-   constructor(public readonly state$: Observable<State>,
+   private readonly stateSubject: BehaviorSubject<State>
+
+   get state$(): Observable<State> {
+      return this.stateSubject
+   }
+
+   get currentState(): State {
+      return this.stateSubject.getValue()
+   }
+
+   constructor(private injectedState$: Observable<State>,
                public readonly path: string,
                private readonly updateOnParent: (updater: Updater<State>) => void,
                private readonly initialState: State) {
+      this.stateSubject = new BehaviorSubject(initialState)
+      injectedState$.subscribe(this.stateSubject)
    }
 
    ////////////

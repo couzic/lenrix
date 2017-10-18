@@ -32,11 +32,11 @@ describe('KeyFocusedStore', () => {
       })
    })
 
-   it('has path', () => {
+   xit('has path', () => {
       expect(store.path).to.equal('root.todo')
    })
 
-   it('has deep path', () => {
+   xit('has deep path', () => {
       expect(store.focusOn('input').path).to.equal('root.todo.input')
    })
 
