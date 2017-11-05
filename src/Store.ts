@@ -1,11 +1,18 @@
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { FieldsUpdater, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { Lens, NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { ReadableStore } from './ReadableStore'
+import { UpdatableStore } from './UpdatableStore'
+import { ComputedStore } from './ComputedStore'
 
 export type FieldLenses<State, RecomposedState> = object & NotAnArray & {[K in keyof RecomposedState]: Lens<State, RecomposedState[K]>}
 
-export interface Store<State> {
+export type ValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state: State) => ComputedValues[K]}
+
+export type AsyncValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state$: Observable<State>) => Observable<ComputedValues[K]>}
+
+export interface Store<State> extends ReadableStore<State>, UpdatableStore<State> {
 
    readonly state$: Observable<State>
    readonly currentState: State
@@ -62,45 +69,21 @@ export interface Store<State> {
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
                               fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
 
-   ///////////
-   // READ //
-   /////////
-
-   pluck<K extends keyof State>(this: Store<State & NotAnArray>,
-                                key: K): Observable<State[K]>
-
-   map<T>(selector: (state: State) => T): Observable<T>
-
-   pick<K extends keyof State>(this: Store<State & NotAnArray>,
-                               ...keys: K[]): Observable<Pick<State, K>>
-
-   cherryPick<ExtractedState>(this: Store<State & object>,
-                              fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState>
-
-   /////////////
-   // UPDATE //
-   ///////////
-
-   setValue(newValue: State): void
-
-   update(updater: Updater<State>): void
-
-   setFieldValues(this: Store<State & NotAnArray>,
-                  newValues: FieldValues<State>): void
-
-   updateFields(this: Store<State & NotAnArray>,
-                updaters: FieldUpdaters<State>): void
-
-   updateFieldValues(this: Store<State & NotAnArray>,
-                     fieldsUpdater: FieldsUpdater<State>): void
-
    // TODO API DESIGN
    // setIndexValues()
    // updateIndexes()
    // updateIndexValues()
 
-   reset(this: Store<State>): void
+   //////////////
+   // COMPUTE //
+   ////////////
 
-   pipe(...updaters: Updater<State>[]): void
+   compute<ComputedValues>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
+
+   computeValues<ComputedValues>(values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
+
+   compute$<ComputedValues>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+
+   computeValues$<ComputedValues>(values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
 }

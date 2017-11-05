@@ -5,6 +5,7 @@ import { shallowEquals } from './shallowEquals'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/publishBehavior'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
+import { ComputedStore } from './ComputedStore'
 
 export class LenrixStore<State> implements Store<State> {
 
@@ -127,4 +128,23 @@ export class LenrixStore<State> implements Store<State> {
       this.updateOnParent(this.lens.pipe(...updaters))
    }
 
+   //////////////
+   // COMPUTE //
+   ////////////
+
+   compute<ComputedValues>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues> {
+      throw new Error('Method not implemented.')
+   }
+
+   computeValues<ComputedValues>(values: {[K in keyof ComputedValues]: (state: State) => ComputedValues[K] }): ComputedStore<State, ComputedValues> {
+      throw new Error('Method not implemented.')
+   }
+
+   compute$<ComputedValues>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues> {
+      throw new Error('Method not implemented.')
+   }
+
+   computeValues$<ComputedValues>(values$: {[K in keyof ComputedValues]: (state$: Observable<State>) => Observable<ComputedValues[K]> }, initialValues: ComputedValues): ComputedStore<State, ComputedValues> {
+      throw new Error('Method not implemented.')
+   }
 }
