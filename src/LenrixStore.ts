@@ -1,11 +1,12 @@
 import { Store } from './Store'
 import { Observable } from 'rxjs/Observable'
-import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, Lens, UnfocusedLens, Updater } from 'immutable-lens'
+import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/publishBehavior'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { ComputedStore } from './ComputedStore'
+import { ComputedStoreData, LenrixComputedStore } from './LenrixComputedStore'
 
 export class LenrixStore<State> implements Store<State> {
 
@@ -132,8 +133,18 @@ export class LenrixStore<State> implements Store<State> {
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues> {
-      throw new Error('Method not implemented.')
+   compute<ComputedValues>(this: LenrixStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues> {
+      const computedValues = computer(this.initialState)
+      const data$: Observable<ComputedStoreData<State, ComputedValues>> = this.state$.map(normalizedState => ({
+         normalizedState,
+         computedValues
+      }))
+      return new LenrixComputedStore(
+         data$,
+         this.path + '.compute(' + Object.keys(computedValues).join(', ') + ')',
+         updater => this.update(updater as any),
+         { normalizedState: this.initialState, computedValues }
+      )
    }
 
    computeValues<ComputedValues>(values: {[K in keyof ComputedValues]: (state: State) => ComputedValues[K] }): ComputedStore<State, ComputedValues> {

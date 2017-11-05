@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { Lens, NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { FieldsUpdater, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 import { ComputedStore } from './ComputedStore'
@@ -74,16 +74,27 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    // updateIndexes()
    // updateIndexValues()
 
+   /////////////
+   // UPDATE //
+   ///////////
+
+   update(updater: Updater<State>): void
+
+   updateFieldValues(this: Store<State & NotAnArray>,
+                     fieldsUpdater: FieldsUpdater<State>): void
+
+   pipe(...updaters: Updater<State>[]): void
+
    //////////////
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
+   compute<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
 
-   computeValues<ComputedValues>(values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
+   computeValues<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
 
-   compute$<ComputedValues>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+   compute$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
-   computeValues$<ComputedValues>(values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+   computeValues$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
 }
