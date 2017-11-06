@@ -1,18 +1,33 @@
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { Lens, NotAnArray } from 'immutable-lens'
+import { FieldLenses, Lens, NotAnArray } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 import { ComputedStore } from './ComputedStore'
-
-export type FieldLenses<State, RecomposedState> = object & NotAnArray & {[K in keyof RecomposedState]: Lens<State, RecomposedState[K]>}
 
 export type ValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state: State) => ComputedValues[K]}
 
 export type AsyncValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state$: Observable<State>) => Observable<ComputedValues[K]>}
 
 export interface Store<State> extends ReadableStore<State>, UpdatableStore<State> {
+
+   // TODO API DESIGN
+   // setIndexValues()
+   // updateIndexes()
+   // updateIndexValues()
+
+   //////////////
+   // COMPUTE //
+   ////////////
+
+   compute<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
+
+   computeValues<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
+
+   compute$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+
+   computeValues$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
    ////////////
    // FOCUS //
@@ -22,6 +37,11 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
                                   key: K): Store<State[K]>
 
    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
+
+   focusFields<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Store<Pick<State, K>>
+
+   recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
+                              fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
 
    focusPath<K extends keyof State>(this: Store<State & NotAnArray>,
                                     key: K): Store<State[K]>
@@ -95,25 +115,4 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
       K6 extends keyof State[K1][K2][K3][K4][K5],
       K7 extends keyof State[K1][K2][K3][K4][K5][K6]>(path: [K1, K2, K3, K4, K5, K6, K7]): Store<State[K1][K2][K3][K4][K5][K6][K7]>
 
-   focusFields<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Store<Pick<State, K>>
-
-   recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
-                              fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
-
-   //////////////
-   // COMPUTE //
-   ////////////
-
-   compute<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
-
-   computeValues<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
-
-   compute$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
-
-   computeValues$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
-
-   // TODO API DESIGN
-   // setIndexValues()
-   // updateIndexes()
-   // updateIndexValues()
 }

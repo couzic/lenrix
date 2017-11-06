@@ -9,7 +9,7 @@ interface ComputedValues {
    todoListLength: number
 }
 
-describe('ComputedStore', () => {
+describe('LenrixComputedStore', () => {
 
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
@@ -67,6 +67,24 @@ describe('ComputedStore', () => {
       store.update(store.lens.focusPath('todo', 'list').setValue([]))
       expect(store.currentState.todoListLength).to.equal(0)
       expect(stateTransitions).to.equal(1)
+   })
+
+   it('can focus path with spread keys', () => {
+      const focused = store.focusPath('todo', 'list')
+      expect(focused.currentState).to.equal(state.todo.list)
+   })
+
+   it('can focus path with key array', () => {
+      const focused = store.focusPath(['todo', 'list'])
+      expect(focused.currentState).to.equal(state.todo.list)
+   })
+
+   it('can focus path with computed values', () => {
+      const focused = store.focusPath(['todo'], ['todoListLength'])
+      expect(focused.currentState).to.deep.equal({
+         ...state.todo,
+         todoListLength: 3
+      })
    })
 
 })

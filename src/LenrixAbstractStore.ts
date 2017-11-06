@@ -1,8 +1,7 @@
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 import { Observable } from 'rxjs/Observable'
-import { FieldLenses } from './Store'
-import { cherryPick, createLens, FieldsUpdater, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
+import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
 
 export abstract class LenrixAbstractStore<NormalizedState, ComputedValues, State extends NormalizedState & ComputedValues> implements ReadableStore<State>, UpdatableStore<NormalizedState> {
