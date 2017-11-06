@@ -67,7 +67,7 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    focusFields<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Store<Pick<State, K>>
 
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
-                              fields: FieldLenses<State, RecomposedState>): Store<RecomposedState>
+                              fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
 
    // TODO API DESIGN
    // setIndexValues()

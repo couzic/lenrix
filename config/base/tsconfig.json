@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "strict": true,
-    "strictFunctionTypes": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "lib": [

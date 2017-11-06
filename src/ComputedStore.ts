@@ -13,11 +13,11 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    // UPDATE //
    ///////////
 
-   update(updater: (state: NormalizedState, computedValues: ComputedValues) => NormalizedState): void
+   update(updater: (normalizedState: NormalizedState, computedValues: ComputedValues) => NormalizedState): void
 
-   updateFieldValues(fieldsUpdater: (state: NormalizedState, computedValues: ComputedValues) => FieldValues<NormalizedState>): void
+   updateFieldValues(fieldsUpdater: (normalizedState: NormalizedState, computedValues: ComputedValues) => FieldValues<NormalizedState>): void
 
-   pipe(...updaters: ((state: NormalizedState, computedValues: ComputedValues) => NormalizedState)[]): void
+   pipe(...updaters: ((normalizedState: NormalizedState, computedValues: ComputedValues) => NormalizedState)[]): void
 
    //////////////
    // COMPUTE //

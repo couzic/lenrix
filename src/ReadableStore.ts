@@ -16,6 +16,6 @@ export interface ReadableStore<State> {
                                ...keys: K[]): Observable<Pick<State, K>>
 
    cherryPick<ExtractedState>(this: Store<State & object>,
-                              fields: FieldLenses<State, ExtractedState>): Observable<ExtractedState>
+                              fields: FieldLenses<State & object, ExtractedState>): Observable<ExtractedState>
 
 }

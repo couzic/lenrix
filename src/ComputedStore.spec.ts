@@ -48,15 +48,27 @@ describe('ComputedStore', () => {
       expect(stateTransitions).to.equal(0)
    })
 
+   it('can update normalized state', () => {
+      store.update(state => ({
+         ...state,
+         counter: state.todo.list.length
+      }))
+      expect(store.currentState.counter).to.equal(3)
+      expect(stateTransitions).to.equal(1)
+   })
+
+   it('can update normalized state with computed values', () => {
+      store.update((state, computedValues) => ({
+         ...state,
+         counter: state.todo.list.length
+      }))
+      expect(stateTransitions).to.equal(1)
+   })
+
    it('recomputes value when state changes', () => {
       store.update(store.lens.focusPath('todo', 'list').setValue([]))
       expect(store.currentState.todoListLength).to.equal(0)
       expect(stateTransitions).to.equal(1)
-   })
-
-   it('can update normalized state', () => {
-      store.update((state, computedValues) => state)
-      store.update((state) => state)
    })
 
 })

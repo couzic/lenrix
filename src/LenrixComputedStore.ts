@@ -68,7 +68,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
       throw new Error('Method not implemented.')
    }
 
-   cherryPick<ExtractedState>(fields: FieldLenses<(NormalizedState & ComputedValues), ExtractedState>): Observable<ExtractedState> {
+   cherryPick<ExtractedState>(fields: FieldLenses<(NormalizedState & ComputedValues & object), ExtractedState>): Observable<ExtractedState> {
       throw new Error('Method not implemented.')
    }
 
