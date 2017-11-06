@@ -46,7 +46,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
    focusPath(...params: any[]): any {
       const keys = params[0] instanceof Array ? params[0] : params // Handle spread keys
       const focusedLens = (this.lens as any).focusPath(...keys)
-      if (params.length === 2 && params[1] instanceof Array) { // Pass computed values
+      if (params.length === 2 && params[1] instanceof Array) { // With computed values
          const computedValueKeys: (keyof ComputedValues)[] = params[1]
          const toFocusedData = (data: ComputedStoreData<NormalizedState, ComputedValues>) => {
             const normalizedState = focusedLens.read(data.normalizedState)
@@ -56,8 +56,8 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
          }
          return new LenrixComputedStore(
             this.dataSubject.map(toFocusedData),
-            this.path + '.' + params[0].join('.'),
-            (updater) => this.update(updater),
+            this.path + focusedLens.path,
+            updater => this.update(updater),
             toFocusedData(this.initialData)
          )
       } else { // Without computed values
@@ -70,7 +70,40 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
    }
 
    focusFields(...params: any[]): any {
-      throw new Error('Method not implemented.')
+      const keys: (keyof NormalizedState)[] = params[0] instanceof Array ? params[0] : params // Handle spread keys
+      const path = this.path + '.pick(' + keys.join(',') + ')'
+      const pickFields = (state: NormalizedState) => {
+         const fields: Partial<NormalizedState> = {}
+         keys.forEach(key => fields[key] = state[key])
+         return fields
+      }
+      const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
+         const fields = pickFields(state)
+         const updatedFields = updater(fields)
+         return { ...state as object, ...updatedFields as object } as NormalizedState
+      })
+      if (params.length === 2 && params[1] instanceof Array) { // With computed values
+         const computedValueKeys: (keyof ComputedValues)[] = params[1]
+         const toPickedData = (data: ComputedStoreData<NormalizedState, ComputedValues>) => {
+            const normalizedState = pickFields(data.normalizedState)
+            const computedValues: Partial<ComputedValues> = {}
+            computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+            return { normalizedState, computedValues }
+         }
+         return new LenrixComputedStore(
+            this.dataSubject.map(toPickedData),
+            path,
+            updateOnParent,
+            toPickedData(this.initialData)
+         )
+      } else { // Without computed values
+         return new LenrixStore(
+            this.map(pickFields),
+            path,
+            updateOnParent,
+            pickFields(this.initialState)
+         )
+      }
    }
 
    recompose(...params: any[]): any {

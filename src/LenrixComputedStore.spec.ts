@@ -87,4 +87,29 @@ describe('LenrixComputedStore', () => {
       })
    })
 
+   it('can focus fields with spread keys', () => {
+      const focused = store.focusFields('counter', 'flag')
+      expect(focused.currentState).to.deep.equal({
+         counter: state.counter,
+         flag: state.flag
+      })
+   })
+
+   it('can focus fields with key array', () => {
+      const focused = store.focusFields(['counter', 'flag'])
+      expect(focused.currentState).to.deep.equal({
+         counter: state.counter,
+         flag: state.flag
+      })
+   })
+
+   it('can focus fields with computedValues', () => {
+      const focused = store.focusFields(['counter', 'flag'], ['todoListLength'])
+      expect(focused.currentState).to.deep.equal({
+         counter: state.counter,
+         flag: state.flag,
+         todoListLength: 3
+      })
+   })
+
 })
