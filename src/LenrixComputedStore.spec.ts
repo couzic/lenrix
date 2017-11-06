@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { initialState, State } from '../test/State'
+import { initialState, State, TodoItem, TodoState } from '../test/State'
 import { Store } from './Store'
 import { createStore } from './createStore'
 import { createLens } from 'immutable-lens'
@@ -87,6 +87,42 @@ describe('LenrixComputedStore', () => {
       })
    })
 
+   describe('path-focused store', () => {
+      let pathFocusedStore: Store<TodoState>
+      let pathFocusedStateTransitions: number
+
+      beforeEach(() => {
+         pathFocusedStore = store.focusPath('todo')
+         pathFocusedStore.state$.subscribe(state => ++pathFocusedStateTransitions)
+         pathFocusedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(pathFocusedStateTransitions).to.equal(0)
+      })
+   })
+
+   describe('path-focused computed store', () => {
+      let pathFocusedStore: ComputedStore<TodoState, { todoListLength: number }>
+      let pathFocusedStateTransitions: number
+
+      beforeEach(() => {
+         pathFocusedStore = store.focusPath(['todo'], ['todoListLength'])
+         pathFocusedStore.state$.subscribe(state => ++pathFocusedStateTransitions)
+         pathFocusedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(pathFocusedStateTransitions).to.equal(0)
+      })
+   })
+
    it('can focus fields with spread keys', () => {
       const focused = store.focusFields('counter', 'flag')
       expect(focused.currentState).to.deep.equal({
@@ -112,6 +148,42 @@ describe('LenrixComputedStore', () => {
       })
    })
 
+   describe('fields-focused store', () => {
+      let fieldsFocusedStore: Store<{ flag: boolean }>
+      let fieldsFocusedStateTransitions: number
+
+      beforeEach(() => {
+         fieldsFocusedStore = store.focusFields('flag')
+         fieldsFocusedStore.state$.subscribe(state => ++fieldsFocusedStateTransitions)
+         fieldsFocusedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(fieldsFocusedStateTransitions).to.equal(0)
+      })
+   })
+
+   describe('fields-focused computed store', () => {
+      let fieldsFocusedStore: ComputedStore<{ flag: boolean }, { todoListLength: number }>
+      let fieldsFocusedStateTransitions: number
+
+      beforeEach(() => {
+         fieldsFocusedStore = store.focusFields(['flag'], ['todoListLength'])
+         fieldsFocusedStore.state$.subscribe(state => ++fieldsFocusedStateTransitions)
+         fieldsFocusedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(fieldsFocusedStateTransitions).to.equal(0)
+      })
+   })
+
    it('throws error when recomposing with function', () => {
       expect(() => store.recompose(() => null)).to.throw()
    })
@@ -132,4 +204,43 @@ describe('LenrixComputedStore', () => {
       expect(recomposed.currentState.todoList).to.deep.equal(state.todo.list)
    })
 
+   describe('recomposed store', () => {
+      let recomposedStore: Store<{ todoList: TodoItem[] }>
+      let recomposedStateTransitions: number
+
+      beforeEach(() => {
+         recomposedStore = store.recompose({
+            todoList: todoListLens
+         })
+         recomposedStore.state$.subscribe(state => ++recomposedStateTransitions)
+         recomposedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(recomposedStateTransitions).to.equal(0)
+      })
+   })
+
+   describe('recomposed computed store', () => {
+      let recomposedStore: ComputedStore<{ todoList: TodoItem[] }, { todoListLength: number }>
+      let recomposedStateTransitions: number
+
+      beforeEach(() => {
+         recomposedStore = store.recompose({
+            todoList: todoListLens
+         }, ['todoListLength'])
+         recomposedStore.state$.subscribe(state => ++recomposedStateTransitions)
+         recomposedStateTransitions = 0
+      })
+
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         store.updateFields({
+            counter: c => c + 1
+         })
+         expect(recomposedStateTransitions).to.equal(0)
+      })
+   })
 })

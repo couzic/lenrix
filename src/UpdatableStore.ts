@@ -7,18 +7,18 @@ export interface UpdatableStore<State> {
 
    setValue(newValue: State): void
 
-   setFieldValues(this: Store<State & NotAnArray>,
+   setFieldValues(this: UpdatableStore<State & NotAnArray>,
                   newValues: FieldValues<State>): void
 
    update(updater: Updater<State>): void
 
-   updateFields(this: Store<State & NotAnArray>,
+   updateFields(this: UpdatableStore<State & NotAnArray>,
                 updaters: FieldUpdaters<State>): void
 
-   updateFieldValues(this: Store<State & NotAnArray>,
+   updateFieldValues(this: UpdatableStore<State & NotAnArray>,
                      fieldsUpdater: FieldsUpdater<State>): void
 
-   reset(this: Store<State>): void // TODO Remove explicit this type ?
+   reset(this: UpdatableStore<State>): void // TODO Remove explicit this type ?
 
    pipe(...updaters: Updater<State>[]): void
 
