@@ -36,10 +36,6 @@ describe('ComputedStore', () => {
       expect(store.path).to.equal('root.compute(todoListLength)')
    })
 
-   ///////////
-   // READ //
-   /////////
-
    it('holds computed value in current state', () => {
       expect(store.currentState).to.deep.equal({
          ...rootStore.currentState,
@@ -58,10 +54,12 @@ describe('ComputedStore', () => {
    })
 
    it('can update normalized state with computed values', () => {
-      store.update((state, computedValues) => ({
+      const { todoListLength } = store.currentState
+      store.update(state => ({
          ...state,
-         counter: state.todo.list.length
+         counter: todoListLength
       }))
+      expect(store.currentState.counter).to.equal(3)
       expect(stateTransitions).to.equal(1)
    })
 

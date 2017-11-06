@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
-import { FieldsUpdater, Lens, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { Lens, NotAnArray } from 'immutable-lens'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 import { ComputedStore } from './ComputedStore'
@@ -13,11 +13,6 @@ export type ValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]
 export type AsyncValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state$: Observable<State>) => Observable<ComputedValues[K]>}
 
 export interface Store<State> extends ReadableStore<State>, UpdatableStore<State> {
-
-   readonly state$: Observable<State>
-   readonly currentState: State
-   readonly lens: UnfocusedLens<State>
-   readonly path: string
 
    ////////////
    // FOCUS //
@@ -69,22 +64,6 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
                               fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
 
-   // TODO API DESIGN
-   // setIndexValues()
-   // updateIndexes()
-   // updateIndexValues()
-
-   /////////////
-   // UPDATE //
-   ///////////
-
-   update(updater: Updater<State>): void
-
-   updateFieldValues(this: Store<State & NotAnArray>,
-                     fieldsUpdater: FieldsUpdater<State>): void
-
-   pipe(...updaters: Updater<State>[]): void
-
    //////////////
    // COMPUTE //
    ////////////
@@ -97,4 +76,8 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
 
    computeValues$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
+   // TODO API DESIGN
+   // setIndexValues()
+   // updateIndexes()
+   // updateIndexValues()
 }

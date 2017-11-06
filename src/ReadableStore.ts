@@ -1,4 +1,4 @@
-import { FieldLenses, NotAnArray } from 'immutable-lens'
+import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 import { Store } from './Store'
 
@@ -6,6 +6,7 @@ export interface ReadableStore<State> {
 
    readonly state$: Observable<State>
    readonly currentState: State
+   readonly path: string
 
    pluck<K extends keyof State>(this: ReadableStore<State & NotAnArray>,
                                 key: K): Observable<State[K]>

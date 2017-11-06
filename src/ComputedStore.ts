@@ -9,15 +9,11 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    readonly lens: UnfocusedLens<NormalizedState>
    readonly path: string
 
-   /////////////
-   // UPDATE //
-   ///////////
+   ////////////
+   // FOCUS //
+   //////////
 
-   update(updater: (normalizedState: NormalizedState, computedValues: ComputedValues) => NormalizedState): void
 
-   updateFieldValues(fieldsUpdater: (normalizedState: NormalizedState, computedValues: ComputedValues) => FieldValues<NormalizedState>): void
-
-   pipe(...updaters: ((normalizedState: NormalizedState, computedValues: ComputedValues) => NormalizedState)[]): void
 
    //////////////
    // COMPUTE //
