@@ -1,10 +1,11 @@
 import { ComputedStore } from './ComputedStore'
 import { Observable } from 'rxjs/Observable'
-import { NotAnArray, Updater } from 'immutable-lens'
+import { FieldLenses, NotAnArray, Updater } from 'immutable-lens'
 import { AsyncValueComputers, ValueComputers } from './Store'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { LenrixAbstractStore } from './LenrixAbstractStore'
 import { LenrixStore } from './LenrixStore'
+import { shallowEquals } from './shallowEquals'
 
 export interface ComputedStoreData<NormalizedState extends object & NotAnArray, ComputedValues extends object & NotAnArray> {
    normalizedState: NormalizedState,
@@ -26,7 +27,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
       return this.stateSubject.getValue()
    }
 
-   constructor(private data$: Observable<ComputedStoreData<NormalizedState, ComputedValues>>,
+   constructor(data$: Observable<ComputedStoreData<NormalizedState, ComputedValues>>,
                public readonly path: string,
                updateOnParent: (updater: Updater<NormalizedState>) => void,
                private readonly initialData: ComputedStoreData<NormalizedState, ComputedValues>) {
@@ -107,7 +108,34 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
    }
 
    recompose(...params: any[]): any {
-      throw new Error('Method not implemented.')
+      if (typeof params === 'function') throw Error('recompose() does not accept functions as arguments.')
+      const fields = params[0] as FieldLenses<NormalizedState, any>
+      const recomposedLens = this.lens.recompose(fields)
+      const path = this.path + recomposedLens.path
+      const updateOnParent = (updater: any) => this.update(recomposedLens.update(updater))
+      if (params.length === 2) { // With computed values
+         const computedValueKeys: (keyof ComputedValues)[] = params[1]
+         const toRecomposedData = (data: ComputedStoreData<NormalizedState, ComputedValues>) => {
+            const normalizedState = recomposedLens.read(data.normalizedState)
+            const computedValues: Partial<ComputedValues> = {}
+            computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+            return { normalizedState, computedValues }
+         }
+         return new LenrixComputedStore(
+            this.dataSubject.map(toRecomposedData),
+            path,
+            updateOnParent,
+            toRecomposedData(this.initialData)
+         )
+      } else { // Without computed values
+         const recomposedState$ = this.state$.map(state => recomposedLens.read(state)).distinctUntilChanged(shallowEquals)
+         const recomposedInitialState = recomposedLens.read(this.initialState)
+         return new LenrixStore(
+            recomposedState$,
+            path,
+            updateOnParent,
+            recomposedInitialState)
+      }
    }
 
    compute<NewComputedValues>(computer: (state: State) => NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {

@@ -112,4 +112,24 @@ describe('LenrixComputedStore', () => {
       })
    })
 
+   it('throws error when recomposing with function', () => {
+      expect(() => store.recompose(() => null)).to.throw()
+   })
+
+   it('can recompose', () => {
+      const recomposed = store.recompose({
+         todoList: lens.focusPath('todo', 'list')
+      })
+      expect(recomposed.currentState).to.deep.equal({ todoList: state.todo.list })
+      expect(recomposed.currentState.todoList).to.deep.equal(state.todo.list)
+   })
+
+   it('can recompose with computed values', () => {
+      const recomposed = store.recompose({
+         todoList: lens.focusPath('todo', 'list')
+      }, ['todoListLength'])
+      expect(recomposed.currentState).to.deep.equal({ todoList: state.todo.list, todoListLength: 3 })
+      expect(recomposed.currentState.todoList).to.deep.equal(state.todo.list)
+   })
+
 })
