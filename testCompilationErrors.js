@@ -8,7 +8,13 @@ const fs = require('fs')
 const glob = require('glob-promise')
 const path = require('path')
 
-const tsOptions = {noImplicitAny: false, noEmit: true, strict: true, target: 'es5'}
+const tsOptions = {
+   strict: true,
+   strictFunctionTypes: false,
+   noImplicitAny: false,
+   noEmit: true,
+   target: 'es5'
+}
 
 const lib = require('./config/base/tsconfig.json').compilerOptions.lib
 

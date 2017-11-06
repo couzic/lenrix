@@ -137,7 +137,7 @@ export class LenrixStore<State> implements Store<State> {
       const computedValues = computer(this.initialState)
       const data$: Observable<ComputedStoreData<State, ComputedValues>> = this.state$.map(normalizedState => ({
          normalizedState,
-         computedValues
+         computedValues: computer(normalizedState)
       }))
       return new LenrixComputedStore(
          data$,

@@ -1,9 +1,7 @@
 import { ComputedStore } from './ComputedStore'
 import { Observable } from 'rxjs/Observable'
-import { ReadableStore } from './ReadableStore'
 import { createLens, FieldLenses, FieldUpdaters, FieldValues, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
 import { AsyncValueComputers, ValueComputers } from './Store'
-import { UpdatableStore } from './UpdatableStore'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
 export interface ComputedStoreData<NormalizedState extends object & NotAnArray, ComputedValues extends object & NotAnArray> {
@@ -13,7 +11,7 @@ export interface ComputedStoreData<NormalizedState extends object & NotAnArray, 
 
 export class LenrixComputedStore<NormalizedState extends object & NotAnArray, ComputedValues extends object & NotAnArray, State extends NormalizedState & ComputedValues> implements ComputedStore<NormalizedState, ComputedValues> {
 
-   lens: UnfocusedLens<State> = createLens<State>()
+   lens: UnfocusedLens<NormalizedState> = createLens<NormalizedState>()
 
    private readonly dataSubject: BehaviorSubject<ComputedStoreData<NormalizedState, ComputedValues>>
    private readonly stateSubject: BehaviorSubject<State>
@@ -58,7 +56,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
       throw new Error('Method not implemented.')
    }
 
-   pluck<K extends keyof State>(this: ReadableStore<State & NotAnArray>, key: K): Observable<State[K]> {
+   pluck<K extends keyof State>(key: K): Observable<State[K]> {
       throw new Error('Method not implemented.')
    }
 
@@ -78,19 +76,19 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
       throw new Error('Method not implemented.')
    }
 
-   update(updater: (state: State) => NormalizedState) {
+   update(updater: (state: NormalizedState, computedValues: ComputedValues) => NormalizedState) {
+      this.updateOnParent(state => updater(state, this.dataSubject.getValue().computedValues))
+   }
+
+   setFieldValues(newValues: FieldValues<NormalizedState>) {
       throw new Error('Method not implemented.')
    }
 
-   setFieldValues(this: UpdatableStore<NormalizedState & NotAnArray>, newValues: FieldValues<NormalizedState>) {
+   updateFields(updaters: FieldUpdaters<NormalizedState>) {
       throw new Error('Method not implemented.')
    }
 
-   updateFields(this: UpdatableStore<NormalizedState & NotAnArray>, updaters: FieldUpdaters<NormalizedState>) {
-      throw new Error('Method not implemented.')
-   }
-
-   updateFieldValues(fieldsUpdater: (state: State) => FieldValues<NormalizedState>) {
+   updateFieldValues(fieldsUpdater: (state: NormalizedState, computedValues: ComputedValues) => FieldValues<NormalizedState>) {
       throw new Error('Method not implemented.')
    }
 
@@ -98,7 +96,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
       throw new Error('Method not implemented.')
    }
 
-   pipe(...updaters: ((state: State) => NormalizedState)[]) {
+   pipe(...updaters: ((state: NormalizedState, computedValues: ComputedValues) => NormalizedState)[]) {
       throw new Error('Method not implemented.')
    }
 
