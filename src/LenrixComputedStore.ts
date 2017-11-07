@@ -56,7 +56,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
             return { normalizedState, computedValues }
          }
          return new LenrixComputedStore(
-            this.dataSubject.map(toFocusedData),
+            this.dataSubject.map(toFocusedData).distinctUntilChanged(shallowEquals, data => data.computedValues),
             this.path + focusedLens.path,
             updater => this.update(updater),
             toFocusedData(this.initialData)
@@ -92,14 +92,14 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
             return { normalizedState, computedValues }
          }
          return new LenrixComputedStore(
-            this.dataSubject.map(toPickedData),
+            this.dataSubject.map(toPickedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
             path,
             updateOnParent,
             toPickedData(this.initialData)
          )
       } else { // Without computed values
          return new LenrixStore(
-            this.map(pickFields),
+            this.map(pickFields).distinctUntilChanged(shallowEquals),
             path,
             updateOnParent,
             pickFields(this.initialState)
@@ -122,7 +122,7 @@ export class LenrixComputedStore<NormalizedState extends object & NotAnArray, Co
             return { normalizedState, computedValues }
          }
          return new LenrixComputedStore(
-            this.dataSubject.map(toRecomposedData),
+            this.dataSubject.map(toRecomposedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
             path,
             updateOnParent,
             toRecomposedData(this.initialData)
