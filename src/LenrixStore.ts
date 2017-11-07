@@ -1,17 +1,30 @@
-import { Store } from './Store'
+import { ReadableStore } from './ReadableStore'
+import { UpdatableStore } from './UpdatableStore'
 import { Observable } from 'rxjs/Observable'
-import { FieldLenses, Lens, NotAnArray, Updater } from 'immutable-lens'
+import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
 import { shallowEquals } from './shallowEquals'
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/publishBehavior'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { ComputedStore } from './ComputedStore'
-import { ComputedStoreData, LenrixComputedStore } from './LenrixComputedStore'
-import { LenrixAbstractStore } from './LenrixAbstractStore'
+import { AsyncValueComputers, Store, ValueComputers } from './Store'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/distinctUntilChanged'
+import 'rxjs/add/operator/pluck'
 
-export class LenrixStore<State> extends LenrixAbstractStore<State, {}, State> implements Store<State> {
+export interface StoreData<NormalizedState, ComputedValues> {
+   normalizedState: NormalizedState,
+   computedValues: ComputedValues
+}
 
+export class LenrixStore<NormalizedState, ComputedValues, State> implements ReadableStore<State>, UpdatableStore<NormalizedState> {
+
+   lens: UnfocusedLens<NormalizedState> = createLens<NormalizedState>()
+
+   private readonly dataSubject: BehaviorSubject<StoreData<NormalizedState, ComputedValues>>
    private readonly stateSubject: BehaviorSubject<State>
+
+   get data$(): Observable<StoreData<NormalizedState, ComputedValues>> {
+      return this.dataSubject
+   }
 
    get state$(): Observable<State> {
       return this.stateSubject
@@ -21,83 +34,211 @@ export class LenrixStore<State> extends LenrixAbstractStore<State, {}, State> im
       return this.stateSubject.getValue()
    }
 
-   constructor(private readonly injectedState$: Observable<State>,
-               public readonly path: string,
-               updateOnParent: (updater: Updater<State>) => void,
-               initialState: State) {
-      super(updateOnParent, initialState)
-      this.stateSubject = new BehaviorSubject(initialState)
-      injectedState$.subscribe(this.stateSubject)
+   constructor(data$: Observable<StoreData<NormalizedState, ComputedValues>>,
+               dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
+               private readonly initialData: StoreData<NormalizedState, ComputedValues>,
+               private readonly updateOnParent: (updater: Updater<NormalizedState>) => void,
+               public readonly path: string) {
+      this.dataSubject = new BehaviorSubject(initialData)
+      this.stateSubject = new BehaviorSubject(dataToState(initialData))
+      data$.subscribe(this.dataSubject)
+      this.dataSubject
+         .map(dataToState)
+         .subscribe(this.stateSubject)
    }
 
    ////////////
    // FOCUS //
    //////////
 
-   focusOn<K extends keyof State>(key: K): Store<State[K]> {
+   focusOn(key: any): any {
       const focusedLens = this.lens.focusOn(key)
       return this.focusWith(focusedLens)
    }
 
-   focusPath(...keys: any[]): Store<any> {
-      const focusedLens = (this.lens as any).focusPath(...keys)
-      return this.focusWith(focusedLens)
-   }
-
-   focusWith<Target>(lens: Lens<State, Target>): Store<Target> {
-      const focusedInitialState = lens.read(this.initialState)
+   focusWith<Target>(lens: any): Store<Target> {
+      const focusedInitialState = lens.read(this.initialData.normalizedState)
       return new LenrixStore(
-         this.map(state => lens.read(state)),
-         this.path + lens.path,
+         this.dataSubject
+            .map(data => ({
+               normalizedState: lens.read(data.normalizedState),
+               computedValues: {}
+            }))
+            .distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         data => data.normalizedState,
+         { normalizedState: focusedInitialState, computedValues: {} },
          updater => this.update(lens.update(updater)),
-         focusedInitialState)
+         this.path + lens.path,
+      )
    }
 
-   focusFields<K extends keyof State>(this: Store<State & object>, ...keys: K[]): Store<Pick<State, K>> {
-      const fields = {} as any
-      keys.forEach(key => fields[key] = this.lens.focusOn(key))
-      return this.recompose(fields)
-   }
-
-   recompose<RecomposedState>(this: LenrixStore<State & object>, fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState> {
-      if (typeof fields === 'function') throw Error('recompose() does not accept functions as arguments. You should try map() instead')
-      const recomposedLens = this.lens.recompose(fields)
-      const recomposedState$ = this.state$.map(state => recomposedLens.read(state)).distinctUntilChanged(shallowEquals)
-      const recomposedInitialState = recomposedLens.read(this.initialState)
+   focusPath(...params: any[]): any {
+      const keys = params[0] instanceof Array ? params[0] : params // Handle spread keys
+      const focusedLens = (this.lens as any).focusPath(...keys)
+      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && params[1] instanceof Array)
+         ? params[1]
+         : []
+      const toFocusedData = (data: StoreData<NormalizedState, ComputedValues>) => {
+         const normalizedState = focusedLens.read(data.normalizedState)
+         const computedValues: Partial<ComputedValues> = {}
+         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         return { normalizedState, computedValues }
+      }
       return new LenrixStore(
-         recomposedState$,
-         this.path + '.recomposed(' + Object.keys(fields).join(', ') + ')',
-         (updater) => this.update(recomposedLens.update(updater)),
-         recomposedInitialState)
+         this.dataSubject.map(toFocusedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         (data: any) => (data.normalizedState instanceof Array || typeof data.normalizedState !== 'object' )
+            ? data.normalizedState
+            : { ...data.normalizedState, ...data.computedValues as object },
+         toFocusedData(this.initialData),
+         updater => this.update(focusedLens.update(updater)),
+         this.path + focusedLens.path
+      )
+   }
+
+   focusFields(...params: any[]): any {
+      const keys: (keyof NormalizedState)[] = params[0] instanceof Array ? params[0] : params // Handle spread keys
+      const path = this.path + '.pick(' + keys.join(',') + ')'
+      const pickFields = (state: NormalizedState) => {
+         const fields: Partial<NormalizedState> = {}
+         keys.forEach(key => fields[key] = state[key])
+         return fields
+      }
+      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && params[1] instanceof Array)
+         ? params[1]
+         : []
+      const toPickedData = (data: StoreData<NormalizedState, ComputedValues>) => {
+         const normalizedState = pickFields(data.normalizedState)
+         const computedValues: Partial<ComputedValues> = {}
+         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         return { normalizedState, computedValues }
+      }
+      const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
+         const fields = pickFields(state)
+         const updatedFields = updater(fields)
+         return { ...state as any, ...updatedFields as any }
+      })
+      return new LenrixStore(
+         this.dataSubject.map(toPickedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+         toPickedData(this.initialData),
+         updateOnParent,
+         path
+      )
+   }
+
+   recompose(...params: any[]): any {
+      if (typeof params === 'function') throw Error('recompose() does not accept functions as arguments.') // TODO Test error message
+      const fields = params[0] as FieldLenses<NormalizedState, any>
+      const recomposedLens = (this.lens as any).recompose(fields)
+      const path = this.path + '.' + recomposedLens.path
+      const computedValueKeys: (keyof ComputedValues)[] = params[1] || []
+      const toRecomposedData = (data: StoreData<NormalizedState, ComputedValues>) => {
+         const normalizedState = recomposedLens.read(data.normalizedState)
+         const computedValues: Partial<ComputedValues> = {}
+         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         return { normalizedState, computedValues }
+      }
+      return new LenrixStore(
+         this.dataSubject.map(toRecomposedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+         toRecomposedData(this.initialData),
+         updater => this.update(recomposedLens.update(updater)),
+         path
+      )
+   }
+
+   ///////////
+   // READ //
+   /////////
+
+   pluck<K extends keyof State>(key: K): Observable<State[K]> {
+      return this.map(state => state[key])
+   }
+
+   map<T>(selector: (state: State) => T): Observable<T> {
+      return this.state$.map(selector).distinctUntilChanged()
+   }
+
+   pick<K extends keyof State>(...
+                                  keys: K[]): Observable<Pick<State, K>> {
+      return this.state$.map(state => {
+         const subset = {} as any
+         keys.forEach(key => subset[key] = state[key])
+         return subset
+      }).distinctUntilChanged(shallowEquals)
+   }
+
+   cherryPick<E>(this: ReadableStore<State & object>, fields: FieldLenses<State & object, E>): Observable<E> {
+      if (typeof fields === 'function')
+         throw Error('cherryPick() does not accept functions as arguments. You should try map() instead')
+      return this.state$.map(state => cherryPick(state, fields)).distinctUntilChanged(shallowEquals)
+   }
+
+   /////////////
+   // UPDATE //
+   ///////////
+
+   reset() {
+      this.setValue(this.initialData.normalizedState)
+   }
+
+   setValue(newValue: NormalizedState) {
+      this.updateOnParent(this.lens.setValue(newValue))
+   }
+
+   update(updater: Updater<NormalizedState>) {
+      this.updateOnParent(this.lens.update(updater))
+   }
+
+   setFieldValues(newValues: FieldValues<NormalizedState>) {
+      this.updateOnParent(this.lens.setFieldValues(newValues))
+   }
+
+   updateFields(updaters: FieldUpdaters<NormalizedState>) {
+      this.updateOnParent(this.lens.updateFields(updaters))
+   }
+
+   updateFieldValues(fieldsUpdater: FieldsUpdater<NormalizedState>) {
+      this.updateOnParent(this.lens.updateFieldValues(fieldsUpdater))
+   }
+
+   pipe(...updaters: Updater<NormalizedState> []) {
+      this.updateOnParent(this.lens.pipe(...updaters))
    }
 
    //////////////
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(this: LenrixStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues> {
-      const computedValues = computer(this.initialState)
-      const data$: Observable<ComputedStoreData<State, ComputedValues>> = this.state$.map(normalizedState => ({
+   compute<NewComputedValues>(computer: (state: NormalizedState) => NewComputedValues): any {
+      const computedValues = computer(this.initialData.normalizedState)
+      const data$ = this.dataSubject.map(({ normalizedState, computedValues }) => ({
          normalizedState,
-         computedValues: computer(normalizedState)
+         computedValues: { ...computedValues as any, ...computer(normalizedState) as any }
       }))
-      return new LenrixComputedStore(
+      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
+         normalizedState: this.initialData.normalizedState,
+         computedValues: { ...this.initialData.computedValues as any }
+      }
+      return new LenrixStore(
          data$,
-         this.path + '.compute(' + Object.keys(computedValues).join(', ') + ')',
-         updater => this.update(updater as any),
-         { normalizedState: this.initialState, computedValues }
+         (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+         initialData,
+         (updater: any) => this.update(updater),
+         this.path + '.compute(' + Object.keys(computedValues).join(', ') + ')'
       )
    }
 
-   computeValues<ComputedValues>(values: {[K in keyof ComputedValues]: (state: State) => ComputedValues[K] }): ComputedStore<State, ComputedValues> {
+   computeValues<NewComputedValues>(values: ValueComputers<State, NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
       throw new Error('Method not implemented.')
    }
 
-   compute$<ComputedValues>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues> {
+   compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
       throw new Error('Method not implemented.')
    }
 
-   computeValues$<ComputedValues>(values$: {[K in keyof ComputedValues]: (state$: Observable<State>) => Observable<ComputedValues[K]> }, initialValues: ComputedValues): ComputedStore<State, ComputedValues> {
+   computeValues$<NewComputedValues>(values$: AsyncValueComputers<State, NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
       throw new Error('Method not implemented.')
    }
+
 }

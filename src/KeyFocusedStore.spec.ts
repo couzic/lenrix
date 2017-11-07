@@ -17,7 +17,7 @@ describe('KeyFocusedStore', () => {
 
    beforeEach(() => {
       rootStore = createStore(initialState)
-      store = rootStore.focusOn('todo')
+      store = rootStore.focusPath('todo')
       rootLens = rootStore.lens
       lens = store.lens
       rootStateTransitions = 0
@@ -41,7 +41,6 @@ describe('KeyFocusedStore', () => {
    })
 
    it('holds initial state as state stream', () => {
-      expect(state).to.equal(initialState.todo)
       expect(state).to.deep.equal(initialState.todo)
       expect(stateTransitions).to.equal(1)
    })
@@ -216,12 +215,10 @@ describe('KeyFocusedStore', () => {
    })
 
    it('can focus fields', () => {
-      let slice: any = {}
       const fieldsStore = store.focusFields('input', 'count')
-      fieldsStore.state$.subscribe(value => slice = value)
-      expect(slice).to.deep.equal({ input: 'input', count: 42 })
+      expect(fieldsStore.currentState).to.deep.equal({ input: 'input', count: 42 })
       fieldsStore.setFieldValues({ input: 'sliced' })
-      expect(slice).to.deep.equal({ input: 'sliced', count: 42 })
+      expect(fieldsStore.currentState).to.deep.equal({ input: 'sliced', count: 42 })
    })
 
    it('can focus with lens', () => {

@@ -4,7 +4,7 @@ import { AsyncValueComputers, Store, ValueComputers } from './Store'
 import { Observable } from 'rxjs/Observable'
 import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 
-export interface ComputedStore<NormalizedState extends object & NotAnArray, ComputedValues extends object & NotAnArray>
+export interface ComputedStore<NormalizedState extends object & NotAnArray, ComputedValues>
    extends ReadableStore<NormalizedState & ComputedValues>, UpdatableStore<NormalizedState> {
 
    readonly lens: UnfocusedLens<NormalizedState>
@@ -14,13 +14,13 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    // COMPUTE //
    ////////////
 
-   compute<NewComputedValues>(this: UpdatableStore<NormalizedState & object & NotAnArray>, computer: (state: NormalizedState & ComputedValues) => NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   compute<NewComputedValues extends object & NotAnArray>(computer: (state: NormalizedState & ComputedValues) => NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   computeValues<NewComputedValues>(this: UpdatableStore<NormalizedState & object & NotAnArray>, values: ValueComputers<NormalizedState & ComputedValues, NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   computeValues<NewComputedValues extends object & NotAnArray>(values: ValueComputers<NormalizedState & ComputedValues, NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   compute$<NewComputedValues>(this: UpdatableStore<NormalizedState & object & NotAnArray>, computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   computeValues$<NewComputedValues>(this: UpdatableStore<NormalizedState & object & NotAnArray>, values$: AsyncValueComputers<NormalizedState & ComputedValues, NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   computeValues$<NewComputedValues extends object & NotAnArray>(values$: AsyncValueComputers<NormalizedState & ComputedValues, NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
    ////////////
    // FOCUS //

@@ -9,7 +9,7 @@ interface ComputedValues {
    todoListLength: number
 }
 
-describe('LenrixComputedStore', () => {
+describe('LenrixStore', () => {
 
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')

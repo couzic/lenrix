@@ -37,7 +37,7 @@ describe('RecomposedStore', () => {
    })
 
    it('has path', () => {
-      expect(store.path).to.equal('root.recomposed(todoList, flag)')
+      expect(store.path).to.equal('root.recomposed({todoList, flag})')
    })
 
    it('has Lens', () => {
