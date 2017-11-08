@@ -103,5 +103,10 @@ const recoomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoLi
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////
 
+// Updating field values with unknown prop @shouldNotButDoesCompile
+store.updateFieldValues(state => ({
+   unknown: 'unknown'
+}))
+
 // Recomposing function @shouldNotButDoesCompile
 store.recompose(() => null) // TODO Implement runtime check

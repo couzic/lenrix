@@ -4,48 +4,35 @@ import { Store } from './Store'
 import { createStore } from './createStore'
 import { createLens } from 'immutable-lens'
 
-describe('AbstractStore', () => {
+describe('LenrixStore', () => {
 
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
    let store: Store<State>
    let state: State
-   let stateTransitions: number
 
    beforeEach(() => {
       store = createStore(initialState)
-      stateTransitions = 0
-      store.state$.subscribe(newState => {
-         state = newState
-         ++stateTransitions
-      })
+      store.state$.subscribe(newState => state = newState)
    })
 
-   ///////////
-   // READ //
-   /////////
-
-   it('can pluck field', () => {
-      const counter$ = store.pluck('counter')
-      let counterValue = 0
-      counter$.subscribe(counter => counterValue = counter)
-      expect(counterValue).to.equal(42)
-   })
-
-   describe('when updating unrelated slice of State', () => {
-
-      it('does not trigger .map() returned Observables to emit', () => {
-         const counter$ = store.map(state => state.counter)
-         let transitions = 0
-         counter$.subscribe(() => ++transitions)
-
-         store.updateFields({ flag: value => !value })
-
-         expect(transitions).to.equal(1)
+   describe('.pluck()', () => {
+      it('can pluck field', () => {
+         const counter$ = store.pluck('counter')
+         let counterValue = 0
+         counter$.subscribe(counter => counterValue = counter)
+         expect(counterValue).to.equal(42)
       })
 
-      it('does not trigger .pluck() returned Observables to emit', () => {
+      // it('can pluck path', () => { // TODO Implement
+      //    const list$ = store.pluck('todo', 'list')
+      //    let list: TodoItem[] = []
+      //    list$.subscribe(l => list = l)
+      //    expect(list).to.equal(initialState.todo.list)
+      // })
+
+      it('does not emit when updating unrelated slice of parent state', () => {
          const counter$ = store.pluck('counter')
          let transitions = 0
          counter$.subscribe(() => ++transitions)
@@ -59,9 +46,12 @@ describe('AbstractStore', () => {
    describe('.pick()', () => {
       it('picks fields', () => {
          const counterPick$ = store.pick('counter')
-         counterPick$.subscribe(counterPick => expect(counterPick).to.deep.equal({ counter: 42 }))
+         let counterPick = {} as any
+         counterPick$.subscribe(value => counterPick = value)
+         expect(counterPick).to.deep.equal({ counter: 42 })
       })
-      it('returns Observables that do not emit when omitted keys are updated', () => {
+
+      it('does not emit when updating unrelated slice of parent state', () => {
          const counter$ = store.pick('counter')
          let transitions = 0
          counter$.subscribe(() => ++transitions)
@@ -74,8 +64,9 @@ describe('AbstractStore', () => {
 
    describe('.cherryPick()', () => {
       it('throws error when given a function', () => {
-         expect(() => store.cherryPick(() => null)).to.throw()
+         expect(() => store.cherryPick(() => null)).to.throw('does not accept functions as arguments')
       })
+
       it('extracts field by Lens', () => {
          const extracted$ = store.cherryPick({ todoList: todoListLens })
          extracted$.subscribe(extracted => {
@@ -83,7 +74,8 @@ describe('AbstractStore', () => {
             expect(extracted.todoList).to.equal(state.todo.list)
          })
       })
-      it('returns Observables that do not emit when non-extracted slices are updated', () => {
+
+      it('does not emit when updating unrelated slice of parent state', () => {
          const todoList$ = store.cherryPick({
             todoList: todoListLens
          })
@@ -96,12 +88,4 @@ describe('AbstractStore', () => {
       })
    })
 
-   ////////////
-   // FOCUS //
-   //////////
-
-   it('can focus path', () => {
-      const focused = store.focusPath('todo', 'list')
-      expect(focused.currentState).to.equal(state.todo.list)
-   })
 })

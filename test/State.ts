@@ -3,6 +3,9 @@ export interface State {
    todo: TodoState
    user: User | undefined
    flag: boolean
+   sorting: {
+      order: 'ascending' | 'descending'
+   }
 }
 
 export interface TodoState {
@@ -36,5 +39,8 @@ export const initialState: State = {
       count: 42
    },
    user: undefined,
-   flag: false
+   flag: false,
+   sorting: {
+      order: 'ascending'
+   }
 }

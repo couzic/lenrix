@@ -85,7 +85,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          return { normalizedState, computedValues }
       }
       return new LenrixStore(
-         this.dataSubject.map(toFocusedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         this.dataSubject.map(toFocusedData).distinctUntilChanged((x, y) => shallowEquals(x.normalizedState, y.normalizedState) && shallowEquals(x.computedValues, y.computedValues)),
          (data: any) => (data.normalizedState instanceof Array || typeof data.normalizedState !== 'object' )
             ? data.normalizedState
             : { ...data.normalizedState, ...data.computedValues as object },
@@ -115,6 +115,9 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
          const fields = pickFields(state)
          const updatedFields = updater(fields)
+         Object.keys(updatedFields).forEach(key => {
+            if (keys.indexOf(key as any) < 0) throw Error(key + ' is not part of the updatable fields: ' + keys)
+         })
          return { ...state as any, ...updatedFields as any }
       })
       return new LenrixStore(
@@ -170,7 +173,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
 
    cherryPick<E>(this: ReadableStore<State & object>, fields: FieldLenses<State & object, E>): Observable<E> {
       if (typeof fields === 'function')
-         throw Error('cherryPick() does not accept functions as arguments. You should try map() instead')
+         throw Error('cherryPick() does not accept functions as arguments')
       return this.state$.map(state => cherryPick(state, fields)).distinctUntilChanged(shallowEquals)
    }
 

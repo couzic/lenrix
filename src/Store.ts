@@ -38,10 +38,14 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
 
    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
 
-   focusFields<K extends keyof State>(this: Store<State & NotAnArray>, ...keys: K[]): Store<Pick<State, K>>
-
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
                               fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
+
+   focusFields<K extends keyof State>(this: Store<State & NotAnArray>,
+                                      ...keys: K[]): Store<Pick<State, K>>
+
+   focusFields<K extends keyof State>(this: Store<State & NotAnArray>,
+                                      keys: K[]): Store<Pick<State, K>>
 
    focusPath<K extends keyof State>(this: Store<State & NotAnArray>,
                                     key: K): Store<State[K]>

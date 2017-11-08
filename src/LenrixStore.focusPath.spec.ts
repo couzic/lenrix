@@ -20,6 +20,8 @@ describe('LenrixStore.focusPath()', () => {
       store = rootStore.focusPath('todo')
       rootLens = rootStore.lens
       lens = store.lens
+      rootStateTransitions = 0
+      stateTransitions = 0
       rootStore.state$.subscribe(newState => {
          rootState = newState
          ++rootStateTransitions
@@ -28,8 +30,11 @@ describe('LenrixStore.focusPath()', () => {
          state = newState
          ++stateTransitions
       })
-      rootStateTransitions = 0
-      stateTransitions = 0
+   })
+
+   it('has Lens', () => {
+      const result = lens.updateFields({ count: (v) => v + 1 })(state)
+      expect(result.count).to.equal(43)
    })
 
    xit('has path', () => {
@@ -40,148 +45,59 @@ describe('LenrixStore.focusPath()', () => {
       expect(store.focusOn('input').path).to.equal('root.todo.input')
    })
 
-   it('holds initial state as current state', () => {
-      expect(store.currentState).to.deep.equal(initialState.todo)
-      expect(stateTransitions).to.equal(0)
-   })
-
-   it('holds initial state as state stream', () => {
-      expect(state).to.deep.equal(initialState.todo)
-      expect(stateTransitions).to.equal(0)
-   })
-
-   it('does not trigger state transitions when unrelated slice of ParentState is updated', () => {
-      rootStore.updateFields({ flag: value => !value })
-
-      expect(rootStateTransitions).to.equal(1)
-      expect(stateTransitions).to.equal(0)
-   })
-
-   it('has Lens', () => {
-      const result = lens.updateFields({ count: (v) => v + 1 })(state)
-      expect(result.count).to.equal(43)
-   })
-
-   ///////////
-   // READ //
-   /////////
-
    /////////////
    // UPDATE //
    ///////////
 
-   describe('.reset()', () => {
-      it('sets state to initialState', () => {
-         store.setFieldValues({ count: 0 })
-         store.reset()
-         expect(state.count).to.equal(42)
-      })
-
-      it('does not trigger state transition when state already is initialState', () => {
-         store.reset()
-         expect(stateTransitions).to.equal(0)
-      })
+   it('can update', () => {
+      store.update(state => ({
+         ...state,
+         count: state.list.length
+      }))
+      expect(store.currentState.count).to.equal(3)
+      expect(stateTransitions).to.equal(2)
    })
 
-   describe('.setValue()', () => {
-      it('can set new state', () => {
-         store.setValue({
-            ...initialState.todo,
-            count: 12
-         })
-         expect(state.count).to.equal(12)
-      })
+   ////////////
+   // STATE //
+   //////////
 
-      it('does not trigger state transition when same state', () => {
-         store.setValue(state)
-         expect(stateTransitions).to.equal(0)
-      })
+   it('holds initial state as current state', () => {
+      expect(store.currentState).to.deep.equal(initialState.todo)
    })
 
-   describe('.update()', () => {
-      it('can update state', () => {
-         store.update(state => ({
-            ...state,
-            count: 21
-         }))
-         expect(state.count).to.equal(21)
-      })
-
-      it('does not trigger state transition when updater returns same state', () => {
-         store.update(state => state)
-         expect(stateTransitions).to.equal(0)
-      })
+   it('holds initial state as state stream', () => {
+      expect(state).to.deep.equal(initialState.todo)
    })
 
-   describe('.setFieldValues()', () => {
-      it('can set new field values', () => {
-         store.setFieldValues({
-            count: 24
-         })
-         expect(state.count).to.equal(24)
-      })
+   it('does not emit new state when unrelated slice of ParentState is updated', () => {
+      rootStore.updateFields({ flag: value => !value })
 
-      it('does not trigger state transition when same field value', () => {
-         store.setFieldValues({
-            count: state.count
-         })
-         expect(stateTransitions).to.equal(0)
-      })
+      expect(rootStateTransitions).to.equal(2)
+      expect(stateTransitions).to.equal(1)
    })
 
-   describe('.updateFields()', () => {
-      it('can update fields', () => {
-         store.updateFields({
-            count: value => ++value
-         })
-         expect(state.count).to.equal(43)
-      })
+   ////////////
+   // FOCUS //
+   //////////
 
-      it('does not trigger state transition when updaters return same value', () => {
-         store.updateFields({
-            count: value => value
-         })
-         expect(stateTransitions).to.equal(0)
-      })
+   it('can focus path with spread keys', () => {
+      const focused = rootStore.focusPath('todo', 'list')
+      expect(focused.currentState).to.equal(initialState.todo.list)
    })
 
-   describe('.updateFieldValues()', () => {
-      it('can update field values', () => {
-         store.updateFieldValues(state => ({
-            count: state.count + 1
-         }))
-         expect(state.count).to.equal(43)
-      })
-
-      it('does not trigger state transition when fields updater returns same value', () => {
-         store.updateFieldValues(state => ({
-            count: state.count
-         }))
-         expect(stateTransitions).to.equal(0)
-      })
+   it('can focus path with key array', () => {
+      const focused = rootStore.focusPath(['todo', 'list'])
+      expect(focused.currentState).to.equal(initialState.todo.list)
    })
 
-   describe('.pipe()', () => {
-      it('can pipe updaters', () => {
-         const increment = lens.focusOn('count').update(value => ++value)
-         store.pipe(
-            increment,
-            increment,
-            increment
-         )
-         expect(state.count).to.equal(45)
-         expect(stateTransitions).to.equal(1)
-      })
-
-      it('does not trigger state transitions when all updaters returns same value', () => {
-         const identity = lens.focusOn('count').update(value => value)
-         store.pipe(
-            identity,
-            identity,
-            identity
-         )
-         expect(state.count).to.equal(42)
-         expect(stateTransitions).to.equal(0)
+   it('can focus path with computed values', () => {
+      const focused = rootStore
+         .compute(state => ({ todoListLength: state.todo.list.length }))
+         .focusPath(['todo'], ['todoListLength'])
+      expect(focused.currentState).to.deep.equal({
+         ...initialState.todo,
+         todoListLength: 3
       })
    })
 
