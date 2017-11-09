@@ -52,14 +52,15 @@ describe('LenrixStore.compute()', () => {
       expect(stateTransitions).to.equal(2)
    })
 
-   it('can update normalized state with computed values', () => {
-      const { todoListLength } = store.currentState
-      store.update(state => ({
-         ...state,
-         counter: todoListLength
-      }))
-      expect(store.currentState.counter).to.equal(3)
+   it('can reset', () => {
+      store.setFieldValues({
+         counter: state.counter + 1
+      })
+      expect(state.counter).to.equal(43)
       expect(stateTransitions).to.equal(2)
+      store.reset()
+      expect(state.counter).to.equal(42)
+      expect(stateTransitions).to.equal(3)
    })
 
    ////////////

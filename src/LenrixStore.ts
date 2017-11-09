@@ -1,14 +1,24 @@
-import { ReadableStore } from './ReadableStore'
-import { UpdatableStore } from './UpdatableStore'
-import { Observable } from 'rxjs/Observable'
-import { cherryPick, createLens, FieldLenses, FieldsUpdater, FieldUpdaters, FieldValues, UnfocusedLens, Updater } from 'immutable-lens'
-import { shallowEquals } from './shallowEquals'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { ComputedStore } from './ComputedStore'
-import { AsyncValueComputers, Store, ValueComputers } from './Store'
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/distinctUntilChanged'
-import 'rxjs/add/operator/pluck'
+import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/pluck';
+
+import {
+   cherryPick,
+   createLens,
+   FieldLenses,
+   FieldsUpdater,
+   FieldUpdaters,
+   FieldValues,
+   UnfocusedLens,
+   Updater,
+} from 'immutable-lens';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
+
+import { ReadableStore } from './ReadableStore';
+import { shallowEquals } from './shallowEquals';
+import { Store } from './Store';
+import { UpdatableStore } from './UpdatableStore';
 
 export interface StoreData<NormalizedState, ComputedValues> {
    normalizedState: NormalizedState,
@@ -227,7 +237,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       }))
       const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
          normalizedState: this.initialData.normalizedState,
-         computedValues: { ...this.initialData.computedValues as any }
+         computedValues: {} as any
       }
       return new LenrixStore(
          data$,
@@ -238,8 +248,22 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       )
    }
 
-   compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
-      throw new Error('Method not implemented.')
+   compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): any {
+      const computedSubject = new BehaviorSubject(initialValues)
+      const data$ = this.data$.map(({ normalizedState, computedValues }) => {
+         return { normalizedState, computedValues: { ...computedValues as any, ...initialValues as any } }
+      })
+      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
+         normalizedState: this.initialData.normalizedState,
+         computedValues: initialValues as any
+      }
+      return new LenrixStore(
+         data$,
+         (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+         this.initialData,
+         (updater: any) => this.update(updater),
+         this.path + '.compute$(' + Object.keys(initialValues).join(', ') + ')'
+      )
    }
 
 }
