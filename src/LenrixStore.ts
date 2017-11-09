@@ -1,6 +1,10 @@
+import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/pluck';
+import 'rxjs/add/operator/startWith';
 
 import {
    cherryPick,
@@ -50,7 +54,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    constructor(data$: Observable<StoreData<NormalizedState, ComputedValues>>,
-      dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
+      private readonly dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
       private readonly initialData: StoreData<NormalizedState, ComputedValues>,
       private readonly updateOnParent: (updater: Updater<NormalizedState>) => void,
       public readonly path: string) {
@@ -250,12 +254,18 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
 
    compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): any {
       const computedSubject = new BehaviorSubject(initialValues)
-      const data$ = this.data$.map(({ normalizedState, computedValues }) => {
-         return { normalizedState, computedValues: { ...computedValues as any, ...initialValues as any } }
-      })
+      const newComputedValues$ = computer$(this.data$.map(this.dataToState)).startWith(initialValues)
+      const data$ = Observable.combineLatest(
+         this.data$,
+         newComputedValues$,
+         (data, newComputedValues) => ({
+            normalizedState: data.normalizedState,
+            computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+         })
+      )
       const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
          normalizedState: this.initialData.normalizedState,
-         computedValues: initialValues as any
+         computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
       }
       return new LenrixStore(
          data$,

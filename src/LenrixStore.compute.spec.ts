@@ -83,6 +83,12 @@ describe('LenrixStore.compute()', () => {
       })
    })
 
+   it('computes value when state changes', () => {
+      expect(state.caret).to.equal('up')
+      store.focusPath('sorting', 'order').setValue('descending')
+      expect(state.caret).to.equal('down')
+   })
+
    describe('.focusPath() with computed values', () => {
       let focusedStore: ComputedStore<State['sorting'], ComputedValues>
       let focusedState: State['sorting'] & ComputedValues

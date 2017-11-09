@@ -11,10 +11,20 @@ import { Store } from './Store';
 
 interface State {
    name: string
+   todo: {
+      input: string
+      list: string[]
+   }
+   flag: boolean
 }
 
 const initialState: State = {
-   name: ''
+   name: '',
+   todo: {
+      input: '',
+      list: []
+   },
+   flag: false
 }
 
 interface ComputedValues {
@@ -37,7 +47,7 @@ describe('LenrixStore.compute$()', () => {
          state$ => state$
             .switchMap(state => isAvailable(state.name))
             .map(available => ({ available })),
-         { available: false })
+         { available: true })
       stateTransitions = 0
       store.state$.subscribe(newState => {
          state = newState
@@ -54,7 +64,7 @@ describe('LenrixStore.compute$()', () => {
    ///////////
 
    it('can update normalized state', () => {
-      store.update(state => ({ name: 'Bob' }))
+      store.setFieldValues({ name: 'Bob' })
       expect(state.name).to.equal('Bob')
    })
 
@@ -73,7 +83,7 @@ describe('LenrixStore.compute$()', () => {
 
    it('holds initial state as current state', () => {
       expect(store.currentState).to.deep.equal({
-         name: '',
+         ...initialState,
          available: false
       })
       expect(stateTransitions).to.equal(1)
@@ -81,124 +91,111 @@ describe('LenrixStore.compute$()', () => {
 
    it('holds initial state as state stream', () => {
       expect(state).to.deep.equal({
-         name: '',
+         ...initialState,
          available: false
       })
       expect(stateTransitions).to.equal(1)
    })
 
    it('computes values when state changes', () => {
+      expect(state.available).to.equal(false)
       store.setFieldValues({
          name: 'Steve'
       })
       expect(state.available).to.equal(true)
+      expect(stateTransitions).to.equal(3)
    })
 
-   it('computes values from initial normalized state')
+   it('computes values from initial normalized state') // TODO ???????
 
-   // describe('.focusPath() with computed values', () => {
-   //    let focusedStore: ComputedStore<State['sorting'], ComputedValues>
-   //    let focusedState: State['sorting'] & ComputedValues
-   //    let focusedStateTransitions: number
+   describe('.focusPath() with computed values', () => {
+      let focusedStore: ComputedStore<State['todo'], ComputedValues>
+      let focusedState: State['todo'] & ComputedValues
+      let focusedStateTransitions: number
 
-   //    beforeEach(() => {
-   //       focusedStore = store.focusPath(['sorting'], ['todoListLength', 'caret'])
-   //       focusedStateTransitions = 0
-   //       focusedStore.state$.subscribe(state => {
-   //          focusedState = state
-   //          ++focusedStateTransitions
-   //       })
-   //    })
+      beforeEach(() => {
+         focusedStore = store.focusPath(['todo'], ['available'])
+         focusedStateTransitions = 0
+         focusedStore.state$.subscribe(state => {
+            focusedState = state
+            ++focusedStateTransitions
+         })
+      })
 
-   //    it('does not emit new state when unrelated slice of parent state changes', () => {
-   //       rootStore.updateFields({
-   //          counter: c => c + 1
-   //       })
-   //       expect(focusedStateTransitions).to.equal(1)
-   //    })
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         rootStore.updateFields({
+            flag: value => !value
+         })
+         expect(focusedStateTransitions).to.equal(1)
+      })
 
-   //    it('emits new state when computed value needs to be recomputed from normalized state', () => {
-   //       expect(focusedState.order).to.equal('ascending')
-   //       expect(focusedState.caret).to.equal('up')
-   //       focusedStore.setFieldValues({ order: 'descending' })
-   //       expect(focusedState.caret).to.equal('down')
-   //    })
+      it('emits new state when value computed from parent normalized state is recomputed', () => {
+         expect(focusedState.available).to.equal(false)
+         rootStore.setFieldValues({ name: 'Steve' })
+         expect(focusedState.available).to.equal(true)
+         expect(focusedStateTransitions).to.equal(2)
+      })
+   })
 
-   //    it('emits new state when value computed from parent normalized state is recomputed', () => {
-   //       rootStore.update(todoListLens.setValue([]))
-   //       expect(focusedState.todoListLength).to.equal(0)
-   //    })
-   // })
+   describe('.focusFields() with computed values', () => {
+      let focusedStore: ComputedStore<Pick<State, 'todo'>, ComputedValues>
+      let focusedState: Pick<State, 'todo'> & ComputedValues
+      let focusedStateTransitions: number
 
-   // describe('.focusFields() with computed values', () => {
-   //    let focusedStore: ComputedStore<Pick<State, 'sorting'>, ComputedValues>
-   //    let focusedState: Pick<State, 'sorting'> & ComputedValues
-   //    let focusedStateTransitions: number
+      beforeEach(() => {
+         focusedStore = store.focusFields(['todo'], ['available'])
+         focusedStateTransitions = 0
+         focusedStore.state$.subscribe(state => {
+            focusedState = state
+            ++focusedStateTransitions
+         })
+      })
 
-   //    beforeEach(() => {
-   //       focusedStore = store.focusFields(['sorting'], ['todoListLength', 'caret'])
-   //       focusedStateTransitions = 0
-   //       focusedStore.state$.subscribe(state => {
-   //          focusedState = state
-   //          ++focusedStateTransitions
-   //       })
-   //    })
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         rootStore.updateFields({
+            flag: value => !value
+         })
+         expect(focusedStateTransitions).to.equal(1)
+      })
 
-   //    it('does not emit new state when unrelated slice of parent state changes', () => {
-   //       rootStore.updateFields({
-   //          flag: value => !value
-   //       })
-   //       expect(focusedStateTransitions).to.equal(1)
-   //    })
+      it('emits new state when value computed from parent normalized state is recomputed', () => {
+         expect(focusedState.available).to.equal(false)
+         rootStore.setFieldValues({ name: 'Steve' })
+         expect(focusedState.available).to.equal(true)
+         expect(focusedStateTransitions).to.equal(2)
+      })
+   })
 
-   //    it('emits new state when computed value needs to be recomputed from normalized state', () => {
-   //       expect(focusedState.sorting.order).to.equal('ascending')
-   //       expect(focusedState.caret).to.equal('up')
-   //       focusedStore.focusPath('sorting').setFieldValues({ order: 'descending' })
-   //       expect(focusedState.caret).to.equal('down')
-   //    })
+   describe('.recompose() with computed values', () => {
+      let focusedStore: ComputedStore<{ todoList: string[] }, ComputedValues>
+      let focusedState: { todoList: string[] } & ComputedValues
+      let focusedStateTransitions: number
 
-   //    it('emits new state when value computed from parent normalized state is recomputed', () => {
-   //       rootStore.update(todoListLens.setValue([]))
-   //       expect(focusedState.todoListLength).to.equal(0)
-   //    })
-   // })
+      beforeEach(() => {
+         focusedStore = store.recompose({
+            todoList: store.lens.focusPath('todo', 'list')
+         }, ['available'])
+         focusedStateTransitions = 0
+         focusedStore.state$.subscribe(state => {
+            focusedState = state
+            ++focusedStateTransitions
+         })
+      })
 
-   // describe('.recompose() with computed values', () => {
-   //    let focusedStore: ComputedStore<{ todoList: TodoItem[] }, ComputedValues>
-   //    let focusedState: { todoList: TodoItem[] } & ComputedValues
-   //    let focusedStateTransitions: number
+      it('does not emit new state when unrelated slice of parent state changes', () => {
+         rootStore.updateFields({
+            flag: value => !value
+         })
+         expect(focusedStateTransitions).to.equal(1)
+      })
 
-   //    beforeEach(() => {
-   //       focusedStore = store.recompose({
-   //          todoList: store.lens.focusPath('todo', 'list')
-   //       }, ['todoListLength', 'caret'])
-   //       focusedStateTransitions = 0
-   //       focusedStore.state$.subscribe(state => {
-   //          focusedState = state
-   //          ++focusedStateTransitions
-   //       })
-   //    })
-
-   //    it('does not emit new state when unrelated slice of parent state changes', () => {
-   //       rootStore.updateFields({
-   //          flag: value => !value
-   //       })
-   //       expect(focusedStateTransitions).to.equal(1)
-   //    })
-
-   //    it('emits new state when computed value needs to be recomputed from normalized state', () => {
-   //       focusedStore.setFieldValues({ todoList: [] })
-   //       expect(focusedState.todoListLength).to.equal(0)
-   //    })
-
-   //    it('emits new state when value computed from parent normalized state is recomputed', () => {
-   //       expect(state.sorting.order).to.equal('ascending')
-   //       expect(state.caret).to.equal('up')
-   //       rootStore.focusPath('sorting', 'order').setValue('descending')
-   //       expect(focusedState.caret).to.equal('down')
-   //    })
-   // })
+      it('emits new state when value computed from parent normalized state is recomputed', () => {
+         expect(state.available).to.equal(false)
+         rootStore.setFieldValues({ name: 'Steve' })
+         expect(focusedState.available).to.equal(true)
+         expect(focusedStateTransitions).to.equal(2)
+      })
+   })
 
    /////////////////////
    // RUNTIME CHECKS //
