@@ -25,7 +25,7 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
 
    compute<ComputedValues extends object & NotAnArray>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
 
-   compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+   // compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
    ////////////
    // FOCUS //

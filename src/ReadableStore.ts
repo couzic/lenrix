@@ -14,10 +14,10 @@ export interface ReadableStore<State> {
    // TODO Remove
    map<T>(selector: (state: State) => T): Observable<T>
 
-   pick<K extends keyof State>(this: Store<State & NotAnArray>,
+   pick<K extends keyof State>(this: ReadableStore<State & NotAnArray>,
                                ...keys: K[]): Observable<Pick<State, K>>
 
-   cherryPick<ExtractedState>(this: Store<State & object>,
+   cherryPick<ExtractedState>(this: ReadableStore<State & object>,
                               fields: FieldLenses<State & object, ExtractedState>): Observable<ExtractedState>
 
 }

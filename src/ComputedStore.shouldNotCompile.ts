@@ -19,8 +19,9 @@ const store = createStore(initialState).compute(state => ({
 // COMPUTE //
 ////////////
 
+// Calling compute() @compiles
 store.compute(state => ({
-   todoListLength: state.todo.list.length
+   again: state.todoListLength
 }))
 
 // Computing values with array @shouldNotCompile
@@ -30,3 +31,10 @@ store.compute(state => [state.todo.list.length])
 const computedWithWrongType: ComputedStore<State, { doubleCounter: 0 }> = store.compute(state => ({
    doubleCounter: state.counter * 2
 }))
+
+///////////
+// READ //
+/////////
+
+// Calling pick() @compiles
+store.pick('todoListLength')

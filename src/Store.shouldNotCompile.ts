@@ -101,6 +101,7 @@ const recomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoLis
 // COMPUTE //
 ////////////
 
+// Calling compute() @compiles
 store.compute(state => ({
    todoListLength: state.todo.list.length
 }))
