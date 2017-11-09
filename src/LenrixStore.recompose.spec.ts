@@ -73,7 +73,7 @@ describe('LenrixStore.recompose()', () => {
       expect(state.todoList).to.equal(initialState.todo.list)
    })
 
-   it('does not emit new state when unrelated slice of parent state is updated', () => {
+   it('does not emit new state when unrelated slice of parent state changes', () => {
       rootStore.updateFields({ flag: value => !value })
 
       expect(rootStateTransitions).to.equal(2)

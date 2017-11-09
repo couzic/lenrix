@@ -101,4 +101,16 @@ describe('LenrixStore.focusPath()', () => {
       })
    })
 
+   it('number-focused store emits new state when value changes', () => {
+      const focused = store.focusPath('count')
+      focused.update(value => value + 1)
+      expect(focused.currentState).to.equal(initialState.todo.count + 1)
+   })
+
+   it('array-focused store emits new state when value changes', () => {
+      const focused = store.focusPath('list')
+      focused.setValue([])
+      expect(focused.currentState).to.be.empty
+   })
+
 })
