@@ -1,5 +1,6 @@
-import { createStore } from './createStore'
-import { Store } from './Store'
+import { ComputedStore } from './ComputedStore';
+import { createStore } from './createStore';
+import { Store } from './Store';
 
 type State = {
    counter: number
@@ -51,9 +52,6 @@ store.focusOn('unknown')
 // Focusing unknown field @shouldNotCompile
 store.focusFields('unknown')
 
-// Focusing array of fields @shouldNotCompile
-store.focusFields(['counter'])
-
 // Focusing fields on arrayFocusedStore @shouldNotCompile
 todoListStore.focusFields('length')
 
@@ -97,7 +95,23 @@ store.recompose([])
 store.recompose({ todoList: todoListStore.lens })
 
 // Recomposing with wrong source type Lens @shouldNotCompile
-const recoomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoList: todoLens.focusOn('list') })
+const recomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoList: todoLens.focusOn('list') })
+
+//////////////
+// COMPUTE //
+////////////
+
+store.compute(state => ({
+   todoListLength: state.todo.list.length
+}))
+
+// Computing values with array @shouldNotCompile
+store.compute(state => [state.todo.list.length])
+
+// Assigning computed store with wrong ComputeValues type @shouldNotCompile
+const computedWithWrongType: ComputedStore<State, { todoListLength: 0 }> = store.compute(state => ({
+   todoListLength: state.todo.list.length
+}))
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
@@ -110,3 +124,6 @@ store.updateFieldValues(state => ({
 
 // Recomposing function @shouldNotButDoesCompile
 store.recompose(() => null) // TODO Implement runtime check
+
+// Computing values with higher order function @shouldNotButDoesCompile
+store.compute(state => () => null)

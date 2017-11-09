@@ -1,9 +1,10 @@
-import { expect } from 'chai'
-import { initialState, State, TodoItem } from '../test/State'
-import { Store } from './Store'
-import { createStore } from './createStore'
-import { createLens } from 'immutable-lens'
-import { ComputedStore } from './ComputedStore'
+import { expect } from 'chai';
+import { createLens } from 'immutable-lens';
+
+import { initialState, State, TodoItem } from '../test/State';
+import { ComputedStore } from './ComputedStore';
+import { createStore } from './createStore';
+import { Store } from './Store';
 
 interface ComputedValues {
    todoListLength: number
@@ -183,6 +184,14 @@ describe('LenrixStore.compute()', () => {
          rootStore.focusPath('sorting', 'order').setValue('descending')
          expect(focusedState.caret).to.equal('down')
       })
+   })
+
+   /////////////////////
+   // RUNTIME CHECKS //
+   ///////////////////
+
+   it('throws error when computing values with higher order function', () => {
+      expect(() => store.compute(state => () => null)).to.throw('compute() does not support higher order functions')
    })
 
 })

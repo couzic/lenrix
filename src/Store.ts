@@ -1,10 +1,12 @@
-import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/distinctUntilChanged'
-import { FieldLenses, Lens, NotAnArray } from 'immutable-lens'
-import { ReadableStore } from './ReadableStore'
-import { UpdatableStore } from './UpdatableStore'
-import { ComputedStore } from './ComputedStore'
+import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/map';
+
+import { FieldLenses, Lens, NotAnArray } from 'immutable-lens';
+import { Observable } from 'rxjs/Observable';
+
+import { ComputedStore } from './ComputedStore';
+import { ReadableStore } from './ReadableStore';
+import { UpdatableStore } from './UpdatableStore';
 
 export type ValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state: State) => ComputedValues[K]}
 
@@ -21,37 +23,33 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
+   compute<ComputedValues extends object & NotAnArray>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
 
-   computeValues<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values: ValueComputers<State, ComputedValues>): ComputedStore<State, ComputedValues>
-
-   compute$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
-
-   computeValues$<ComputedValues>(this: UpdatableStore<State & object & NotAnArray>, values$: AsyncValueComputers<State, ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+   compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
    ////////////
    // FOCUS //
    //////////
 
    focusOn<K extends keyof State>(this: Store<State & NotAnArray>,
-                                  key: K): Store<State[K]>
+      key: K): Store<State[K]>
 
    focusWith<Target>(lens: Lens<State, Target>): Store<Target>
 
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
-                              fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
+      fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>
 
    focusFields<K extends keyof State>(this: Store<State & NotAnArray>,
-                                      ...keys: K[]): Store<Pick<State, K>>
+      ...keys: K[]): Store<Pick<State, K>>
 
    focusFields<K extends keyof State>(this: Store<State & NotAnArray>,
-                                      keys: K[]): Store<Pick<State, K>>
+      keys: K[]): Store<Pick<State, K>>
 
    focusPath<K extends keyof State>(this: Store<State & NotAnArray>,
-                                    key: K): Store<State[K]>
+      key: K): Store<State[K]>
 
    focusPath<K extends keyof State>(this: Store<State & NotAnArray>,
-                                    path: [K]): Store<State[K]>
+      path: [K]): Store<State[K]>
 
    focusPath<K1 extends keyof State,
       K2 extends keyof State[K1]>(key1: K1, key2: K2): Store<State[K1][K2]>

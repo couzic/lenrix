@@ -40,10 +40,10 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    constructor(data$: Observable<StoreData<NormalizedState, ComputedValues>>,
-               dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
-               private readonly initialData: StoreData<NormalizedState, ComputedValues>,
-               private readonly updateOnParent: (updater: Updater<NormalizedState>) => void,
-               public readonly path: string) {
+      dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
+      private readonly initialData: StoreData<NormalizedState, ComputedValues>,
+      private readonly updateOnParent: (updater: Updater<NormalizedState>) => void,
+      public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.stateSubject = new BehaviorSubject(dataToState(initialData))
       data$.subscribe(this.dataSubject)
@@ -91,7 +91,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       }
       return new LenrixStore(
          this.dataSubject.map(toFocusedData).distinctUntilChanged(dataEquals),
-         (data: any) => (Array.isArray(data.normalizedState) || typeof data.normalizedState !== 'object' )
+         (data: any) => (Array.isArray(data.normalizedState) || typeof data.normalizedState !== 'object')
             ? data.normalizedState
             : { ...data.normalizedState, ...data.computedValues as object },
          toFocusedData(this.initialData),
@@ -168,7 +168,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    pick<K extends keyof State>(...
-                                  keys: K[]): Observable<Pick<State, K>> {
+      keys: K[]): Observable<Pick<State, K>> {
       return this.state$.map(state => {
          const subset = {} as any
          keys.forEach(key => subset[key] = state[key])
@@ -210,7 +210,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       this.updateOnParent(this.lens.updateFieldValues(fieldsUpdater))
    }
 
-   pipe(...updaters: Updater<NormalizedState> []) {
+   pipe(...updaters: Updater<NormalizedState>[]) {
       this.updateOnParent(this.lens.pipe(...updaters))
    }
 
@@ -220,6 +220,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
 
    compute<NewComputedValues>(computer: (state: NormalizedState) => NewComputedValues): any {
       const computedValues = computer(this.initialData.normalizedState)
+      if (typeof computedValues === 'function') throw Error('LenrixStore.compute() does not support higher order functions as arguments')
       const data$ = this.dataSubject.map(({ normalizedState, computedValues }) => ({
          normalizedState,
          computedValues: { ...computedValues as any, ...computer(normalizedState) as any }
@@ -237,15 +238,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       )
    }
 
-   computeValues<NewComputedValues>(values: ValueComputers<State, NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
-      throw new Error('Method not implemented.')
-   }
-
    compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
-      throw new Error('Method not implemented.')
-   }
-
-   computeValues$<NewComputedValues>(values$: AsyncValueComputers<State, NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues> {
       throw new Error('Method not implemented.')
    }
 
