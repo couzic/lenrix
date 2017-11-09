@@ -15,6 +15,11 @@ export interface StoreData<NormalizedState, ComputedValues> {
    computedValues: ComputedValues
 }
 
+function dataEquals<NormalizedState, ComputedValues>(previous: StoreData<NormalizedState, ComputedValues>, next: StoreData<NormalizedState, ComputedValues>): boolean {
+   return shallowEquals(previous.normalizedState, next.normalizedState)
+      && shallowEquals(previous.computedValues, next.computedValues)
+}
+
 export class LenrixStore<NormalizedState, ComputedValues, State> implements ReadableStore<State>, UpdatableStore<NormalizedState> {
 
    lens: UnfocusedLens<NormalizedState> = createLens<NormalizedState>()
@@ -85,7 +90,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          return { normalizedState, computedValues }
       }
       return new LenrixStore(
-         this.dataSubject.map(toFocusedData).distinctUntilChanged((x, y) => shallowEquals(x.normalizedState, y.normalizedState) && shallowEquals(x.computedValues, y.computedValues)),
+         this.dataSubject.map(toFocusedData).distinctUntilChanged(dataEquals),
          (data: any) => (data.normalizedState instanceof Array || typeof data.normalizedState !== 'object' )
             ? data.normalizedState
             : { ...data.normalizedState, ...data.computedValues as object },
@@ -121,7 +126,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          return { ...state as any, ...updatedFields as any }
       })
       return new LenrixStore(
-         this.dataSubject.map(toPickedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         this.dataSubject.map(toPickedData).distinctUntilChanged(dataEquals),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          toPickedData(this.initialData),
          updateOnParent,
@@ -142,7 +147,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          return { normalizedState, computedValues }
       }
       return new LenrixStore(
-         this.dataSubject.map(toRecomposedData).distinctUntilChanged(shallowEquals, data => data.normalizedState),
+         this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          toRecomposedData(this.initialData),
          updater => this.update(recomposedLens.update(updater)),
