@@ -78,9 +78,9 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    focusPath(...params: any[]): any {
-      const keys = params[0] instanceof Array ? params[0] : params // Handle spread keys
+      const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.lens as any).focusPath(...keys)
-      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && params[1] instanceof Array)
+      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && Array.isArray(params[1]))
          ? params[1]
          : []
       const toFocusedData = (data: StoreData<NormalizedState, ComputedValues>) => {
@@ -91,7 +91,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       }
       return new LenrixStore(
          this.dataSubject.map(toFocusedData).distinctUntilChanged(dataEquals),
-         (data: any) => (data.normalizedState instanceof Array || typeof data.normalizedState !== 'object' )
+         (data: any) => (Array.isArray(data.normalizedState) || typeof data.normalizedState !== 'object' )
             ? data.normalizedState
             : { ...data.normalizedState, ...data.computedValues as object },
          toFocusedData(this.initialData),
@@ -101,14 +101,14 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    focusFields(...params: any[]): any {
-      const keys: (keyof NormalizedState)[] = params[0] instanceof Array ? params[0] : params // Handle spread keys
+      const keys: (keyof NormalizedState)[] = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const path = this.path + '.pick(' + keys.join(',') + ')'
       const pickFields = (state: NormalizedState) => {
          const fields: Partial<NormalizedState> = {}
          keys.forEach(key => fields[key] = state[key])
          return fields
       }
-      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && params[1] instanceof Array)
+      const computedValueKeys: (keyof ComputedValues)[] = (params.length === 2 && Array.isArray(params[1]))
          ? params[1]
          : []
       const toPickedData = (data: StoreData<NormalizedState, ComputedValues>) => {
