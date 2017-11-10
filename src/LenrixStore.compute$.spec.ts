@@ -1,13 +1,15 @@
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/observable/of'
+import 'rxjs/add/operator/delay'
+import 'rxjs/add/operator/switchMap'
+import 'rxjs/add/operator/toArray'
 
-import { expect } from 'chai';
-import { createLens } from 'immutable-lens';
-import { Observable } from 'rxjs/Observable';
+import { expect } from 'chai'
+import { createLens } from 'immutable-lens'
+import { Observable } from 'rxjs/Observable'
 
-import { ComputedStore } from './ComputedStore';
-import { createStore } from './createStore';
-import { Store } from './Store';
+import { ComputedStore } from './ComputedStore'
+import { createStore } from './createStore'
+import { Store } from './Store'
 
 interface State {
    name: string

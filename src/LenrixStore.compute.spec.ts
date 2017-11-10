@@ -1,10 +1,10 @@
-import { expect } from 'chai';
-import { createLens } from 'immutable-lens';
+import { expect } from 'chai'
+import { createLens } from 'immutable-lens'
 
-import { initialState, State, TodoItem } from '../test/State';
-import { ComputedStore } from './ComputedStore';
-import { createStore } from './createStore';
-import { Store } from './Store';
+import { initialState, State, TodoItem } from '../test/State'
+import { ComputedStore } from './ComputedStore'
+import { createStore } from './createStore'
+import { Store } from './Store'
 
 interface ComputedValues {
    todoListLength: number
@@ -87,6 +87,13 @@ describe('LenrixStore.compute()', () => {
       expect(state.caret).to.equal('up')
       store.focusPath('sorting', 'order').setValue('descending')
       expect(state.caret).to.equal('down')
+   })
+
+   it('passes computed values to child compute() store', () => {
+      const childStore = store.compute(state => ({
+         computedOnChild: state.caret
+      }))
+      expect(childStore.currentState.computedOnChild).to.equal(state.caret)
    })
 
    describe('.focusPath() with computed values', () => {
