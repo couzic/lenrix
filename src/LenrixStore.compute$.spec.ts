@@ -1,5 +1,6 @@
 import 'rxjs/add/observable/of'
 import 'rxjs/add/operator/delay'
+import 'rxjs/add/operator/mapTo'
 import 'rxjs/add/operator/switchMap'
 import 'rxjs/add/operator/toArray'
 
@@ -106,6 +107,13 @@ describe('LenrixStore.compute$()', () => {
       })
       expect(state.available).to.equal(true)
       expect(stateTransitions).to.equal(3)
+   })
+
+   it('holds initial computed values in initial state', () => {
+      const computedStore = rootStore.compute$(state$ => state$.mapTo({
+         available: false
+      }).delay(1), { available: true })
+      expect(computedStore.currentState.available).to.equal(true)
    })
 
    it('computes values from initial normalized state') // TODO ???????

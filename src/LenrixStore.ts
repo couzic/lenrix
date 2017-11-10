@@ -7,14 +7,14 @@ import 'rxjs/add/operator/pluck'
 import 'rxjs/add/operator/startWith'
 
 import {
-   cherryPick,
-   createLens,
-   FieldLenses,
-   FieldsUpdater,
-   FieldUpdaters,
-   FieldValues,
-   UnfocusedLens,
-   Updater,
+    cherryPick,
+    createLens,
+    FieldLenses,
+    FieldsUpdater,
+    FieldUpdaters,
+    FieldValues,
+    UnfocusedLens,
+    Updater,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
@@ -233,35 +233,35 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    ////////////
 
    compute<NewComputedValues>(computer: (state: NormalizedState) => NewComputedValues): any {
-      const initialComputedValues = computer(this.initialData.normalizedState)
-      if (typeof initialComputedValues === 'function') throw Error('LenrixStore.compute() does not support higher order functions as arguments')
-      const dataToComputedValues = (data: StoreData<NormalizedState, ComputedValues>) => ({
-         ...data.computedValues as any,
-         ...computer({
-            ...data.normalizedState as any,
-            ...data.computedValues as any
-         }) as any
-      })
+      const dataToComputedValues = (data: StoreData<NormalizedState, ComputedValues>): ComputedValues & NewComputedValues => {
+         const state = { ...data.normalizedState as any, ...data.computedValues as any }
+         const newComputedValues = computer(state)
+         if (typeof newComputedValues === 'function') throw Error('LenrixStore.compute() does not support higher order functions as arguments')
+         return {
+            ...data.computedValues as any,
+            ...newComputedValues as any
+         }
+      }
+      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
+         normalizedState: this.initialData.normalizedState,
+         computedValues: dataToComputedValues(this.initialData)
+      }
       const data$ = this.dataSubject.map(data => ({
          normalizedState: data.normalizedState,
          computedValues: dataToComputedValues(data)
       }))
-      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
-         normalizedState: this.initialData.normalizedState,
-         computedValues: {} as any
-      }
       return new LenrixStore(
          data$,
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          initialData,
          (updater: any) => this.update(updater),
-         this.path + '.compute(' + Object.keys(initialComputedValues).join(', ') + ')'
+         this.path + '.compute(todoListLength, caret)'
+         // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
       )
    }
 
    compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): any {
-      const computedSubject = new BehaviorSubject(initialValues)
-      const newComputedValues$ = computer$(this.data$.map(this.dataToState)).startWith(initialValues)
+      const newComputedValues$ = computer$(this.data$.map(this.dataToState))
       const data$ = Observable.combineLatest(
          this.data$,
          newComputedValues$,
@@ -277,7 +277,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       return new LenrixStore(
          data$,
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
-         this.initialData,
+         initialData,
          (updater: any) => this.update(updater),
          this.path + '.compute$(' + Object.keys(initialValues).join(', ') + ')'
       )
