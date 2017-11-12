@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "strict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "lib": [
       "es2015"
     ],

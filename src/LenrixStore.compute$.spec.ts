@@ -1,3 +1,4 @@
+import 'rxjs/add/observable/never'
 import 'rxjs/add/observable/of'
 import 'rxjs/add/operator/delay'
 import 'rxjs/add/operator/mapTo'
@@ -60,6 +61,26 @@ describe('LenrixStore.compute$()', () => {
 
    it('has path', () => {
       expect(store.path).to.equal('root.compute$(available)')
+   })
+
+   it('computes initial state only once', () => {
+      let executions = 0
+      const what = rootStore.compute$(state$ => state$.map(state => {
+         ++executions
+         return { whatever: 'computed' }
+      }), { whatever: 'initial' })
+      expect(what.currentState.whatever).to.equal('computed')
+      expect(executions).to.equal(1)
+   })
+
+   it('holds initial values in state if Observable has not emitted yet', () => {
+      let executions = 0
+      const what = rootStore.compute$(state$ => state$.mergeMap(state => {
+         ++executions
+         return Observable.never()
+      }), { whatever: 'initial' })
+      expect(what.currentState.whatever).to.equal('initial')
+      expect(executions).to.equal(1)
    })
 
    /////////////

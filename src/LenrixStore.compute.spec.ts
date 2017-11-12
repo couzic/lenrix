@@ -39,6 +39,17 @@ describe('LenrixStore.compute()', () => {
       expect(store.path).to.equal('root.compute(todoListLength, caret)')
    })
 
+   it('computes initial state only once', () => {
+      let executions = 0
+      rootStore.compute(state => {
+         ++executions
+         return {
+            whatever: 'whatever'
+         }
+      })
+      expect(executions).to.equal(1)
+   })
+
    /////////////
    // UPDATE //
    ///////////

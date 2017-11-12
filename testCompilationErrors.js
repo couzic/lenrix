@@ -10,7 +10,6 @@ const path = require('path')
 
 const tsOptions = {
    strict: true,
-   noImplicitAny: false,
    noEmit: true,
    target: 'es5'
 }

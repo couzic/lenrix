@@ -13,7 +13,7 @@ export function createStore<State extends object>(initialState: State): Store<St
    updaters$
       .scan((state, updater) => updater(state), initialState)
       .subscribe(stateSubject)
-   const state$ = stateSubject.distinctUntilChanged()
+   const state$ = stateSubject.distinctUntilChanged().skip(1)
    return new LenrixStore(
       state$.map(normalizedState => ({ normalizedState, computedValues: {} })),
       data => data.normalizedState,

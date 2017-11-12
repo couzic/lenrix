@@ -4,6 +4,7 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/mergeMap'
 import 'rxjs/add/operator/pluck'
+import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
@@ -161,7 +162,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          return { normalizedState, computedValues }
       }
       return new LenrixStore(
-         this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals),
+         this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals).skip(1),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          toRecomposedData(this.initialData),
          updater => this.update(recomposedLens.update(updater)),
@@ -246,7 +247,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          normalizedState: this.initialData.normalizedState,
          computedValues: dataToComputedValues(this.initialData)
       }
-      const data$ = this.dataSubject.map(data => ({
+      const data$ = this.dataSubject.skip(1).map(data => ({
          normalizedState: data.normalizedState,
          computedValues: dataToComputedValues(data)
       }))
