@@ -15,15 +15,27 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    // COMPUTE //
    ////////////
 
-   compute<NewComputedValues extends object & NotAnArray>(computer: (state: NormalizedState & ComputedValues) => NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   compute<NewComputedValues extends object & NotAnArray>(
+      computer: (state: NormalizedState & ComputedValues) => NewComputedValues
+   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   compute$<NewComputedValues extends object & NotAnArray>(
+      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>,
+      initialValues: NewComputedValues
+   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
+   compute$<NewComputedValues extends object & NotAnArray>(
+      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>
+   ): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
 
-   computeJoin$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   computeJoin$<NewComputedValues extends object & NotAnArray>(
+      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>,
+      initialValues: NewComputedValues
+   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   computeJoin$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
+   computeJoin$<NewComputedValues extends object & NotAnArray>(
+      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>
+   ): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
 
    ////////////
    // FOCUS //
