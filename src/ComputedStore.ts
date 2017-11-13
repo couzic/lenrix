@@ -1,8 +1,9 @@
-import { ReadableStore } from './ReadableStore'
-import { UpdatableStore } from './UpdatableStore'
-import { AsyncValueComputers, Store, ValueComputers } from './Store'
-import { Observable } from 'rxjs/Observable'
 import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { Observable } from 'rxjs/Observable'
+
+import { ReadableStore } from './ReadableStore'
+import { Store } from './Store'
+import { UpdatableStore } from './UpdatableStore'
 
 export interface ComputedStore<NormalizedState extends object & NotAnArray, ComputedValues>
    extends ReadableStore<NormalizedState & ComputedValues>, UpdatableStore<NormalizedState> {
@@ -17,6 +18,8 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    compute<NewComputedValues extends object & NotAnArray>(computer: (state: NormalizedState & ComputedValues) => NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
    compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+
+   compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
 
    ////////////
    // FOCUS //

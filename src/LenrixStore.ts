@@ -8,14 +8,14 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-    cherryPick,
-    createLens,
-    FieldLenses,
-    FieldsUpdater,
-    FieldUpdaters,
-    FieldValues,
-    UnfocusedLens,
-    Updater,
+   cherryPick,
+   createLens,
+   FieldLenses,
+   FieldsUpdater,
+   FieldUpdaters,
+   FieldValues,
+   UnfocusedLens,
+   Updater,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
@@ -261,7 +261,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
       )
    }
 
-   compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues: NewComputedValues): any {
+   compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
       const newComputedValues$ = computer$(this.data$.map(this.dataToState))
       const data$ = Observable.combineLatest(
          this.data$,
@@ -280,7 +280,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          initialData,
          (updater: any) => this.update(updater),
-         this.path + '.compute$(' + Object.keys(initialValues).join(', ') + ')'
+         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
       )
    }
 

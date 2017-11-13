@@ -74,13 +74,13 @@ describe('LenrixStore.compute$()', () => {
    })
 
    it('holds initial values in state if Observable has not emitted yet', () => {
-      let executions = 0
-      const what = rootStore.compute$(state$ => state$.mergeMap(state => {
-         ++executions
-         return Observable.never()
-      }), { whatever: 'initial' })
-      expect(what.currentState.whatever).to.equal('initial')
-      expect(executions).to.equal(1)
+      const computed = rootStore.compute$(state$ => Observable.never(), { whatever: 'initial' })
+      expect(computed.currentState.whatever).to.equal('initial')
+   })
+
+   it('has initial state without computed values if computer has not emitted yet', () => {
+      const computed = rootStore.compute$(state$ => Observable.never<{ whatever: 'computed' }>())
+      expect(computed.currentState.whatever).to.be.undefined
    })
 
    /////////////

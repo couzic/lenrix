@@ -32,6 +32,11 @@ const computedWithWrongType: ComputedStore<State, { doubleCounter: 0 }> = store.
    doubleCounter: state.counter * 2
 }))
 
+// Assigning non-initialized value to safe pointer @shouldNotCompile
+const computedWithoutInitialValues: number = store.compute$(state$ => state$.map(state => ({
+   nonInitialized: 42
+}))).currentState.nonInitialized
+
 ///////////
 // READ //
 /////////

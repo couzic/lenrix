@@ -1,12 +1,12 @@
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/distinctUntilChanged'
+import 'rxjs/add/operator/map'
 
-import { FieldLenses, Lens, NotAnArray } from 'immutable-lens';
-import { Observable } from 'rxjs/Observable';
+import { FieldLenses, Lens, NotAnArray } from 'immutable-lens'
+import { Observable } from 'rxjs/Observable'
 
-import { ComputedStore } from './ComputedStore';
-import { ReadableStore } from './ReadableStore';
-import { UpdatableStore } from './UpdatableStore';
+import { ComputedStore } from './ComputedStore'
+import { ReadableStore } from './ReadableStore'
+import { UpdatableStore } from './UpdatableStore'
 
 export type ValueComputers<State, ComputedValues> = {[K in keyof ComputedValues]: (state: State) => ComputedValues[K]}
 
@@ -26,6 +26,8 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    compute<ComputedValues extends object & NotAnArray>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
 
    compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+
+   compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>): ComputedStore<State, Partial<ComputedValues>>
 
    ////////////
    // FOCUS //

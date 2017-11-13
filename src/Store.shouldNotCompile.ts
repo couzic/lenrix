@@ -1,6 +1,6 @@
-import { ComputedStore } from './ComputedStore';
-import { createStore } from './createStore';
-import { Store } from './Store';
+import { ComputedStore } from './ComputedStore'
+import { createStore } from './createStore'
+import { Store } from './Store'
 
 type State = {
    counter: number
@@ -113,6 +113,11 @@ store.compute(state => [state.todo.list.length])
 const computedWithWrongType: ComputedStore<State, { todoListLength: 0 }> = store.compute(state => ({
    todoListLength: state.todo.list.length
 }))
+
+// Assigning non-initialized value to safe pointer @shouldNotCompile
+const computedWithoutInitialValues: number = store.compute$(state$ => state$.map(state => ({
+   nonInitialized: 42
+}))).currentState.nonInitialized
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
