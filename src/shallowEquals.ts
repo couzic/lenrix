@@ -11,7 +11,9 @@ export function shallowEquals<T>(a: T, b: T) {
    const keysA = Object.keys(a)
    const keysB = Object.keys(b)
    if (keysA.length !== keysB.length) return false
-   for (let i in a) if (!(i in b)) return false
-   for (let i in b) if (a[i] !== b[i]) return false
+   for (let i in keysA) {
+      const key = keysA[i] as keyof T
+      if (a[key] !== b[key]) return false
+   }
    return true
 }
