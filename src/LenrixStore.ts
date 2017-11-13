@@ -8,14 +8,14 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-   cherryPick,
-   createLens,
-   FieldLenses,
-   FieldsUpdater,
-   FieldUpdaters,
-   FieldValues,
-   UnfocusedLens,
-   Updater,
+    cherryPick,
+    createLens,
+    FieldLenses,
+    FieldsUpdater,
+    FieldUpdaters,
+    FieldValues,
+    UnfocusedLens,
+    Updater,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
@@ -262,7 +262,7 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
    }
 
    compute$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
-      const newComputedValues$ = computer$(this.data$.map(this.dataToState))
+      const newComputedValues$ = computer$(this.data$.map(this.dataToState)).startWith(initialValues)
       const data$ = Observable.combineLatest(
          this.data$,
          newComputedValues$,
@@ -271,16 +271,42 @@ export class LenrixStore<NormalizedState, ComputedValues, State> implements Read
             computedValues: { ...data.computedValues as any, ...newComputedValues as any }
          })
       )
-      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = {
-         normalizedState: this.initialData.normalizedState,
-         computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
-      }
+      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = initialValues
+         ? {
+            normalizedState: this.initialData.normalizedState,
+            computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
+         }
+         : this.initialData
+      return new LenrixStore(
+         data$.skip(1),
+         (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+         initialData,
+         (updater: any) => this.update(updater),
+         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
+      )
+   }
+
+   computeJoin$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
+      const data$ = this.data$.mergeMap(data => {
+         const state = this.dataToState(data)
+         const newComputedValues$ = computer$(Observable.of(state))
+         return newComputedValues$.map(newComputedValues => ({
+            normalizedState: data.normalizedState,
+            computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+         }))
+      })
+      const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = initialValues
+         ? {
+            normalizedState: this.initialData.normalizedState,
+            computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
+         }
+         : this.initialData
       return new LenrixStore(
          data$,
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          initialData,
          (updater: any) => this.update(updater),
-         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
+         this.path + '.computeJoin$()'
       )
    }
 

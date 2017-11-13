@@ -21,6 +21,10 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
 
    compute$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
 
+   computeJoin$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>, initialValues: NewComputedValues): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+
+   computeJoin$<NewComputedValues extends object & NotAnArray>(computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
+
    ////////////
    // FOCUS //
    //////////

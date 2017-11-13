@@ -23,11 +23,15 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues extends object & NotAnArray>(computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
+   compute<ComputedValues extends object & NotAnArray>(this: Store<State & object & NotAnArray>, computer: (state: State) => ComputedValues): ComputedStore<State, ComputedValues>
 
-   compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+   compute$<ComputedValues extends object & NotAnArray>(this: Store<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
 
-   compute$<ComputedValues extends object & NotAnArray>(computer$: (state$: Observable<State>) => Observable<ComputedValues>): ComputedStore<State, Partial<ComputedValues>>
+   compute$<ComputedValues extends object & NotAnArray>(this: Store<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>): ComputedStore<State, Partial<ComputedValues>>
+
+   computeJoin$<ComputedValues extends object & NotAnArray>(this: Store<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>, initialValues: ComputedValues): ComputedStore<State, ComputedValues>
+
+   computeJoin$<ComputedValues extends object & NotAnArray>(this: Store<State & object & NotAnArray>, computer$: (state$: Observable<State>) => Observable<ComputedValues>): ComputedStore<State, Partial<ComputedValues>>
 
    ////////////
    // FOCUS //
