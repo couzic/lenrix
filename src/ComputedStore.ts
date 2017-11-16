@@ -19,6 +19,17 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
       computer: (state: NormalizedState & ComputedValues) => NewComputedValues
    ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
+   computeFrom<Selection extends object & NotAnArray, NewComputedValues extends object & NotAnArray>(
+      selection: FieldLenses<NormalizedState & ComputedValues, Selection>,
+      computer: (selection: Selection) => NewComputedValues
+   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+
+   // TODO Implement
+   // computeFromFields<K extends keyof NormalizedState & ComputedValues, NewComputedValues extends object & NotAnArray>(
+   //    fields: K[],
+   //    computer: (fields: Pick<NormalizedState & ComputedValues, K>) => NewComputedValues
+   // ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+
    compute$<NewComputedValues extends object & NotAnArray>(
       computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>,
       initialValues: NewComputedValues
@@ -28,14 +39,31 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
       computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>
    ): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
 
-   computeJoin$<NewComputedValues extends object & NotAnArray>(
-      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>,
-      initialValues: NewComputedValues
-   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   // TODO Implement
+   // computeFrom$<NewComputedValues extends object & NotAnArray>(
+   //    selection: FieldLenses<NormalizedState & ComputedValues, Selection>,
+   //    computer$: (selection$: Observable<Selection>) => Observable<NewComputedValues>,
+   //    initialValues: NewComputedValues
+   // ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
-   computeJoin$<NewComputedValues extends object & NotAnArray>(
-      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>
-   ): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
+   // TODO Implement
+   // computeFrom$<NewComputedValues extends object & NotAnArray>(
+   //    selection: FieldLenses<NormalizedState & ComputedValues, Selection>,
+   //    computer$: (selection$: Observable<Selection>) => Observable<NewComputedValues>
+   // ): ComputedStore<NormalizedState, Partial<ComputedValues & NewComputedValues>>
+
+   // TODO Implement
+   // computeFromFields$<K extends keyof NormalizedState & ComputedValues, NewComputedValues extends object & NotAnArray>(
+   //    fields: K[],
+   //    computer$: (fields$: Observable<Pick<NormalizedState & ComputedValues, K>>) => Observable<NewComputedValues>,
+   //    initialValues: NewComputedValues
+   // ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+
+   // TODO Implement
+   // computeFromFields$<K extends keyof NormalizedState & ComputedValues, NewComputedValues extends object & NotAnArray>(
+   //    fields: K[],
+   //    computer$: (fields$: Observable<Pick<NormalizedState & ComputedValues, K>>) => Observable<NewComputedValues>
+   // ): ComputedStore<NormalizedState, Partial<ComputedValues & NewComputedValues>>
 
    ////////////
    // FOCUS //
