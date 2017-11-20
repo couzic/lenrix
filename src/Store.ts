@@ -86,10 +86,10 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    // FOCUS //
    //////////
 
-   focusOn<K extends keyof State>(this: Store<State & NotAnArray>,
-      key: K): Store<State[K]>
+   // focusOn<K extends keyof State>(this: Store<State & NotAnArray>,
+   //    key: K): Store<State[K]>
 
-   focusWith<Target>(lens: Lens<State, Target>): Store<Target>
+   // focusWith<Target>(lens: Lens<State, Target>): Store<Target>
 
    recompose<RecomposedState>(this: Store<State & object & NotAnArray>,
       fields: FieldLenses<State & object, RecomposedState>): Store<RecomposedState>

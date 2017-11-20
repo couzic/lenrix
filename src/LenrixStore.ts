@@ -8,22 +8,22 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-    cherryPick,
-    createLens,
-    FieldLenses,
-    FieldsUpdater,
-    FieldUpdaters,
-    FieldValues,
-    NotAnArray,
-    UnfocusedLens,
-    Updater,
+   cherryPick,
+   createLens,
+   FieldLenses,
+   FieldsUpdater,
+   FieldUpdaters,
+   FieldValues,
+   Lens,
+   NotAnArray,
+   UnfocusedLens,
+   Updater,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
 import { ReadableStore } from './ReadableStore'
 import { shallowEquals } from './shallowEquals'
-import { Store } from './Store'
 import { UpdatableStore } from './UpdatableStore'
 
 export interface StoreData<NormalizedState, ComputedValues extends object> {
@@ -39,7 +39,7 @@ function dataEquals<NormalizedState extends object, ComputedValues extends objec
       && shallowEquals(previous.computedValues, next.computedValues)
 }
 
-export class LenrixStore<NormalizedState extends object, ComputedValues extends object, State extends NormalizedState & ComputedValues>
+export class LenrixStore<NormalizedState extends object, ComputedValues extends object, State extends NormalizedState & ComputedValues, RootState extends object>
    implements ReadableStore<State>, UpdatableStore<NormalizedState> {
 
    lens: UnfocusedLens<NormalizedState> = createLens<NormalizedState>()
@@ -62,7 +62,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
    constructor(data$: Observable<StoreData<NormalizedState, ComputedValues>>,
       private readonly dataToState: (data: StoreData<NormalizedState, ComputedValues>) => State,
       private readonly initialData: StoreData<NormalizedState, ComputedValues>,
-      private readonly updateOnParent: (updater: Updater<NormalizedState>) => void,
+      private readonly rootLens: Lens<RootState, NormalizedState>,
+      private readonly updateRootState: (updater: Updater<RootState>) => void,
       public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.stateSubject = new BehaviorSubject(dataToState(initialData))
@@ -76,26 +77,27 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
    // FOCUS //
    //////////
 
-   focusOn(key: any): any {
-      const focusedLens = this.lens.focusOn(key)
-      return this.focusWith(focusedLens)
-   }
+   // focusOn(key: any): any {
+   //    const focusedLens = this.lens.focusOn(key)
+   //    return this.focusWith(focusedLens)
+   // }
 
-   focusWith<Target>(lens: any): Store<Target> {
-      const focusedInitialState = lens.read(this.initialData.normalizedState)
-      return new LenrixStore(
-         this.dataSubject
-            .map(data => ({
-               normalizedState: lens.read(data.normalizedState),
-               computedValues: {}
-            }))
-            .distinctUntilChanged(shallowEquals, data => data.normalizedState),
-         data => data.normalizedState,
-         { normalizedState: focusedInitialState, computedValues: {} },
-         updater => this.update(lens.update(updater)),
-         this.path + lens.path,
-      )
-   }
+   // focusWith<Target>(lens: any): Store<Target> {
+   //    const focusedInitialState = lens.read(this.initialData.normalizedState)
+   //    return new LenrixStore(
+   //       this.dataSubject
+   //          .map(data => ({
+   //             normalizedState: lens.read(data.normalizedState),
+   //             computedValues: {}
+   //          }))
+   //          .distinctUntilChanged(shallowEquals, data => data.normalizedState),
+   //       data => data.normalizedState,
+   //       { normalizedState: focusedInitialState, computedValues: {} },
+   //       this.rootLens.fo
+   //       updater => this.update(lens.update(updater)),
+   //       this.path + lens.path,
+   //    )
+   // }
 
    focusPath(...params: any[]): any {
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
@@ -115,7 +117,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
             ? data.normalizedState
             : { ...data.normalizedState, ...data.computedValues },
          toFocusedData(this.initialData),
-         updater => this.update(focusedLens.update(updater)),
+         (this.rootLens as any).focusPath(...keys),
+         this.updateRootState,
          this.path + focusedLens.path
       )
    }
@@ -137,19 +140,25 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
          return { normalizedState, computedValues }
       }
-      const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
-         const fields = pickFields(state)
-         const updatedFields = updater(fields)
-         Object.keys(updatedFields).forEach(key => { // TODO Write test
-            if (keys.indexOf(key as any) < 0) throw Error(key + ' is not part of the updatable fields: ' + keys)
-         })
-         return { ...state as any, ...updatedFields as any }
-      })
+      // const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
+      //    const fields = pickFields(state)
+      //    const updatedFields = updater(fields)
+      //    Object.keys(updatedFields).forEach(key => { // TODO Write test
+      //       if (keys.indexOf(key as any) < 0) throw Error(key + ' is not part of the updatable fields: ' + keys)
+      //    })
+      //    return { ...state as any, ...updatedFields as any }
+      // })
       return new LenrixStore(
          this.dataSubject.map(toPickedData).distinctUntilChanged(dataEquals),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          toPickedData(this.initialData),
-         updateOnParent,
+         this.rootLens.focus(pickFields, fields => state => {
+            Object.keys(fields).forEach(key => { // TODO Write test
+               if (keys.indexOf(key as any) < 0) throw Error(key + ' is not part of the updatable fields: ' + keys)
+            })
+            return { ...state as any, ...fields as any }
+         }),
+         this.updateRootState,
          path
       )
    }
@@ -170,7 +179,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals).skip(1),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          toRecomposedData(this.initialData),
-         updater => this.update(recomposedLens.update(updater)),
+         this.rootLens.recompose(fields),
+         this.updateRootState,
          path
       )
    }
@@ -211,27 +221,27 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
    }
 
    setValue(newValue: NormalizedState) {
-      this.updateOnParent(this.lens.setValue(newValue))
+      this.updateRootState(this.rootLens.setValue(newValue))
    }
 
    update(updater: Updater<NormalizedState>) {
-      this.updateOnParent(this.lens.update(updater))
+      this.updateRootState(this.rootLens.update(updater))
    }
 
    setFieldValues(newValues: FieldValues<NormalizedState>) {
-      this.updateOnParent(this.lens.setFieldValues(newValues))
+      this.updateRootState(this.rootLens.setFieldValues(newValues))
    }
 
    updateFields(updaters: FieldUpdaters<NormalizedState>) {
-      this.updateOnParent(this.lens.updateFields(updaters))
+      this.updateRootState(this.rootLens.updateFields(updaters))
    }
 
    updateFieldValues(fieldsUpdater: FieldsUpdater<NormalizedState>) {
-      this.updateOnParent(this.lens.updateFieldValues(fieldsUpdater))
+      this.updateRootState(this.rootLens.updateFieldValues(fieldsUpdater))
    }
 
    pipe(...updaters: Updater<NormalizedState>[]) {
-      this.updateOnParent(this.lens.pipe(...updaters))
+      this.updateRootState(this.rootLens.pipe(...updaters))
    }
 
    //////////////
@@ -260,7 +270,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          data$,
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          initialData,
-         (updater: any) => this.update(updater),
+         this.rootLens,
+         this.updateRootState,
          this.path + '.compute(todoListLength, caret)'
          // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
       )
@@ -295,7 +306,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          data$,
          data => ({ ...data.normalizedState as any, ...data.computedValues as any }),
          initialData,
-         updater => this.update(updater),
+         this.rootLens,
+         this.updateRootState,
          this.path + '.computeFrom()'
       )
    }
@@ -322,7 +334,8 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          data$.skip(1),
          (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
          initialData,
-         (updater: any) => this.update(updater),
+         this.rootLens,
+         this.updateRootState,
          this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
       )
    }

@@ -2,6 +2,7 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 
+import { createLens } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
@@ -10,9 +11,11 @@ import { Store } from './Store'
 
 export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<State> {
    const augmentedReducer: Reducer<State> = (state, action) => {
-      if (action.type.startsWith('[UPDATE'))
+      if (action.type.startsWith('[UPDATE]')) {
          return action.payload
-      else return reducer(state, action)
+      } else {
+         return reducer(state, action)
+      }
    }
 
    const reduxStore = createReduxStore(
@@ -32,6 +35,7 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
       state$.map(normalizedState => ({ normalizedState, computedValues: {} })),
       data => data.normalizedState,
       { normalizedState: preloadedState, computedValues: {} },
+      createLens<State>(),
       updater => reduxStore.dispatch({ type: '[UPDATE]' + updater.name, payload: updater(reduxStore.getState()) }),
       'root'
    )
