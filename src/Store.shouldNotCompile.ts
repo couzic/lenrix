@@ -14,12 +14,12 @@ type State = {
 const state = {} as State
 
 const store = createStore(state)
-const counterStore = store.focusOn('counter')
-const todoStore = store.focusOn('todo')
-const todoListStore = todoStore.focusOn('list')
+const counterStore = store.focusPath('counter')
+const todoStore = store.focusPath('todo')
+const todoListStore = todoStore.focusPath('list')
 
 const lens = store.lens
-const todoLens = lens.focusOn('todo')
+const todoLens = lens.focusPath('todo')
 
 // Mutating state$ @shouldNotCompile
 store.state$ = store.state$
@@ -32,22 +32,22 @@ store.lens = store.lens
 //////////
 
 // Focusing on null key @shouldNotCompile
-store.focusOn(null)
+store.focusPath(null)
 
 // Focusing on undefined key @shouldNotCompile
-store.focusOn(undefined)
+store.focusPath(undefined)
 
 // Focusing on non-string key @shouldNotCompile
-store.focusOn(42)
+store.focusPath(42)
 
 // Focusing on object key @shouldNotCompile
-store.focusOn({})
+store.focusPath({})
 
 // Focusing on function key @shouldNotCompile
-store.focusOn(() => 'counter')
+store.focusPath(() => 'counter')
 
 // Focusing on unknown key @shouldNotCompile
-store.focusOn('unknown')
+store.focusPath('unknown')
 
 // Focusing unknown field @shouldNotCompile
 store.focusFields('unknown')
@@ -56,7 +56,7 @@ store.focusFields('unknown')
 todoListStore.focusFields('length')
 
 // Focusing key on array-focused store @shouldNotCompile
-todoListStore.focusOn('length')
+todoListStore.focusPath('length')
 
 // Focusing null index @shouldNotCompile
 todoListStore.focusIndex(null)
@@ -95,7 +95,7 @@ store.recompose([])
 store.recompose({ todoList: todoListStore.lens })
 
 // Recomposing with wrong source type Lens @shouldNotCompile
-const recomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoList: todoLens.focusOn('list') })
+const recomposedStore: Store<{ todoList: number[] }> = store.recompose({ todoList: todoLens.focusPath('list') })
 
 //////////////
 // COMPUTE //

@@ -13,11 +13,11 @@ type State = {
 const state = {} as State
 
 const store = createStore(state)
-const todoStore = store.focusOn('todo')
-const todoListStore = todoStore.focusOn('list')
+const todoStore = store.focusPath('todo')
+const todoListStore = todoStore.focusPath('list')
 
 const lens = store.lens
-const todoLens = lens.focusOn('todo')
+const todoLens = lens.focusPath('todo')
 
 // Plucking null key @shouldNotCompile
 store.pluck(null)
@@ -95,10 +95,10 @@ store.cherryPick({ a: [] })
 store.cherryPick({ a: (state: { counter: string }) => null })
 
 // Assigning cherryPick to wrong lens-extracted variable type @shouldNotCompile
-const lensExtractedState$: Observable<{ todoList: number[] }> = store.cherryPick({ todoList: todoLens.focusOn('list') })
+const lensExtractedState$: Observable<{ todoList: number[] }> = store.cherryPick({ todoList: todoLens.focusPath('list') })
 
 // Cherry-picking with wrong lens source type @shouldNotCompile
-store.cherryPick({ a: todoStore.lens.focusOn('list') })
+store.cherryPick({ a: todoStore.lens.focusPath('list') })
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //

@@ -12,7 +12,7 @@ type State = {
 const state = {} as State
 
 const store = createStore(state)
-const counterStore = store.focusOn('counter')
+const counterStore = store.focusPath('counter')
 
 // Setting wrong value type @shouldNotCompile
 counterStore.setValue('42')
