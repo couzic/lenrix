@@ -8,15 +8,15 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-   cherryPick,
-   createLens,
-   FieldLenses,
-   FieldsUpdater,
-   FieldUpdaters,
-   FieldValues,
-   NotAnArray,
-   UnfocusedLens,
-   Updater,
+    cherryPick,
+    createLens,
+    FieldLenses,
+    FieldsUpdater,
+    FieldUpdaters,
+    FieldValues,
+    NotAnArray,
+    UnfocusedLens,
+    Updater,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
@@ -140,7 +140,7 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
       const updateOnParent = (updater: Updater<Partial<NormalizedState>>) => this.update(state => {
          const fields = pickFields(state)
          const updatedFields = updater(fields)
-         Object.keys(updatedFields).forEach(key => {
+         Object.keys(updatedFields).forEach(key => { // TODO Write test
             if (keys.indexOf(key as any) < 0) throw Error(key + ' is not part of the updatable fields: ' + keys)
          })
          return { ...state as any, ...updatedFields as any }
