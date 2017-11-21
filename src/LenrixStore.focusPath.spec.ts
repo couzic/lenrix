@@ -42,7 +42,7 @@ describe('LenrixStore.focusPath()', () => {
    })
 
    xit('has deep path', () => {
-      expect(store.focusOn('input').path).to.equal('root.todo.input')
+      expect(store.focusPath('input').path).to.equal('root.todo.input')
    })
 
    /////////////

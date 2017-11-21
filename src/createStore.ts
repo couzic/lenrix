@@ -2,11 +2,11 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 
-import { createLens } from 'immutable-lens'
+import { createLens, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
-import { LenrixStore } from './LenrixStore'
+import { ActionMeta, LenrixStore } from './LenrixStore'
 import { Store } from './Store'
 
 export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<State> {
@@ -30,13 +30,20 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
       stateSubject.next(reduxStore.getState())
    })
 
+   const dispatchUpdate = (updater: Updater<State>, meta: ActionMeta) => {
+      const type = '[UPDATE]'
+         + (meta.store.name ? meta.store.name + '.' : '')
+         + updater.name
+      reduxStore.dispatch({ type, payload: updater(reduxStore.getState()), meta })
+   }
+
    const state$ = stateSubject.distinctUntilChanged().skip(1)
    return new LenrixStore(
       state$.map(normalizedState => ({ normalizedState, computedValues: {} })),
       data => data.normalizedState,
       { normalizedState: preloadedState, computedValues: {} },
       createLens<State>(),
-      updater => reduxStore.dispatch({ type: '[UPDATE]' + updater.name, payload: updater(reduxStore.getState()) }),
+      dispatchUpdate,
       'root'
    )
 }

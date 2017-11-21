@@ -19,6 +19,8 @@ export interface Store<State> extends ReadableStore<State>, UpdatableStore<State
    // updateIndexes()
    // updateIndexValues()
 
+   name?: string
+
    //////////////
    // COMPUTE //
    ////////////

@@ -1,6 +1,6 @@
 {
   "name": "lenrix",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Type-safe, reactive, lens-focused, immutable state management",
   "keywords": [
     "typescript",

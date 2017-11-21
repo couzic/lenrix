@@ -11,6 +11,8 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    readonly lens: UnfocusedLens<NormalizedState>
    readonly path: string
 
+   name?: string
+
    //////////////
    // COMPUTE //
    ////////////
