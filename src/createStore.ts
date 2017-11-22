@@ -16,6 +16,7 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
          if (typeof updater === 'function') {
             return updater(state)
          } else {
+            console.warn('Unable to apply update (Updater is not serializable) : fallback to precomputed newState')
             return newState
          }
       } else {
@@ -38,7 +39,7 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
    const dispatchUpdate = (updater: Updater<State>, meta: ActionMeta) => {
       const type = '[UPDATE]'
          + (meta.store.name ? meta.store.name + '.' : '')
-         + updater.name
+         + meta.updater.name
       const newState = updater(reduxStore.getState())
       reduxStore.dispatch({
          type,
