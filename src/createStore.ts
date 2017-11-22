@@ -12,7 +12,12 @@ import { Store } from './Store'
 export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<State> {
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[UPDATE]')) {
-         return action.payload
+         const { updater, newState } = action.payload
+         if (typeof updater === 'function') {
+            return updater(state)
+         } else {
+            return newState
+         }
       } else {
          return reducer(state, action)
       }
@@ -34,7 +39,12 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
       const type = '[UPDATE]'
          + (meta.store.name ? meta.store.name + '.' : '')
          + updater.name
-      reduxStore.dispatch({ type, payload: updater(reduxStore.getState()), meta })
+      const newState = updater(reduxStore.getState())
+      reduxStore.dispatch({
+         type,
+         payload: { updater, newState },
+         meta
+      })
    }
 
    const state$ = stateSubject.distinctUntilChanged().skip(1)
