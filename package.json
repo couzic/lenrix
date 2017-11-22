@@ -48,7 +48,7 @@
     "chai": "^4.1.2",
     "chalk": "^2.3.0",
     "glob-promise": "^3.3.0",
-    "immutable-lens": "^0.1.5",
+    "immutable-lens": "^0.1.7",
     "mocha": "^3.5.3",
     "ramda": "^0.25.0",
     "redux": "^3.7.2",

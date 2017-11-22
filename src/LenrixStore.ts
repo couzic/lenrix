@@ -8,18 +8,19 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-   cherryPick,
-   createLens,
-   FieldLenses,
-   FieldsUpdater,
-   FieldUpdaters,
-   FieldValues,
-   Lens,
-   NotAnArray,
-   UnfocusedLens,
-   Updater,
+    cherryPick,
+    createLens,
+    FieldLenses,
+    FieldsUpdater,
+    FieldUpdaters,
+    FieldValues,
+    Lens,
+    NotAnArray,
+    UnfocusedLens,
+    Updater,
+    UpdaterMeta,
+    UpdaterWithMeta,
 } from 'immutable-lens'
-import { LensCreatedUpdater } from 'immutable-lens/lib'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
@@ -34,11 +35,7 @@ export interface ActionMeta {
       currentState: any
       computedValues?: any
    }
-   updater: {
-      name: string
-      genericName: string
-      detailedName: string
-   }
+   updater: UpdaterMeta
 }
 
 export interface StoreData<NormalizedState, ComputedValues extends object> {
@@ -237,19 +234,14 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
       this.setValue(this.initialData.normalizedState)
    }
 
-   private dispatchWithMeta(updater: LensCreatedUpdater<RootState>) {
+   private dispatchWithMeta(updater: UpdaterWithMeta<RootState>) {
       this.dispatchUpdate(updater, {
          store: {
             name: this.name,
             path: this.path,
             currentState: this.currentState
          },
-         updater: {
-            name: updater.name,
-            // newValue,
-            genericName: updater.genericName,
-            detailedName: updater.detailedName
-         }
+         updater: updater.meta
       })
    }
 
