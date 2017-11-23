@@ -9,15 +9,25 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { ActionMeta, LenrixStore } from './LenrixStore'
 import { Store } from './Store'
 
+declare const process: undefined | {
+   env?: {
+      NODE_ENV?: string
+   }
+}
+
 export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<State> {
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[UPDATE]')) {
          const { updater, newState } = action.payload
          if (typeof updater === 'function') {
             return updater(state)
-         } else {
+         } else if (newState) {
             console.warn('Unable to apply update (Updater is not serializable) : fallback to precomputed newState')
             return newState
+         } else {
+            console.warn('Unable to apply update (Updater is not serializable), Unable to fallback to precomputed state: fallback to redux reducer')
+            console.info('Have you tried setting NODE_ENV to development ?')
+            return reducer(state, action)
          }
       } else {
          return reducer(state, action)
@@ -40,10 +50,13 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
       const type = '[UPDATE]'
          + (meta.store.name ? meta.store.name + '.' : '')
          + meta.updater.name
-      const newState = updater(reduxStore.getState())
+      const payload = { updater }
+      if (process && process.env && process.env.NODE_ENV && process.env.NODE_ENV === 'development') {
+         (payload as any).newState = updater(reduxStore.getState())
+      }
       reduxStore.dispatch({
          type,
-         payload: { updater, newState },
+         payload,
          meta
       })
    }
