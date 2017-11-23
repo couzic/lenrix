@@ -1,5 +1,6 @@
-import { createStore } from './createStore'
 import { Observable } from 'rxjs/Observable'
+
+import { createStore } from './createStore'
 
 type State = {
    counter: number

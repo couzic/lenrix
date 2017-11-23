@@ -1,15 +1,16 @@
 import { expect } from 'chai'
-import { initialState, State } from '../test/State'
-import { Store } from './Store'
-import { createStore } from './createStore'
 import { createLens } from 'immutable-lens'
+
+import { initialState, State } from '../test/State'
+import { createStore } from './createStore'
+import { Store } from './Store'
 
 describe('LenrixStore', () => {
 
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
-   let store: Store<State>
+   let store: Store<{ state: State }>
    let state: State
 
    beforeEach(() => {

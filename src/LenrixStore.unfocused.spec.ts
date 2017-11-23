@@ -1,12 +1,13 @@
 import { expect } from 'chai'
 import { UnfocusedLens } from 'immutable-lens'
+
 import { initialState, State } from '../test/State'
-import { Store } from './Store'
 import { createStore } from './createStore'
+import { Store } from './Store'
 
 describe('LenrixStore when unfocused', () => {
 
-   let store: Store<State>
+   let store: Store<{ state: State }>
    let lens: UnfocusedLens<State>
    let state: State
    let stateTransitions: number

@@ -1,15 +1,16 @@
 import { expect } from 'chai'
-import { initialState, State } from '../test/State'
-import { Store } from './Store'
-import { createStore } from './createStore'
 import { UnfocusedLens } from 'immutable-lens'
+
+import { initialState, State } from '../test/State'
+import { createStore } from './createStore'
+import { Store } from './Store'
 
 type PickedState = Pick<State, 'counter' | 'todo'>
 
 describe('LenrixStore.focusFields()', () => {
 
-   let rootStore: Store<State>
-   let store: Store<PickedState>
+   let rootStore: Store<{ state: State }>
+   let store: Store<{ state: PickedState }>
    let rootState: State
    let state: PickedState
    let rootLens: UnfocusedLens<State>

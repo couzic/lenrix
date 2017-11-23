@@ -1,13 +1,14 @@
 import { expect } from 'chai'
-import { initialState, State, TodoState } from '../test/State'
 import { UnfocusedLens } from 'immutable-lens'
-import { Store } from './Store'
+
+import { initialState, State, TodoState } from '../test/State'
 import { createStore } from './createStore'
+import { Store } from './Store'
 
 describe('LenrixStore.focusPath()', () => {
 
-   let rootStore: Store<State>
-   let store: Store<TodoState>
+   let rootStore: Store<{ state: State }>
+   let store: Store<{ state: TodoState }>
    let rootState: State
    let state: TodoState
    let rootLens: UnfocusedLens<State>

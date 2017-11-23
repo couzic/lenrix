@@ -40,7 +40,7 @@ const isAvailable = (name: string) => Observable.of(name.length > 3)
 describe('LenrixStore.compute$()', () => {
 
    const lens = createLens<State>()
-   let rootStore: Store<State>
+   let rootStore: Store<{ state: State }>
    beforeEach(() => {
       rootStore = createStore(initialState)
    })
@@ -61,7 +61,7 @@ describe('LenrixStore.compute$()', () => {
 
    describe('with initial values', () => {
 
-      let store: ComputedStore<State, ComputedValues>
+      let store: ComputedStore<{ normalizedState: State, computedValues: ComputedValues }>
       let state: State & ComputedValues
       let stateTransitions: number
 
@@ -166,7 +166,7 @@ describe('LenrixStore.compute$()', () => {
       it('computes values from initial normalized state') // TODO ???????
 
       describe('.focusPath() with computed values', () => {
-         let focusedStore: ComputedStore<State['todo'], ComputedValues>
+         let focusedStore: ComputedStore<{ normalizedState: State['todo'], computedValues: ComputedValues }>
          let focusedState: State['todo'] & ComputedValues
          let focusedStateTransitions: number
 
@@ -195,7 +195,7 @@ describe('LenrixStore.compute$()', () => {
       })
 
       describe('.focusFields() with computed values', () => {
-         let focusedStore: ComputedStore<Pick<State, 'todo'>, ComputedValues>
+         let focusedStore: ComputedStore<{ normalizedState: Pick<State, 'todo'>, computedValues: ComputedValues }>
          let focusedState: Pick<State, 'todo'> & ComputedValues
          let focusedStateTransitions: number
 
@@ -224,7 +224,7 @@ describe('LenrixStore.compute$()', () => {
       })
 
       describe('.recompose() with computed values', () => {
-         let focusedStore: ComputedStore<{ todoList: string[] }, ComputedValues>
+         let focusedStore: ComputedStore<{ normalizedState: { todoList: string[] }, computedValues: ComputedValues }>
          let focusedState: { todoList: string[] } & ComputedValues
          let focusedStateTransitions: number
 

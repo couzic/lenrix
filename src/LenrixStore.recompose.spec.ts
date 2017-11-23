@@ -1,11 +1,12 @@
 import { expect } from 'chai'
+
 import { initialState, State, TodoItem } from '../test/State'
-import { Store } from './Store'
 import { createStore } from './createStore'
+import { Store } from './Store'
 
 describe('LenrixStore.recompose()', () => {
 
-   let rootStore: Store<State>
+   let rootStore: Store<{ state: State }>
    let rootState: State
    let rootStateTransitions: number
 
@@ -14,7 +15,7 @@ describe('LenrixStore.recompose()', () => {
       todoList: TodoItem[]
    }
 
-   let store: Store<RecomposedState>
+   let store: Store<{ state: RecomposedState }>
    let state: RecomposedState
    let stateTransitions: number
 

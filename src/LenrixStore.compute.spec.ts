@@ -16,9 +16,9 @@ describe('LenrixStore.compute()', () => {
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
-   let rootStore: Store<State>
+   let rootStore: Store<{ state: State }>
 
-   let store: ComputedStore<State, ComputedValues>
+   let store: ComputedStore<{ normalizedState: State, computedValues: ComputedValues }>
    let state: State & ComputedValues
    let stateTransitions: number
 
@@ -108,7 +108,7 @@ describe('LenrixStore.compute()', () => {
    })
 
    describe('.focusPath() with computed values', () => {
-      let focusedStore: ComputedStore<State['sorting'], ComputedValues>
+      let focusedStore: ComputedStore<{ normalizedState: State['sorting'], computedValues: ComputedValues }>
       let focusedState: State['sorting'] & ComputedValues
       let focusedStateTransitions: number
 
@@ -142,7 +142,7 @@ describe('LenrixStore.compute()', () => {
    })
 
    describe('.focusFields() with computed values', () => {
-      let focusedStore: ComputedStore<Pick<State, 'sorting'>, ComputedValues>
+      let focusedStore: ComputedStore<{ normalizedState: Pick<State, 'sorting'>, computedValues: ComputedValues }>
       let focusedState: Pick<State, 'sorting'> & ComputedValues
       let focusedStateTransitions: number
 
@@ -176,7 +176,7 @@ describe('LenrixStore.compute()', () => {
    })
 
    describe('.recompose() with computed values', () => {
-      let focusedStore: ComputedStore<{ todoList: TodoItem[] }, ComputedValues>
+      let focusedStore: ComputedStore<{ normalizedState: { todoList: TodoItem[] }, computedValues: ComputedValues }>
       let focusedState: { todoList: TodoItem[] } & ComputedValues
       let focusedStateTransitions: number
 

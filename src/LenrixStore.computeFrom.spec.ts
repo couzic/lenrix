@@ -26,8 +26,8 @@ const initialState: State = {
 describe('LenrixStore.computeFrom()', () => {
 
    const lens = createLens<State>()
-   let store: Store<State>
-   let computedStore: ComputedStore<State, { todoListLength: number }>
+   let store: Store<{ state: State }>
+   let computedStore: ComputedStore<{ normalizedState: State, computedValues: { todoListLength: number } }>
    let state: State
    let stateTransitions: number
 

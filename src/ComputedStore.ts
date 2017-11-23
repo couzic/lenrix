@@ -5,10 +5,15 @@ import { ReadableStore } from './ReadableStore'
 import { Store } from './Store'
 import { UpdatableStore } from './UpdatableStore'
 
-export interface ComputedStore<NormalizedState extends object & NotAnArray, ComputedValues>
-   extends ReadableStore<NormalizedState & ComputedValues>, UpdatableStore<NormalizedState> {
+export interface ComputedStoreType<NormalizedState extends object & NotAnArray, ComputedValues> {
+   normalizedState: NormalizedState
+   computedValues: ComputedValues
+}
 
-   readonly lens: UnfocusedLens<NormalizedState>
+export interface ComputedStore<Type extends ComputedStoreType<any, any>>
+   extends ReadableStore<Type['normalizedState'] & Type['computedValues']>, UpdatableStore<Type['normalizedState']> {
+
+   readonly lens: UnfocusedLens<Type['normalizedState']>
    readonly path: string
 
    name?: string
@@ -18,13 +23,13 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    ////////////
 
    compute<NewComputedValues extends object & NotAnArray>(
-      computer: (state: NormalizedState & ComputedValues) => NewComputedValues
-   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+      computer: (state: Type['normalizedState'] & Type['computedValues']) => NewComputedValues
+   ): ComputedStore<{ normalizedState: Type['normalizedState'], computedValues: Type['computedValues'] & NewComputedValues }>
 
    computeFrom<Selection extends object & NotAnArray, NewComputedValues extends object & NotAnArray>(
-      selection: FieldLenses<NormalizedState & ComputedValues, Selection>,
+      selection: FieldLenses<Type['normalizedState'] & Type['computedValues'], Selection>,
       computer: (selection: Selection) => NewComputedValues
-   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   ): ComputedStore<{ normalizedState: Type['normalizedState'], computedValues: Type['computedValues'] & NewComputedValues }>
 
    // TODO Implement
    // computeFromFields<K extends keyof NormalizedState & ComputedValues, NewComputedValues extends object & NotAnArray>(
@@ -33,13 +38,13 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    // ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
 
    compute$<NewComputedValues extends object & NotAnArray>(
-      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>,
+      computer$: (state$: Observable<Type['normalizedState'] & Type['computedValues']>) => Observable<NewComputedValues>,
       initialValues: NewComputedValues
-   ): ComputedStore<NormalizedState, ComputedValues & NewComputedValues>
+   ): ComputedStore<{ normalizedState: Type['normalizedState'], computedValues: Type['computedValues'] & NewComputedValues }>
 
    compute$<NewComputedValues extends object & NotAnArray>(
-      computer$: (state$: Observable<NormalizedState & ComputedValues>) => Observable<NewComputedValues>
-   ): ComputedStore<NormalizedState, ComputedValues & Partial<NewComputedValues>>
+      computer$: (state$: Observable<Type['normalizedState'] & Type['computedValues']>) => Observable<NewComputedValues>
+   ): ComputedStore<{ normalizedState: Type['normalizedState'], computedValues: Type['computedValues'] & Partial<NewComputedValues> }>
 
    // TODO Implement
    // computeFrom$<NewComputedValues extends object & NotAnArray>(
@@ -71,43 +76,58 @@ export interface ComputedStore<NormalizedState extends object & NotAnArray, Comp
    // FOCUS //
    //////////
 
-   focusFields<K extends keyof NormalizedState>(...keys: K[]): Store<Pick<NormalizedState, K>>
+   focusFields<K extends keyof Type['normalizedState']>(...keys: K[]): Store<{ state: Pick<Type['normalizedState'], K> }>
 
-   focusFields<K extends keyof NormalizedState>(keys: K[]): Store<Pick<NormalizedState, K>>
+   focusFields<K extends keyof Type['normalizedState']>(keys: K[]): Store<{ state: Pick<Type['normalizedState'], K> }>
 
-   focusFields<NK extends keyof NormalizedState, CK extends keyof ComputedValues>(keys: NK[], computedValues: CK[]): ComputedStore<Pick<NormalizedState, NK>, Pick<ComputedValues, CK>>
+   focusFields<NK extends keyof Type['normalizedState'], CK extends keyof Type['computedValues']>(
+      keys: NK[],
+      computedValues: CK[]
+   ): ComputedStore<{ normalizedState: Pick<Type['normalizedState'], NK>, computedValues: Pick<Type['computedValues'], CK> }>
 
-   recompose<RecomposedState>(fields: FieldLenses<NormalizedState, RecomposedState>): Store<RecomposedState>
+   recompose<RecomposedState>(fields: FieldLenses<Type['normalizedState'], RecomposedState>): Store<{ state: RecomposedState }>
 
-   recompose<RecomposedState, CK extends keyof ComputedValues>(fields: FieldLenses<NormalizedState, RecomposedState>, computedValues: CK[]): ComputedStore<RecomposedState, Pick<ComputedValues, CK>>
+   recompose<RecomposedState, CK extends keyof Type['computedValues']>(
+      fields: FieldLenses<Type['normalizedState'], RecomposedState>,
+      computedValues: CK[]
+   ): ComputedStore<{ normalizedState: RecomposedState, computedValues: Pick<Type['computedValues'], CK> }>
 
-   focusPath<K extends keyof NormalizedState>(key: K): Store<NormalizedState[K]>
+   focusPath<K extends keyof Type['normalizedState']>(key: K): Store<{ state: Type['normalizedState'][K] }>
 
-   focusPath<K extends keyof NormalizedState>(path: [K]): Store<NormalizedState[K]>
+   focusPath<K extends keyof Type['normalizedState']>(path: [K]): Store<{ state: Type['normalizedState'][K] }>
 
-   focusPath<NK extends keyof NormalizedState, CK extends keyof ComputedValues>(path: [NK], computedValues: CK[]): ComputedStore<NormalizedState[NK], Pick<ComputedValues, CK>>
+   focusPath<NK extends keyof Type['normalizedState'], CK extends keyof Type['computedValues']>(
+      path: [NK],
+      computedValues: CK[]
+   ): ComputedStore<{ normalizedState: Type['normalizedState'][NK], computedValues: Pick<Type['computedValues'], CK> }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1]>(key1: K1, key2: K2): Store<NormalizedState[K1][K2]>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1]>(key1: K1, key2: K2): Store<{ state: Type['normalizedState'][K1][K2] }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1]>(path: [K1, K2]): Store<NormalizedState[K1][K2]>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1]>(path: [K1, K2]): Store<{ state: Type['normalizedState'][K1][K2] }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1],
-      CK extends keyof ComputedValues>(path: [K1, K2], computedValues: CK[]): ComputedStore<NormalizedState[K1][K2], Pick<ComputedValues, CK>>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1],
+      CK extends keyof Type['computedValues']>(
+      path: [K1, K2],
+      computedValues: CK[]
+      ): ComputedStore<{ normalizedState: Type['normalizedState'][K1][K2], computedValues: Pick<Type['computedValues'], CK> }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1],
-      K3 extends keyof NormalizedState[K2]>(key1: K1, key2: K2, key3: K3): Store<NormalizedState[K1][K2][K3]>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1],
+      K3 extends keyof Type['normalizedState'][K2]>(key1: K1, key2: K2, key3: K3): Store<{ state: Type['normalizedState'][K1][K2][K3] }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1],
-      K3 extends keyof NormalizedState[K2]>(path: [K1, K2, K3]): Store<NormalizedState[K1][K2][K3]>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1],
+      K3 extends keyof Type['normalizedState'][K2]>(path: [K1, K2, K3]): Store<{ state: Type['normalizedState'][K1][K2][K3] }>
 
-   focusPath<K1 extends keyof NormalizedState,
-      K2 extends keyof NormalizedState[K1],
-      K3 extends keyof NormalizedState[K2],
-      CK extends keyof ComputedValues>(path: [K1, K2, K3], computedValues: CK[]): ComputedStore<NormalizedState[K1][K2][K3], Pick<ComputedValues, CK>>
+   focusPath<K1 extends keyof Type['normalizedState'],
+      K2 extends keyof Type['normalizedState'][K1],
+      K3 extends keyof Type['normalizedState'][K2],
+      CK extends keyof Type['computedValues']>(
+      path: [K1, K2, K3],
+      computedValues: CK[]
+      ): ComputedStore<{ normalizedState: Type['normalizedState'][K1][K2][K3], computedValues: Pick<Type['computedValues'], CK> }>
 
 }
