@@ -1,6 +1,7 @@
 import { NotAnArray, UnfocusedLens } from 'immutable-lens'
 
-import { FocusedHandlers } from './ActionStore'
+import { ActionDispatchers } from './ActionDispatch'
+import { FocusedHandlers } from './FocusedHandlers'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 
@@ -20,6 +21,6 @@ export interface ActionComputedStore<Type extends {
       focusedHandlers: (lens: UnfocusedLens<Type['normalizedState']>) => FocusedHandlers<Type['normalizedState'], Type['actions']>
    ): ActionComputedStore<Type>
 
-   dispatch: {[ActionType in keyof Type['actions']]: (payload: Type['actions'][ActionType]) => void}
+   actions: ActionDispatchers<Type['actions']>
 
 }

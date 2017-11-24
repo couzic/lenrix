@@ -2,10 +2,11 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 
-import { createLens, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
+import { FocusedAction } from './FocusedAction'
+import { FocusedHandlers } from './FocusedHandlers'
 import { ActionMeta, LenrixStore } from './LenrixStore'
 import { Store } from './Store'
 
@@ -16,19 +17,13 @@ declare const process: undefined | {
 }
 
 export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<{ state: State }> {
+   let handlers = {} as any
+
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[UPDATE]')) {
-         const { updater, newState } = action.payload
-         if (typeof updater === 'function') {
-            return updater(state)
-         } else if (newState) {
-            console.warn('Unable to apply update (Updater is not serializable) : fallback to precomputed newState')
-            return newState
-         } else {
-            console.warn('Unable to apply update (Updater is not serializable), Unable to fallback to precomputed state: fallback to redux reducer')
-            console.info('Have you tried setting NODE_ENV to development ?')
-            return reducer(state, action)
-         }
+         const { type, payload } = action
+         const handler = handlers[type]
+         return handler(payload)(state)
       } else {
          return reducer(state, action)
       }
@@ -46,28 +41,31 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
       stateSubject.next(reduxStore.getState())
    })
 
-   const dispatchUpdate = (updater: Updater<State>, meta: ActionMeta) => {
-      const type = '[UPDATE]'
-         + (meta.store.name ? meta.store.name + '.' : '')
-         + meta.updater.name
-      const payload = { updater }
-      if (process && process.env && process.env.NODE_ENV && process.env.NODE_ENV === 'development') {
-         (payload as any).newState = updater(reduxStore.getState())
-      }
+   const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
+      const type = '[UPDATE]' + action.type
       reduxStore.dispatch({
          type,
-         payload,
+         payload: action.payload,
          meta
       })
    }
 
    const state$ = stateSubject.distinctUntilChanged().skip(1)
+
+   const registerHandlers = <Actions>(newHandlers: FocusedHandlers<State, Actions>) => {
+      const actionTypes = Object.keys(newHandlers)
+      actionTypes.forEach(actionType => {
+         const key = '[UPDATE]' + actionType
+         handlers[key] = (newHandlers as any)[actionType]
+      })
+   }
+
    return new LenrixStore(
       state$.map(normalizedState => ({ normalizedState, computedValues: {} })),
       data => data.normalizedState,
       { normalizedState: preloadedState, computedValues: {} },
-      createLens<State>(),
-      dispatchUpdate,
+      registerHandlers,
+      dispatchAction,
       'root'
    )
 }

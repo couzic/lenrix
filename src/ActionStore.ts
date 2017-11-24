@@ -1,18 +1,16 @@
-import { FieldLenses, NotAnArray, UnfocusedLens, Updater } from 'immutable-lens'
+import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
 import { ActionComputedStore } from './ActionComputedStore'
+import { ActionDispatchers } from './ActionDispatch'
+import { FocusedHandlers } from './FocusedHandlers'
 import { ReadableStore } from './ReadableStore'
-import { StoreType } from './Store'
 import { UpdatableStore } from './UpdatableStore'
 
-export type FocusedHandlers<State, Actions> = {[ActionType in keyof Actions]?: (payload: Actions[ActionType]) => Updater<State> }
-
-export interface ActionStoreType<State, Actions> extends StoreType<State> {
-   actions: Actions
-}
-
-export interface ActionStore<Type extends ActionStoreType<any, any>> extends ReadableStore<Type['state']>, UpdatableStore<Type['state']> {
+export interface ActionStore<Type extends {
+   state: any
+   actions: any
+}> extends ReadableStore<Type['state']>, UpdatableStore<Type['state']> {
 
    //////////////
    // ACTIONS //
@@ -27,7 +25,7 @@ export interface ActionStore<Type extends ActionStoreType<any, any>> extends Rea
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type['state'], Type['actions']>
    ): ActionStore<Type>
 
-   dispatch: {[ActionType in keyof Type['actions']]: (payload: Type['actions'][ActionType]) => void}
+   actions: ActionDispatchers<Type['actions']>
 
    //////////////
    // COMPUTE //
