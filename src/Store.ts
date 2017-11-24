@@ -4,6 +4,7 @@ import 'rxjs/add/operator/map'
 import { FieldLenses, NotAnArray } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
+import { ActionStore } from './ActionStore'
 import { ComputedStore } from './ComputedStore'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
@@ -87,6 +88,15 @@ export interface Store<Type extends StoreType<any>> extends ReadableStore<Type['
    //    fields: K[],
    //    computer$: (fields$: Observable<Pick<State, K>>) => Observable<ComputedValues>
    // ): ComputedStore<State, Partial<ComputedValues>>
+
+   //////////////
+   // ACTIONS //
+   ////////////
+
+   actionTypes<Actions>(): ActionStore<{
+      state: Type['state']
+      actions: Actions
+   }>
 
    ////////////
    // FOCUS //

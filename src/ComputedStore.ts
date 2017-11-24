@@ -1,6 +1,7 @@
 import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
+import { ActionComputedStore } from './ActionComputedStore'
 import { ReadableStore } from './ReadableStore'
 import { Store } from './Store'
 import { UpdatableStore } from './UpdatableStore'
@@ -10,7 +11,7 @@ export interface ComputedStoreType<NormalizedState extends object & NotAnArray, 
    computedValues: ComputedValues
 }
 
-export interface ComputedStore<Type extends ComputedStoreType<any, any>>
+export interface ComputedStore<Type extends ComputedStoreType<object & NotAnArray, any>>
    extends ReadableStore<Type['normalizedState'] & Type['computedValues']>, UpdatableStore<Type['normalizedState']> {
 
    readonly lens: UnfocusedLens<Type['normalizedState']>
@@ -71,6 +72,16 @@ export interface ComputedStore<Type extends ComputedStoreType<any, any>>
    //    fields: K[],
    //    computer$: (fields$: Observable<Pick<NormalizedState & ComputedValues, K>>) => Observable<NewComputedValues>
    // ): ComputedStore<NormalizedState, Partial<ComputedValues & NewComputedValues>>
+
+   //////////////
+   // ACTIONS //
+   ////////////
+
+   actionTypes<Actions>(): ActionComputedStore<{
+      normalizedState: Type['normalizedState']
+      computedValues: Type['computedValues']
+      actions: Actions
+   }>
 
    ////////////
    // FOCUS //

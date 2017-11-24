@@ -8,18 +8,18 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-    cherryPick,
-    createLens,
-    FieldLenses,
-    FieldsUpdater,
-    FieldUpdaters,
-    FieldValues,
-    Lens,
-    NotAnArray,
-    UnfocusedLens,
-    Updater,
-    UpdaterMeta,
-    UpdaterWithMeta,
+   cherryPick,
+   createLens,
+   FieldLenses,
+   FieldsUpdater,
+   FieldUpdaters,
+   FieldValues,
+   Lens,
+   NotAnArray,
+   UnfocusedLens,
+   Updater,
+   UpdaterMeta,
+   UpdaterWithMeta,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
@@ -27,6 +27,7 @@ import { Observable } from 'rxjs/Observable'
 import { ReadableStore } from './ReadableStore'
 import { shallowEquals } from './shallowEquals'
 import { UpdatableStore } from './UpdatableStore'
+import { FocusedHandlers } from './ActionStore';
 
 export interface ActionMeta {
    store: {
@@ -51,7 +52,12 @@ function dataEquals<NormalizedState extends object, ComputedValues extends objec
       && shallowEquals(previous.computedValues, next.computedValues)
 }
 
-export class LenrixStore<NormalizedState extends object, ComputedValues extends object, State extends NormalizedState & ComputedValues, RootState extends object>
+export class LenrixStore<
+   NormalizedState extends object,
+   ComputedValues extends object,
+   Actions extends object,
+   State extends NormalizedState & ComputedValues,
+   RootState extends object>
    implements ReadableStore<State>, UpdatableStore<NormalizedState> {
 
    name?: string
@@ -86,6 +92,22 @@ export class LenrixStore<NormalizedState extends object, ComputedValues extends 
          .map(dataToState)
          .subscribe(this.stateSubject)
    }
+
+   //////////////
+   // ACTIONS //
+   ////////////
+
+   actionTypes<NewActions>(): any {
+      return this
+   }
+
+   actionHandlers(
+      focusedHandlers: (lens: UnfocusedLens<NormalizedState>) => FocusedHandlers<NormalizedState, Actions>
+   ) {
+
+   }
+
+   dispatch: {[ActionType in keyof Actions]: (payload: Actions[ActionType]) => void}
 
    ////////////
    // FOCUS //

@@ -15,7 +15,7 @@ declare const process: undefined | {
    }
 }
 
-export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<State> {
+export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<{ state: State }> {
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[UPDATE]')) {
          const { updater, newState } = action.payload
@@ -72,6 +72,6 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
    )
 }
 
-export function createStore<State extends object>(initialState: State): Store<State> {
+export function createStore<State extends object>(initialState: State): Store<{ state: State }> {
    return createFocusableStore(state => state, initialState)
 }
