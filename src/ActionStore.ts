@@ -4,6 +4,7 @@ import { Observable } from 'rxjs/Observable'
 import { ActionComputedStore } from './ActionComputedStore'
 import { ActionDispatchers } from './ActionDispatch'
 import { FocusedHandlers } from './FocusedHandlers'
+import { MergedFields } from './MergedFields'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 
@@ -18,7 +19,7 @@ export interface ActionStore<Type extends {
 
    actionTypes<NewActions>(): ActionStore<{
       state: Type['state']
-      actions: Type['actions'] & NewActions
+      actions: MergedFields<Type['actions'], NewActions>
    }>
 
    actionHandlers(

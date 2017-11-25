@@ -2,6 +2,7 @@ import { NotAnArray, UnfocusedLens } from 'immutable-lens'
 
 import { ActionDispatchers } from './ActionDispatch'
 import { FocusedHandlers } from './FocusedHandlers'
+import { MergedFields } from './MergedFields'
 import { ReadableStore } from './ReadableStore'
 import { UpdatableStore } from './UpdatableStore'
 
@@ -14,7 +15,7 @@ export interface ActionComputedStore<Type extends {
    actionTypes<NewActions>(): ActionComputedStore<{
       normalizedState: Type['normalizedState']
       computedValues: Type['computedValues']
-      actions: Type['actions'] & NewActions
+      actions: MergedFields<Type['actions'], NewActions>
    }>
 
    actionHandlers(
