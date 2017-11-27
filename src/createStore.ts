@@ -2,6 +2,7 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 
+import { NotAnArray } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 
@@ -16,7 +17,17 @@ declare const process: undefined | {
    }
 }
 
-export function createFocusableStore<State extends object>(reducer: Reducer<State>, preloadedState: State, enhancer?: StoreEnhancer<State>): Store<{ state: State }> {
+export function createFocusableStore<State extends object & NotAnArray>(
+   reducer: Reducer<State>,
+   preloadedState: State,
+   enhancer?: StoreEnhancer<State>
+): Store<{
+   state: State
+   computedValues: {}
+   actions: {}
+   dependencies: {}
+}> {
+
    let handlers = {} as any
 
    const augmentedReducer: Reducer<State> = (state, action) => {
@@ -52,7 +63,7 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
 
    const state$ = stateSubject.distinctUntilChanged().skip(1)
 
-   const registerHandlers = <Actions>(newHandlers: FocusedHandlers<State, Actions>) => {
+   const registerHandlers = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
          const key = '[UPDATE]' + actionType
@@ -61,15 +72,20 @@ export function createFocusableStore<State extends object>(reducer: Reducer<Stat
    }
 
    return new LenrixStore(
-      state$.map(normalizedState => ({ normalizedState, computedValues: {} })),
-      data => data.normalizedState,
-      { normalizedState: preloadedState, computedValues: {} },
+      state$.map(state => ({ state, computedValues: {} })),
+      data => data.state as any,
+      { state: preloadedState, computedValues: {} },
       registerHandlers,
       dispatchAction,
       'root'
    )
 }
 
-export function createStore<State extends object>(initialState: State): Store<{ state: State }> {
+export function createStore<State extends object>(initialState: State): Store<{
+   state: State
+   computedValues: {}
+   actions: {}
+   dependencies:{}
+ }> {
    return createFocusableStore(state => state, initialState)
 }

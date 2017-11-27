@@ -1,3 +1,9 @@
-import { Updater } from 'immutable-lens'
+import { NotAnArray } from 'immutable-lens'
 
-export type FocusedHandlers<State, Actions> = {[ActionType in keyof Actions]?: (payload: Actions[ActionType]) => Updater<State> }
+import { FocusedUpdater } from './FocusedUpdater'
+
+export type FocusedHandlers<Type extends {
+   state: object & NotAnArray
+   computedValues: object
+   actions: object
+}> = {[ActionType in keyof Type['actions']]?: (payload: Type['actions'][ActionType]) => FocusedUpdater<Type> }

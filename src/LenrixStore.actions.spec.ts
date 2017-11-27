@@ -10,7 +10,12 @@ describe('LenrixStore.actionHandlers()', () => {
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
-   let rootStore: Store<{ state: State }>
+   let rootStore: Store<{
+      state: State
+      computedValues: {}
+      actions: {}
+      dependencies: {}
+   }>
 
    beforeEach(() => {
       rootStore = createStore(initialState)
