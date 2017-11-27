@@ -48,14 +48,14 @@ describe('LenrixStore.focusFields()', () => {
    // UPDATE //
    ///////////
 
-   it('can update', () => {
-      store.update(state => ({
-         ...state,
-         counter: state.todo.list.length
-      }))
-      expect(store.currentState.counter).to.equal(3)
-      expect(stateTransitions).to.equal(2)
-   })
+   // it('can update', () => {
+   //    store.update(state => ({
+   //       ...state,
+   //       counter: state.todo.list.length
+   //    }))
+   //    expect(store.currentState.counter).to.equal(3)
+   //    expect(stateTransitions).to.equal(2)
+   // })
 
    ////////////
    // STATE //

@@ -8,23 +8,22 @@ import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
 import {
-   cherryPick,
-   createLens,
-   FieldLenses,
-   FieldsUpdater,
-   FieldUpdaters,
-   FieldValues,
-   Lens,
-   NotAnArray,
-   UnfocusedLens,
-   Updater,
-   UpdaterWithMeta,
+    cherryPick,
+    createLens,
+    FieldLenses,
+    FieldsUpdater,
+    FieldUpdaters,
+    FieldValues,
+    NotAnArray,
+    UnfocusedLens,
+    Updater,
+    UpdaterWithMeta,
 } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
-import { FocusedHandlers } from './ActionStore'
 import { FocusedAction } from './FocusedAction'
+import { FocusedHandlers } from './FocusedHandlers'
 import { ReadableStore } from './ReadableStore'
 import { shallowEquals } from './shallowEquals'
 import { UpdatableStore } from './UpdatableStore'

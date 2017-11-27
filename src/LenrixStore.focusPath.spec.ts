@@ -50,14 +50,14 @@ describe('LenrixStore.focusPath()', () => {
    // UPDATE //
    ///////////
 
-   it('can update', () => {
-      store.update(state => ({
-         ...state,
-         count: state.list.length
-      }))
-      expect(store.currentState.count).to.equal(3)
-      expect(stateTransitions).to.equal(2)
-   })
+   // it('can update', () => {
+   //    store.update(state => ({
+   //       ...state,
+   //       count: state.list.length
+   //    }))
+   //    expect(store.currentState.count).to.equal(3)
+   //    expect(stateTransitions).to.equal(2)
+   // })
 
    ////////////
    // STATE //
@@ -71,12 +71,12 @@ describe('LenrixStore.focusPath()', () => {
       expect(state).to.deep.equal(initialState.todo)
    })
 
-   it('does not emit new state when unrelated slice of ParentState is updated', () => {
-      rootStore.updateFields({ flag: value => !value })
+   // it('does not emit new state when unrelated slice of ParentState is updated', () => {
+   //    rootStore.updateFields({ flag: value => !value })
 
-      expect(rootStateTransitions).to.equal(2)
-      expect(stateTransitions).to.equal(1)
-   })
+   //    expect(rootStateTransitions).to.equal(2)
+   //    expect(stateTransitions).to.equal(1)
+   // })
 
    ////////////
    // FOCUS //
@@ -102,16 +102,16 @@ describe('LenrixStore.focusPath()', () => {
       })
    })
 
-   it('number-focused store emits new state when value changes', () => {
-      const focused = store.focusPath('count')
-      focused.update(value => value + 1)
-      expect(focused.currentState).to.equal(initialState.todo.count + 1)
-   })
+   // it('number-focused store emits new state when value changes', () => {
+   //    const focused = store.focusPath('count')
+   //    focused.update(value => value + 1)
+   //    expect(focused.currentState).to.equal(initialState.todo.count + 1)
+   // })
 
-   it('array-focused store emits new state when value changes', () => {
-      const focused = store.focusPath('list')
-      focused.setValue([])
-      expect(focused.currentState).to.be.empty
-   })
+   // it('array-focused store emits new state when value changes', () => {
+   //    const focused = store.focusPath('list')
+   //    focused.setValue([])
+   //    expect(focused.currentState).to.be.empty
+   // })
 
 })

@@ -51,14 +51,14 @@ describe('LenrixStore.recompose()', () => {
    // UPDATE //
    ///////////
 
-   it('can update', () => {
-      store.update(state => ({
-         ...state,
-         counter: state.todoList.length
-      }))
-      expect(store.currentState.counter).to.equal(3)
-      expect(stateTransitions).to.equal(2)
-   })
+   // it('can update', () => {
+   //    store.update(state => ({
+   //       ...state,
+   //       counter: state.todoList.length
+   //    }))
+   //    expect(store.currentState.counter).to.equal(3)
+   //    expect(stateTransitions).to.equal(2)
+   // })
 
    ////////////////////////
    // STATE TRANSITIONS //
@@ -74,12 +74,12 @@ describe('LenrixStore.recompose()', () => {
       expect(state.todoList).to.equal(initialState.todo.list)
    })
 
-   it('does not emit new state when unrelated slice of parent state changes', () => {
-      rootStore.updateFields({ flag: value => !value })
+   // it('does not emit new state when unrelated slice of parent state changes', () => {
+   //    rootStore.updateFields({ flag: value => !value })
 
-      expect(rootStateTransitions).to.equal(2)
-      expect(stateTransitions).to.equal(1)
-   })
+   //    expect(rootStateTransitions).to.equal(2)
+   //    expect(stateTransitions).to.equal(1)
+   // })
 
    ////////////
    // FOCUS //
