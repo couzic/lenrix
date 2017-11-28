@@ -64,6 +64,28 @@ describe('LenrixStore actions', () => {
       })
    })
 
+   describe('on fields-focused store', () => {
+      let store: Store<any>
+      beforeEach(() => {
+         store = rootStore.focusFields('todo')
+      })
+
+      it('applies handler registered on root store', () => {
+         store.actions.clearTodoList(undefined)
+
+         expect(store.currentState.todo.list).to.be.empty
+      })
+
+      it('applies handler registered on focused store', () => {
+         store
+            .actionTypes<{ clearList: void }>()
+            .actionHandlers(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
+            .actions.clearList(undefined)
+
+         expect(store.currentState.todo.list).to.be.empty
+      })
+   })
+
    describe('on recomposed store', () => {
       let store: Store<any>
       beforeEach(() => {

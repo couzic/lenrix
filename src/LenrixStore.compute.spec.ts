@@ -68,30 +68,6 @@ describe('LenrixStore.compute()', () => {
       expect(executions).to.equal(1)
    })
 
-   /////////////
-   // UPDATE //
-   ///////////
-
-   // it('can update normalized state', () => {
-   //    store.update(state => ({
-   //       ...state,
-   //       counter: state.todo.list.length
-   //    }))
-   //    expect(store.currentState.counter).to.equal(3)
-   //    expect(stateTransitions).to.equal(2)
-   // })
-
-   // it('can reset', () => {
-   //    store.setFieldValues({
-   //       counter: state.counter + 1
-   //    })
-   //    expect(state.counter).to.equal(43)
-   //    expect(stateTransitions).to.equal(2)
-   //    store.reset()
-   //    expect(state.counter).to.equal(42)
-   //    expect(stateTransitions).to.equal(3)
-   // })
-
    ////////////
    // STATE //
    //////////

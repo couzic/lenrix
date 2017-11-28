@@ -56,19 +56,6 @@ describe('LenrixStore.focusPath()', () => {
       expect(store.focusPath('input').path).to.equal('root.todo.input')
    })
 
-   /////////////
-   // UPDATE //
-   ///////////
-
-   // it('can update', () => {
-   //    store.update(state => ({
-   //       ...state,
-   //       count: state.list.length
-   //    }))
-   //    expect(store.currentState.count).to.equal(3)
-   //    expect(stateTransitions).to.equal(2)
-   // })
-
    ////////////
    // STATE //
    //////////
@@ -81,12 +68,15 @@ describe('LenrixStore.focusPath()', () => {
       expect(state).to.deep.equal(initialState.todo)
    })
 
-   // it('does not emit new state when unrelated slice of ParentState is updated', () => {
-   //    rootStore.updateFields({ flag: value => !value })
+   it('does not emit new state when unrelated slice of ParentState is updated', () => {
+      rootStore
+         .actionTypes<{ toggleFlag: void }>()
+         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .actions.toggleFlag(undefined)
 
-   //    expect(rootStateTransitions).to.equal(2)
-   //    expect(stateTransitions).to.equal(1)
-   // })
+      expect(rootStateTransitions).to.equal(2)
+      expect(stateTransitions).to.equal(1)
+   })
 
    ////////////
    // FOCUS //
