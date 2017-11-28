@@ -181,6 +181,7 @@ export class LenrixStore<
       return this.dataSubject
          .map(_ => _.state)
          .map(state => keys.reduce((acc: any, key: any) => acc[key], state))
+         .distinctUntilChanged()
    }
 
    //////////////
