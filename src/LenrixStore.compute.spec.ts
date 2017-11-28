@@ -18,14 +18,14 @@ describe('LenrixStore.compute()', () => {
    let rootStore: Store<{
       state: State
       computedValues: {}
-      actions: { toggleFlag: void }
+      actions: { toggleFlag: void, toggleOrder: void }
       dependencies: {}
    }>
 
    let store: Store<{
       state: State
       computedValues: ComputedValues
-      actions: { toggleFlag: void }
+      actions: { toggleFlag: void, toggleOrder: void }
       dependencies: {}
    }>
 
@@ -34,9 +34,13 @@ describe('LenrixStore.compute()', () => {
 
    beforeEach(() => {
       rootStore = createStore(initialState)
-         .actionTypes<{ toggleFlag: void }>()
+         .actionTypes<{
+            toggleFlag: void
+            toggleOrder: void
+         }>()
          .actionHandlers(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleOrder: () => _.focusPath('sorting', 'order').update(order => order === 'descending' ? 'ascending' : 'descending')
          }))
       store = rootStore.compute(state => ({
          todoListLength: state.todo.list.length,
@@ -110,7 +114,7 @@ describe('LenrixStore.compute()', () => {
 
    it('computes value when state changes', () => {
       expect(state.caret).to.equal('up')
-      store.focusPath('sorting', 'order').setValue('descending')
+      store.actions.toggleOrder(undefined)
       expect(state.caret).to.equal('down')
    })
 
@@ -134,10 +138,6 @@ describe('LenrixStore.compute()', () => {
       beforeEach(() => {
          focusedStore = store
             .focusPath(['sorting'], ['todoListLength', 'caret'])
-            .actionTypes<{ toggleOrder: void }>()
-            .actionHandlers(_ => ({
-               toggleOrder: () => _.focusPath('order').update(order => order === 'descending' ? 'ascending' : 'descending')
-            }))
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(state => {
             focusedState = state
@@ -223,16 +223,16 @@ describe('LenrixStore.compute()', () => {
       let focusedStore: Store<{
          state: { todoList: TodoItem[] }
          computedValues: ComputedValues
-         actions: { toggleFlag: void }
+         actions: { toggleFlag: void, toggleOrder: void }
          dependencies: {}
       }>
       let focusedState: { todoList: TodoItem[] } & ComputedValues
       let focusedStateTransitions: number
 
       beforeEach(() => {
-         focusedStore = store.recompose({
-            todoList: store.localLens.focusPath('todo', 'list')
-         }, ['todoListLength', 'caret'])
+         focusedStore = store.recompose(_ => ({
+            todoList: _.focusPath('todo', 'list')
+         }), ['todoListLength', 'caret'])
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(state => {
             focusedState = state
@@ -258,11 +258,7 @@ describe('LenrixStore.compute()', () => {
       it('emits new state when value computed from parent normalized state is recomputed', () => {
          expect(state.sorting.order).to.equal('ascending')
          expect(state.caret).to.equal('up')
-         rootStore
-            .actionTypes<{ toggleOrder: void }>()
-            .actionHandlers(_ => ({
-               toggleOrder: () => _.focusPath('sorting', 'order').update(order => order === 'descending' ? 'ascending' : 'descending')
-            }))
+         focusedStore
             .actions.toggleOrder(undefined)
          expect(focusedState.caret).to.equal('down')
       })

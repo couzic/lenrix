@@ -1,10 +1,10 @@
 import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 
-import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
-import { ActionDispatchers } from './ActionDispatch'
+import { ActionDispatchers } from './ActionDispatchers'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
@@ -210,7 +210,7 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   recompose<RecomposedState>(fields: FieldLenses<Type['state'], RecomposedState>): Store<{
+   recompose<RecomposedState>(fields: FocusedSelection<Type, RecomposedState>): Store<{
       state: RecomposedState
       computedValues: {}
       actions: Type['actions']
@@ -218,7 +218,7 @@ export interface Store<Type extends {
    }>
 
    recompose<RecomposedState, CK extends keyof Type['computedValues']>(
-      fields: FieldLenses<Type['state'], RecomposedState>,
+      fields: FocusedSelection<Type, RecomposedState>,
       computedValues: CK[]
    ): Store<{
       state: RecomposedState

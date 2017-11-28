@@ -77,6 +77,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       { state: preloadedState, computedValues: {} },
       registerHandlers,
       dispatchAction,
+      {},
       'root'
    )
 }
@@ -85,7 +86,7 @@ export function createStore<State extends object>(initialState: State): Store<{
    state: State
    computedValues: {}
    actions: {}
-   dependencies:{}
- }> {
+   dependencies: {}
+}> {
    return createFocusableStore(state => state, initialState)
 }

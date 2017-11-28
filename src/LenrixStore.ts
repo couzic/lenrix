@@ -11,6 +11,7 @@ import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens, Updater
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
+import { ActionDispatchers } from './ActionDispatchers'
 import { ComputedState } from './ComputedState'
 import { FocusedAction } from './FocusedAction'
 import { FocusedHandlers } from './FocusedHandlers'
@@ -95,6 +96,7 @@ export class LenrixStore<
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
       private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta) => void,
+      actionDispatchers: ActionDispatchers<Type['actions']>,
       public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
@@ -102,17 +104,22 @@ export class LenrixStore<
       this.dataSubject
          .map(dataToComputedState)
          .subscribe(this.computedStateSubject)
+      this.actionDispatchers = actionDispatchers
    }
 
    //////////////
    // ACTIONS //
    ////////////
 
+   private actionDispatchers: ActionDispatchers<Type['actions']>
+
+   get actions() {
+      return this.actionDispatchers
+   }
+
    actionTypes<NewActions>(): any {
       return this
    }
-
-   actions: {[ActionType in keyof Type['actions']]: (payload: Type['actions'][ActionType]) => void}
 
    // actionHandlers(
    //    this: Store<Type & { state: object & NotAnArray }>,
@@ -140,7 +147,10 @@ export class LenrixStore<
          const handler = (handlers as any)[actionType]
          actions[actionType] = (payload: any) => this.dispatchAction({ type: actionType, payload }, meta)
       })
-      this.actions = actions
+      this.actionDispatchers = {
+         ...this.actionDispatchers as any,
+         ...actions
+      }
       return this
    }
 
@@ -201,6 +211,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.dispatchAction,
+         this.actionDispatchers,
          this.path + '.compute()'
          // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
       )
@@ -235,6 +246,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.dispatchAction,
+         this.actionDispatchers,
          this.path + '.computeFrom()'
       )
    }
@@ -266,6 +278,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.dispatchAction,
+         this.actionDispatchers,
          this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
       )
    }
@@ -298,6 +311,7 @@ export class LenrixStore<
          toFocusedData(this.initialData),
          this.registerHandlers,
          this.dispatchAction,
+         this.actionDispatchers,
          this.path + focusedLens.path
       )
    }
@@ -325,28 +339,39 @@ export class LenrixStore<
          toPickedData(this.initialData),
          this.registerHandlers as any,
          this.dispatchAction,
+         this.actionDispatchers,
          path
       )
    }
 
    recompose(...params: any[]): any {
-      if (typeof params === 'function') throw Error('recompose() does not accept functions as arguments.') // TODO Test error message
-      const fields = params[0] as FieldLenses<Type['state'], any>
+      const focusedSelection = params[0]
+      const computedValueKeys: (keyof Type['computedValues'])[] = params[1] || []
+      const fields = focusedSelection(this.localLens) as FieldLenses<Type['state'], any>
+      // if (typeof params === 'function') throw Error('recompose() does not accept functions as arguments.') // TODO Test error message
       const recomposedLens = (this.localLens as any).recompose(fields)
       const path = this.path + '.' + recomposedLens.path
-      const computedValueKeys: (keyof Type['computedValues'])[] = params[1] || []
       const toRecomposedData = (data: StoreData<Type>) => {
          const state = recomposedLens.read(data.state)
          const computedValues: Partial<Type['computedValues']> = {}
          computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
          return { state, computedValues }
       }
+      const registerHandlers: (handlersToRegister: FocusedHandlers<any>) => void = (handlersToRegister) => {
+         const handlers = {} as any
+         Object.keys(handlersToRegister).forEach(actionType => {
+            const handler = handlersToRegister[actionType] as any
+            handlers[actionType] = (payload: any) => recomposedLens.update(handler(payload))
+         })
+         return this.registerHandlers(handlers as any)
+      }
       return new LenrixStore(
          this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals).skip(1),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toRecomposedData(this.initialData),
-         this.registerHandlers,
+         registerHandlers,
          this.dispatchAction,
+         this.actionDispatchers,
          path
       )
    }
