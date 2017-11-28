@@ -62,22 +62,27 @@ export interface Store<Type extends {
       selection: FocusedSelection<Type, Selection>
    ): Observable<Selection>
 
-   pluck<K extends keyof Type['state']>(key: K): Observable<Type['state'][K]>
+   pluck<
+      CS extends ComputedState<Type>,
+      K extends keyof CS>(key: K): Observable<CS[K]>
 
    pluck<
-      K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1]>(key1: K1, key2: K2): Observable<Type['state'][K1][K2]>
+      CS extends ComputedState<Type>,
+      K1 extends keyof CS,
+      K2 extends keyof CS[K1]>(key1: K1, key2: K2): Observable<CS[K1][K2]>
 
    pluck<
-      K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1],
-      K3 extends keyof Type['state'][K1][K2]>(key1: K1, key2: K2, key3: K3): Observable<Type['state'][K1][K2][K3]>
+      CS extends ComputedState<Type>,
+      K1 extends keyof CS,
+      K2 extends keyof CS[K1],
+      K3 extends keyof CS[K1][K2]>(key1: K1, key2: K2, key3: K3): Observable<CS[K1][K2][K3]>
 
    pluck<
-      K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1],
-      K3 extends keyof Type['state'][K1][K2],
-      K4 extends keyof Type['state'][K1][K2][K3]>(key1: K1, key2: K2, key3: K3, key4: K4): Observable<Type['state'][K1][K2][K3][K4]>
+      CS extends ComputedState<Type>,
+      K1 extends keyof CS,
+      K2 extends keyof CS[K1],
+      K3 extends keyof CS[K1][K2],
+      K4 extends keyof CS[K1][K2][K3]>(key1: K1, key2: K2, key3: K3, key4: K4): Observable<CS[K1][K2][K3][K4]>
 
    //////////////
    // COMPUTE //

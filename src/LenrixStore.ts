@@ -7,7 +7,7 @@ import 'rxjs/add/operator/pluck'
 import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
-import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens, UpdaterWithMeta } from 'immutable-lens'
+import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
@@ -169,8 +169,7 @@ export class LenrixStore<
 
    pluck(...params: any[]): Observable<any> {
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
-      return this.dataSubject
-         .map(_ => _.state)
+      return this.computedStateSubject
          .map(state => keys.reduce((acc: any, key: any) => acc[key], state))
          .distinctUntilChanged()
    }
