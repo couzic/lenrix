@@ -6,7 +6,12 @@ import { Store } from './Store'
 
 describe('LenrixStore.recompose()', () => {
 
-   let rootStore: Store<{ state: State }>
+   let rootStore: Store<{
+      state: State
+      computedValues: {}
+      actions: { toggleFlag: void }
+      dependencies: {}
+   }>
    let rootState: State
    let rootStateTransitions: number
 
@@ -15,16 +20,23 @@ describe('LenrixStore.recompose()', () => {
       todoList: TodoItem[]
    }
 
-   let store: Store<{ state: RecomposedState }>
+   let store: Store<{
+      state: RecomposedState
+      computedValues: {}
+      actions: { toggleFlag: void }
+      dependencies: {}
+   }>
    let state: RecomposedState
    let stateTransitions: number
 
    beforeEach(() => {
       rootStore = createStore(initialState)
-      store = rootStore.recompose({
-         counter: rootStore.lens.focusPath('counter'),
-         todoList: rootStore.lens.focusPath('todo', 'list')
-      })
+         .actionTypes<{ toggleFlag: void }>()
+         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+      store = rootStore.recompose(_ => ({
+         counter: rootStore.localLens.focusPath('counter'),
+         todoList: rootStore.localLens.focusPath('todo', 'list')
+      }))
       rootStateTransitions = 0
       stateTransitions = 0
       rootStore.state$.subscribe(newState => {
@@ -43,22 +55,9 @@ describe('LenrixStore.recompose()', () => {
 
    it('has Lens', () => {
       const newList: TodoItem[] = []
-      const result = store.lens.setFieldValues({ todoList: newList })(state)
+      const result = store.localLens.setFieldValues({ todoList: newList })(state)
       expect(result.todoList).to.equal(newList)
    })
-
-   /////////////
-   // UPDATE //
-   ///////////
-
-   // it('can update', () => {
-   //    store.update(state => ({
-   //       ...state,
-   //       counter: state.todoList.length
-   //    }))
-   //    expect(store.currentState.counter).to.equal(3)
-   //    expect(stateTransitions).to.equal(2)
-   // })
 
    ////////////////////////
    // STATE TRANSITIONS //
@@ -74,28 +73,28 @@ describe('LenrixStore.recompose()', () => {
       expect(state.todoList).to.equal(initialState.todo.list)
    })
 
-   // it('does not emit new state when unrelated slice of parent state changes', () => {
-   //    rootStore.updateFields({ flag: value => !value })
+   it('does not emit new state when unrelated slice of parent state changes', () => {
+      rootStore.actions.toggleFlag(undefined)
 
-   //    expect(rootStateTransitions).to.equal(2)
-   //    expect(stateTransitions).to.equal(1)
-   // })
+      expect(rootStateTransitions).to.equal(2)
+      expect(stateTransitions).to.equal(1)
+   })
 
    ////////////
    // FOCUS //
    //////////
 
    it('throws error when recomposing with function', () => {
-      expect(() => rootStore.recompose(() => null)).to.throw()
+      expect(() => rootStore.recompose(() => () => null)).to.throw()
    })
 
    it('can recompose with computed values', () => {
       const recomposed = rootStore
          .compute(state => ({ todoListLength: state.todo.list.length }))
-         .recompose({
-            todoList: rootStore.lens.focusPath('todo', 'list')
-         }, ['todoListLength'])
-      expect(recomposed.currentState).to.deep.equal({ todoList: initialState.todo.list, todoListLength: 3 })
+         .recompose(_ => ({
+            todoList: _.focusPath('todo', 'list')
+         }), ['todoListLength'])
+      expect(recomposed.currentComputedState).to.deep.equal({ todoList: initialState.todo.list, todoListLength: 3 })
       expect(recomposed.currentState.todoList).to.deep.equal(initialState.todo.list)
    })
 
