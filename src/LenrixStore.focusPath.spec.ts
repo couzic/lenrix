@@ -7,8 +7,18 @@ import { Store } from './Store'
 
 describe('LenrixStore.focusPath()', () => {
 
-   let rootStore: Store<{ state: State }>
-   let store: Store<{ state: TodoState }>
+   let rootStore: Store<{
+      state: State
+      computedValues: {}
+      actions: {}
+      dependencies: {}
+   }>
+   let store: Store<{
+      state: TodoState
+      computedValues: {}
+      actions: {}
+      dependencies: {}
+   }>
    let rootState: State
    let state: TodoState
    let rootLens: UnfocusedLens<State>
@@ -19,8 +29,8 @@ describe('LenrixStore.focusPath()', () => {
    beforeEach(() => {
       rootStore = createStore(initialState)
       store = rootStore.focusPath('todo')
-      rootLens = rootStore.lens
-      lens = store.lens
+      rootLens = rootStore.localLens
+      lens = store.localLens
       rootStateTransitions = 0
       stateTransitions = 0
       rootStore.state$.subscribe(newState => {
@@ -96,22 +106,28 @@ describe('LenrixStore.focusPath()', () => {
       const focused = rootStore
          .compute(state => ({ todoListLength: state.todo.list.length }))
          .focusPath(['todo'], ['todoListLength'])
-      expect(focused.currentState).to.deep.equal({
+      expect(focused.currentComputedState).to.deep.equal({
          ...initialState.todo,
          todoListLength: 3
       })
    })
 
-   // it('number-focused store emits new state when value changes', () => {
-   //    const focused = store.focusPath('count')
-   //    focused.update(value => value + 1)
-   //    expect(focused.currentState).to.equal(initialState.todo.count + 1)
-   // })
+   it('number-focused store emits new state when value changes', () => {
+      const focused = store.focusPath('count')
+      focused
+         .actionTypes<{ incrementCount: void }>()
+         .actionHandlers(_ => ({ incrementCount: () => _.update(val => val + 1) }))
+         .actions.incrementCount(undefined)
+      expect(focused.currentState).to.equal(initialState.todo.count + 1)
+   })
 
-   // it('array-focused store emits new state when value changes', () => {
-   //    const focused = store.focusPath('list')
-   //    focused.setValue([])
-   //    expect(focused.currentState).to.be.empty
-   // })
+   it('array-focused store emits new state when value changes', () => {
+      const focused = store.focusPath('list')
+      focused
+         .actionTypes<{ clearTodos: void }>()
+         .actionHandlers(_ => ({ clearTodos: () => _.setValue([]) }))
+         .actions.clearTodos(undefined)
+      expect(focused.currentState).to.be.empty
+   })
 
 })

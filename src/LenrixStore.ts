@@ -303,13 +303,21 @@ export class LenrixStore<
          computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
          return { state, computedValues }
       }
+      const registerHandlers: (handlersToRegister: FocusedHandlers<any>) => void = (handlersToRegister) => {
+         const handlers = {} as any
+         Object.keys(handlersToRegister).forEach(actionType => {
+            const handler = handlersToRegister[actionType] as any
+            handlers[actionType] = (payload: any) => focusedLens.update(handler(payload))
+         })
+         return this.registerHandlers(handlers as any)
+      }
       return new LenrixStore(
          this.dataSubject.map(toFocusedData).distinctUntilChanged(dataEquals),
          (data: any) => (Array.isArray(data.state) || typeof data.state !== 'object')
             ? data.state
             : { ...data.state, ...data.computedValues },
          toFocusedData(this.initialData),
-         this.registerHandlers,
+         registerHandlers,
          this.dispatchAction,
          this.actionDispatchers,
          this.path + focusedLens.path
