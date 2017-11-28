@@ -1,4 +1,3 @@
-import { ComputedStore } from './ComputedStore'
 import { createStore } from './createStore'
 
 type State = {
@@ -32,6 +31,16 @@ store.compute(state => ({
 // Computing values with array @shouldNotCompile
 store.compute(state => [state.todo.list.length])
 
+// Computing values on primitive-focused store @shouldNotCompile
+store
+   .focusPath('counter')
+   .compute((state: any) => ({ nothing: 'nothing' }))
+
+// Computing values on array-focused store @shouldNotCompile
+store
+   .focusPath('todo', 'list')
+   .compute((state: any) => ({ nothing: 'nothing' }))
+
 // Assigning computed store with wrong ComputeValues type @shouldNotCompile
 const computedWithWrongType: ComputedStore<State, { todoListLength: 0 }> = store.compute(state => ({
    todoListLength: state.todo.list.length
@@ -41,3 +50,10 @@ const computedWithWrongType: ComputedStore<State, { todoListLength: 0 }> = store
 const computedWithoutInitialValues: number = store.compute$(state$ => state$.map(state => ({
    nonInitialized: 42
 }))).currentState.nonInitialized
+
+////////////////////////////////////////////////////////
+// @shouldNotButDoesCompile - Require runtime checks //
+//////////////////////////////////////////////////////
+
+// Computing values with higher order function @shouldNotButDoesCompile
+store.compute(state => () => null)

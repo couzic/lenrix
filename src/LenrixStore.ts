@@ -121,15 +121,6 @@ export class LenrixStore<
       return this
    }
 
-   // actionHandlers(
-   //    this: Store<Type & { state: object & NotAnArray }>,
-   //    focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
-   // ): Store<Type>
-
-   // actionHandlers(
-   //    focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
-   // ): Store<Type>
-
    actionHandlers(focusHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) {
       const handlers = focusHandlers(this.localLens)
       this.registerHandlers(handlers)
@@ -383,23 +374,6 @@ export class LenrixStore<
          this.actionDispatchers,
          path
       )
-   }
-
-
-   /////////////
-   // UPDATE //
-   ///////////
-
-
-   private dispatchWithMeta(updater: UpdaterWithMeta<RootState>) {
-      // this.dispatchUpdate(updater, {
-      //    store: {
-      //       name: this.name,
-      //       path: this.path,
-      //       currentState: this.currentState
-      //    },
-      //    updater: updater.meta
-      // })
    }
 
    // computeJoin$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {

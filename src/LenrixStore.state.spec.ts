@@ -31,10 +31,6 @@ describe('LenrixStore when unfocused', () => {
       expect(store.path).to.equal('root')
    })
 
-   ////////////
-   // STATE //
-   //////////
-
    it('holds initial state as current state', () => {
       expect(store.currentState).to.equal(initialState)
       expect(store.currentState).to.deep.equal(initialState)

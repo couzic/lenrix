@@ -186,14 +186,20 @@ export interface Store<Type extends {
    // FOCUS //
    //////////
 
-   focusFields<K extends keyof Type['state']>(...keys: K[]): Store<{
+   focusFields<K extends keyof Type['state']>(
+      this: Store<Type & { state: object & NotAnArray }>,
+      ...keys: K[]
+   ): Store<{
       state: Pick<Type['state'], K>
       computedValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
-   focusFields<K extends keyof Type['state']>(keys: K[]): Store<{
+   focusFields<K extends keyof Type['state']>(
+      this: Store<Type & { state: object & NotAnArray }>,
+      keys: K[]
+   ): Store<{
       state: Pick<Type['state'], K>
       computedValues: {}
       actions: Type['actions']
@@ -201,6 +207,7 @@ export interface Store<Type extends {
    }>
 
    focusFields<SK extends keyof Type['state'], CK extends keyof Type['computedValues']>(
+      this: Store<Type & { state: object & NotAnArray }>,
       keys: SK[],
       computed: CK[]
    ): Store<{
@@ -227,14 +234,18 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   focusPath<K extends keyof Type['state']>(key: K): Store<{
+   focusPath<K extends keyof Type['state']>(
+      key: K
+   ): Store<{
       state: Type['state'][K]
       computedValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
-   focusPath<K extends keyof Type['state']>(path: [K]): Store<{
+   focusPath<K extends keyof Type['state']>(
+      path: [K]
+   ): Store<{
       state: Type['state'][K]
       computedValues: {}
       actions: Type['actions']
@@ -242,12 +253,6 @@ export interface Store<Type extends {
    }>
 
    focusPath<SK extends keyof Type['state'], CK extends keyof Type['computedValues']>(
-      this: Store<{
-         state: Type['state'] & object & NotAnArray
-         computedValues: Type['computedValues']
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>,
       path: [SK],
       computedValues: CK[]
    ): Store<{
@@ -279,12 +284,6 @@ export interface Store<Type extends {
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
       CK extends keyof Type['computedValues']>(
-      this: Store<{
-         state: Type['state'] & object & NotAnArray
-         computedValues: Type['computedValues']
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>,
       path: [K1, K2],
       computedValues: CK[]
       ): Store<{
@@ -319,12 +318,6 @@ export interface Store<Type extends {
       K2 extends keyof Type['state'][K1],
       K3 extends keyof Type['state'][K1][K2],
       CK extends keyof Type['computedValues']>(
-      this: Store<{
-         state: object & NotAnArray
-         computedValues: Type['computedValues']
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>,
       path: [K1, K2, K3],
       computedValues: CK[]
       ): Store<{
