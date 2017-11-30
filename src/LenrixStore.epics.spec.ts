@@ -15,16 +15,17 @@ type State = {
 }
 
 const initialState: State = {
-   counter: 42,
+   counter: 0,
    todo: {
       input: '',
       list: [],
-      count: 42
+      count: 0
    }
 }
 
 interface Actions {
-   resetCounter: void
+   buttonClicked: void
+   incrementCounter: void
    setCounter: number
    setTodoCount: number
 }
@@ -41,17 +42,24 @@ describe('LenrixStore.epics()', () => {
       store = createStore(initialState)
          .actionTypes<Actions>()
          .actionHandlers(_ => ({
+            incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),
             setCounter: (counter) => _.setFieldValues({ counter }),
             setTodoCount: (todoCount) => _.focusPath('todo', 'count').setValue(todoCount)
          }))
          .epics({
-            resetCounter: ($) => $.mapTo({ setCounter: 0 })
+            buttonClicked: ($) => $.mapTo({ incrementCounter: undefined })
          })
    })
 
-   xit('dispatches actions', () => {
-      store.dispatch({ resetCounter: undefined })
-      expect(store.currentState.counter).to.be.empty
+   it('dispatches actions', () => {
+      store.dispatch({ buttonClicked: undefined })
+      expect(store.currentState.counter).to.equal(1)
+   })
+
+   it('dispatches actions for every dispatched epic', () => {
+      store.dispatch({ buttonClicked: undefined })
+      store.dispatch({ buttonClicked: undefined })
+      expect(store.currentState.counter).to.equal(2)
    })
 
 })

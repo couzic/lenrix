@@ -95,6 +95,7 @@ export class LenrixStore<
       private readonly dataToComputedState: (data: StoreData<Type>) => ComputedState<Type>,
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
+      private readonly registerEpics: (epics: any) => void,
       private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta) => void,
       actionDispatchers: ActionDispatchers<Type['actions']>,
       public readonly path: string) {
@@ -167,7 +168,8 @@ export class LenrixStore<
       }
    }
 
-   epics(...params: any[]): Store<Type> {
+   epics(epics: any): Store<Type> {
+      this.registerEpics(epics)
       return this
    }
 
@@ -227,6 +229,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          this.path + '.compute()'
@@ -262,6 +265,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          this.path + '.computeFrom()'
@@ -294,6 +298,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
@@ -335,6 +340,7 @@ export class LenrixStore<
             : { ...data.state, ...data.computedValues },
          toFocusedData(this.initialData),
          registerHandlers,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          this.path + focusedLens.path
@@ -363,6 +369,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toPickedData(this.initialData),
          this.registerHandlers as any,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          path
@@ -395,6 +402,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toRecomposedData(this.initialData),
          registerHandlers,
+         this.registerEpics,
          this.dispatchAction,
          this.actionDispatchers,
          path
