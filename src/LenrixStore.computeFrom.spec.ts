@@ -60,7 +60,7 @@ describe('LenrixStore.computeFrom()', () => {
       computedStore.state$.subscribe(() => ++stateTransitions)
       expect(stateTransitions).to.equal(1)
 
-      computedStore.actions.toggleFlag(undefined)
+      computedStore.dispatch({ toggleFlag: undefined })
 
       expect(stateTransitions).to.equal(1)
    })

@@ -29,7 +29,7 @@ describe('LenrixStore actions', () => {
 
    describe('on root store', () => {
       it('applies registered handler on dispatch', () => {
-         rootStore.actions.clearTodoList(undefined)
+         rootStore.dispatch({ type: 'clearTodoList' })
 
          expect(rootStore.currentState.todo.list).to.be.empty
       })
@@ -37,7 +37,7 @@ describe('LenrixStore actions', () => {
       it('root actions can be dispatched from path focused store', () => {
          rootStore
             .focusPath('todo')
-            .actions.clearTodoList(undefined)
+            .dispatch({ type: 'clearTodoList' })
          expect(rootStore.currentState.todo.list).to.be.empty
       })
    })
@@ -49,7 +49,7 @@ describe('LenrixStore actions', () => {
       })
 
       it('applies handler registered on root store', () => {
-         store.actions.clearTodoList(undefined)
+         store.dispatch({ type: 'clearTodoList' })
 
          expect(store.currentState.list).to.be.empty
       })
@@ -58,7 +58,7 @@ describe('LenrixStore actions', () => {
          store
             .actionTypes<{ clearList: void }>()
             .actionHandlers(_ => ({ clearList: () => _.focusPath('list').setValue([]) }))
-            .actions.clearList(undefined)
+            .dispatch({ type: 'clearList' })
 
          expect(store.currentState.list).to.be.empty
       })
@@ -71,7 +71,7 @@ describe('LenrixStore actions', () => {
       })
 
       it('applies handler registered on root store', () => {
-         store.actions.clearTodoList(undefined)
+         store.dispatch({ type: 'clearTodoList' })
 
          expect(store.currentState.todo.list).to.be.empty
       })
@@ -80,7 +80,7 @@ describe('LenrixStore actions', () => {
          store
             .actionTypes<{ clearList: void }>()
             .actionHandlers(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
-            .actions.clearList(undefined)
+            .dispatch({ type: 'clearList' })
 
          expect(store.currentState.todo.list).to.be.empty
       })
@@ -95,7 +95,7 @@ describe('LenrixStore actions', () => {
       })
 
       it('applies handler registered on root store', () => {
-         store.actions.clearTodoList(undefined)
+         store.dispatch({ type: 'clearTodoList' })
 
          expect(store.currentState.todoList).to.be.empty
       })
@@ -104,7 +104,7 @@ describe('LenrixStore actions', () => {
          store
             .actionTypes<{ clearRecomposedTodoList: void }>()
             .actionHandlers(_ => ({ clearRecomposedTodoList: () => _.focusPath('todoList').setValue([]) }))
-            .actions.clearRecomposedTodoList(undefined)
+            .dispatch({ type: 'clearRecomposedTodoList' })
 
          expect(store.currentState.todoList).to.be.empty
       })

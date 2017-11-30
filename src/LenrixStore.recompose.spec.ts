@@ -74,7 +74,7 @@ describe('LenrixStore.recompose()', () => {
    })
 
    it('does not emit new state when unrelated slice of parent state changes', () => {
-      rootStore.actions.toggleFlag(undefined)
+      rootStore.dispatch({toggleFlag:undefined})
 
       expect(rootStateTransitions).to.equal(2)
       expect(stateTransitions).to.equal(1)

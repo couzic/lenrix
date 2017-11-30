@@ -70,7 +70,7 @@ describe('LenrixStore.focusFields()', () => {
       store
          .actionTypes<{ doNothing: void }>()
          .actionHandlers(_ => ({ doNothing: () => state => state }))
-         .actions.doNothing(undefined)
+         .dispatch({ doNothing: undefined })
       expect(stateTransitions).to.equal(1)
    })
 
@@ -78,7 +78,7 @@ describe('LenrixStore.focusFields()', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
-         .actions.toggleFlag(undefined)
+         .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(1)
    })
 

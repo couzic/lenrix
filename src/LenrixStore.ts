@@ -145,6 +145,32 @@ export class LenrixStore<
       return this
    }
 
+   makeActionMeta(): ActionMeta {
+      return {
+         store: {
+            name: this.name,
+            path: this.path,
+            currentState: this.currentState,
+            computedValues: this.currentComputedValues
+         }
+      }
+   }
+
+   dispatch(actionOrActions: any) {
+      if (actionOrActions.type) {
+         const { type, payload } = actionOrActions
+         this.dispatchAction({ type, payload }, this.makeActionMeta())
+      } else {
+         Object.keys(actionOrActions).forEach(type => {
+            this.dispatchAction({ type, payload: actionOrActions[type] }, this.makeActionMeta())
+         })
+      }
+   }
+
+   epics(...params: any[]): Store<Type> {
+      return this
+   }
+
    ///////////
    // READ //
    /////////

@@ -132,7 +132,7 @@ describe('LenrixStore.compute$()', () => {
 
       it('computes values when state changes', () => {
          expect(state.available).to.equal(false)
-         store.actions.setName('Steve')
+         store.dispatch({ setName: 'Steve' })
          expect(state.available).to.equal(true)
          expect(stateTransitions).to.equal(3)
       })
@@ -151,7 +151,7 @@ describe('LenrixStore.compute$()', () => {
          }), { value$: 'initial' })
          computed.state$.subscribe(state => ++stateTransions)
 
-         rootStore.actions.toggleFlag(undefined)
+         rootStore.dispatch({ toggleFlag: undefined })
 
          expect(stateTransions).to.equal(2)
       })
@@ -178,13 +178,13 @@ describe('LenrixStore.compute$()', () => {
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.actions.toggleFlag(undefined)
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(focusedState.available).to.equal(false)
-            rootStore.actions.setName('Steve')
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })
@@ -210,13 +210,13 @@ describe('LenrixStore.compute$()', () => {
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.actions.toggleFlag(undefined)
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(focusedState.available).to.equal(false)
-            rootStore.actions.setName('Steve')
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })
@@ -244,13 +244,13 @@ describe('LenrixStore.compute$()', () => {
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.actions.toggleFlag(undefined)
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(state.available).to.equal(false)
-            rootStore.actions.setName('Steve')
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })

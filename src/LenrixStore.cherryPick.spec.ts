@@ -42,7 +42,7 @@ describe('LenrixStore.cherryPick()', () => {
       let transitions = 0
       todoList$.subscribe(() => ++transitions)
 
-      store.actions.toggleFlag(undefined)
+      store.dispatch({ type: 'toggleFlag' })
 
       expect(transitions).to.equal(1)
    })

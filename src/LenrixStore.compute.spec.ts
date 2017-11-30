@@ -90,7 +90,7 @@ describe('LenrixStore.compute()', () => {
 
    it('computes value when state changes', () => {
       expect(state.caret).to.equal('up')
-      store.actions.toggleOrder(undefined)
+      store.dispatch({ type: 'toggleOrder' })
       expect(state.caret).to.equal('down')
    })
 
@@ -127,14 +127,14 @@ describe('LenrixStore.compute()', () => {
             .actionHandlers(_ => ({
                incrementCounter: () => _.focusPath('counter').update(counter => counter + 1)
             }))
-         store.actions.incrementCounter(undefined)
+         store.dispatch({ type: 'incrementCounter' })
          expect(focusedStateTransitions).to.equal(1)
       })
 
       it('emits new state when computed value needs to be recomputed from normalized state', () => {
          expect(focusedState.order).to.equal('ascending')
          expect(focusedState.caret).to.equal('up')
-         focusedStore.actions.toggleOrder(undefined)
+         focusedStore.dispatch({ type: 'toggleOrder' })
          expect(focusedState.caret).to.equal('down')
       })
 
@@ -144,7 +144,7 @@ describe('LenrixStore.compute()', () => {
             .actionHandlers(_ => ({
                clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
-            .actions.clearTodoList(undefined)
+            .dispatch({ type: 'clearTodoList' })
          expect(focusedState.todoListLength).to.equal(0)
       })
    })
@@ -173,14 +173,14 @@ describe('LenrixStore.compute()', () => {
       })
 
       it('does not emit new state when unrelated slice of parent state changes', () => {
-         rootStore.actions.toggleFlag(undefined)
+         rootStore.dispatch({toggleFlag:undefined})
          expect(focusedStateTransitions).to.equal(1)
       })
 
       it('emits new state when computed value needs to be recomputed from normalized state', () => {
          expect(focusedState.sorting.order).to.equal('ascending')
          expect(focusedState.caret).to.equal('up')
-         focusedStore.actions.toggleOrder(undefined)
+         focusedStore.dispatch({ type: 'toggleOrder' })
          expect(focusedState.caret).to.equal('down')
       })
 
@@ -190,7 +190,7 @@ describe('LenrixStore.compute()', () => {
             .actionHandlers(_ => ({
                clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
-            .actions.clearTodoList(undefined)
+            .dispatch({ type: 'clearTodoList' })
          expect(focusedState.todoListLength).to.equal(0)
       })
    })
@@ -217,7 +217,7 @@ describe('LenrixStore.compute()', () => {
       })
 
       it('does not emit new state when unrelated slice of parent state changes', () => {
-         rootStore.actions.toggleFlag(undefined)
+         rootStore.dispatch({ type: 'toggleFlag' })
          expect(focusedStateTransitions).to.equal(1)
       })
 
@@ -227,7 +227,7 @@ describe('LenrixStore.compute()', () => {
             .actionHandlers(_ => ({
                clearTodoList: () => _.focusPath('todoList').setValue([])
             }))
-            .actions.clearTodoList(undefined)
+            .dispatch({ type: 'clearTodoList' })
          expect(focusedState.todoListLength).to.equal(0)
       })
 
@@ -235,7 +235,7 @@ describe('LenrixStore.compute()', () => {
          expect(state.sorting.order).to.equal('ascending')
          expect(state.caret).to.equal('up')
          focusedStore
-            .actions.toggleOrder(undefined)
+            .dispatch({ type: 'toggleOrder' })
          expect(focusedState.caret).to.equal('down')
       })
    })

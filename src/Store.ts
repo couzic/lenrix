@@ -4,7 +4,7 @@ import 'rxjs/add/operator/map'
 import { NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
-import { ActionDispatchers } from './ActionDispatchers'
+import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
@@ -46,7 +46,15 @@ export interface Store<Type extends {
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
    ): Store<Type>
 
-   actions: ActionDispatchers<Type['actions']>
+   dispatch(actions: Partial<Type['actions']>): void
+   dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType] & void>(action: { type: ActionType }): void
+   dispatch(action: ActionObject<Type['actions']>): void
+
+   // action$: Observable<Type['actions']>
+
+   epics(epics: {
+      [ActionType in keyof Type['actions']]?: (payload$: Observable<Type['actions'][ActionType]>) => Observable<Partial<Type['actions']> | ActionObject<Type['actions']>>
+   }): Store<Type>
 
    ///////////
    // READ //

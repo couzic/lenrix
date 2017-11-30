@@ -72,7 +72,7 @@ describe('LenrixStore.focusPath()', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
-         .actions.toggleFlag(undefined)
+         .dispatch({ toggleFlag: undefined })
 
       expect(rootStateTransitions).to.equal(2)
       expect(stateTransitions).to.equal(1)
@@ -107,7 +107,7 @@ describe('LenrixStore.focusPath()', () => {
       focused
          .actionTypes<{ incrementCount: void }>()
          .actionHandlers(_ => ({ incrementCount: () => _.update(val => val + 1) }))
-         .actions.incrementCount(undefined)
+         .dispatch({ incrementCount: undefined })
       expect(focused.currentState).to.equal(initialState.todo.count + 1)
    })
 
@@ -116,7 +116,7 @@ describe('LenrixStore.focusPath()', () => {
       focused
          .actionTypes<{ clearTodos: void }>()
          .actionHandlers(_ => ({ clearTodos: () => _.setValue([]) }))
-         .actions.clearTodos(undefined)
+         .dispatch({ type: 'clearTodos' })
       expect(focused.currentState).to.be.empty
    })
 
