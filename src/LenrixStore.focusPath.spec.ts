@@ -116,7 +116,7 @@ describe('LenrixStore.focusPath()', () => {
       focused
          .actionTypes<{ clearTodos: void }>()
          .actionHandlers(_ => ({ clearTodos: () => _.setValue([]) }))
-         .dispatch({ type: 'clearTodos' })
+         .dispatch({ clearTodos: undefined })
       expect(focused.currentState).to.be.empty
    })
 

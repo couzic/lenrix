@@ -91,11 +91,6 @@ export function createFocusableStore<State extends object & NotAnArray>(
                   dispatchAction({ type, payload: actionOrActions[type] }, meta)
                })
             }
-            reduxStore.dispatch({
-               type: '[UPDATE]' + action.type,
-               payload: action.payload,
-               meta: {} as any
-            })
          })
       }
    }

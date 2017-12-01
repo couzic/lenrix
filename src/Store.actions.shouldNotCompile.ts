@@ -25,7 +25,7 @@ const store = createStore(state)
 // @shouldNotCompile
 store.dispatch({ type: 'doNothing' })
 
-store.dispatch('doNothing', undefined)
+// store.dispatch('doNothing', undefined)
 
 // @shouldNotCompile
 store.dispatch('doSomething')

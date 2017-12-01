@@ -55,7 +55,7 @@ describe('LenrixStore.pluck()', () => {
       let transitions = 0
       counter$.subscribe(() => ++transitions)
 
-      store.dispatch({ type: 'toggleFlag' })
+      store.dispatch({ toggleFlag: undefined })
 
       expect(transitions).to.equal(1)
    })

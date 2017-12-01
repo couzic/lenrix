@@ -29,7 +29,7 @@ describe('LenrixStore actions', () => {
 
    describe('on root store', () => {
       it('applies registered handler on dispatch', () => {
-         rootStore.dispatch({ type: 'clearTodoList' })
+         rootStore.dispatch({ clearTodoList: undefined })
 
          expect(rootStore.currentState.todo.list).to.be.empty
       })
@@ -37,7 +37,7 @@ describe('LenrixStore actions', () => {
       it('root actions can be dispatched from path focused store', () => {
          rootStore
             .focusPath('todo')
-            .dispatch({ type: 'clearTodoList' })
+            .dispatch({ clearTodoList: undefined })
          expect(rootStore.currentState.todo.list).to.be.empty
       })
    })

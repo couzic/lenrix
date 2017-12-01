@@ -48,7 +48,8 @@ export interface Store<Type extends {
 
    dispatch(actions: Partial<Type['actions']>): void
    dispatch(action: ActionObject<Type['actions']>): void
-   dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType]>(type: ActionType, payload: Payload): void
+   // TODO Implement
+   // dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType]>(type: ActionType, payload: Payload): void
 
    // action$: Observable<Type['actions']>
 
