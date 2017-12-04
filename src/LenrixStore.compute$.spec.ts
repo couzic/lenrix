@@ -9,8 +9,8 @@ import { expect } from 'chai'
 import { createLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
-import { ComputedStore } from './ComputedStore'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 interface State {
@@ -40,28 +40,42 @@ const isAvailable = (name: string) => Observable.of(name.length > 3)
 describe('LenrixStore.compute$()', () => {
 
    const lens = createLens<State>()
-   let rootStore: Store<State>
+   let rootStore: Store<{
+      state: State
+      computedValues: {}
+      actions: { toggleFlag: void, setName: string }
+      dependencies: {}
+   }>
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
+         .actionTypes<{ toggleFlag: void }>()
+         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .actionTypes<{ setName: string }>()
+         .actionHandlers(_ => ({ setName: name => _.focusPath('name').setValue(name) }))
    })
 
    describe('without initial values', () => {
 
       it('computed values are undefined if computer has not emitted yet', () => {
          const computed = rootStore.compute$(state$ => Observable.never<{ whatever: 'computed' }>())
-         expect(computed.currentState.whatever).to.be.undefined
+         expect(computed.currentComputedState.whatever).to.be.undefined
       })
 
       it('computed values are defined if computer has emitted', () => {
          const computed = rootStore.compute$(state$ => Observable.of({ whatever: 'computed' }))
-         expect(computed.currentState.whatever).to.equal('computed')
+         expect(computed.currentComputedState.whatever).to.equal('computed')
       })
 
    })
 
    describe('with initial values', () => {
 
-      let store: ComputedStore<State, ComputedValues>
+      let store: Store<{
+         state: State
+         computedValues: ComputedValues
+         actions: { toggleFlag: void, setName: string }
+         dependencies: {}
+      }>
       let state: State & ComputedValues
       let stateTransitions: number
 
@@ -72,7 +86,7 @@ describe('LenrixStore.compute$()', () => {
                .map(available => ({ available })),
             { available: true })
          stateTransitions = 0
-         store.state$.subscribe(newState => {
+         store.computedState$.subscribe(newState => {
             state = newState
             ++stateTransitions
          })
@@ -88,31 +102,13 @@ describe('LenrixStore.compute$()', () => {
             ++executions
             return { whatever: 'computed' }
          }), { whatever: 'initial' })
-         expect(what.currentState.whatever).to.equal('computed')
+         expect(what.currentComputedState.whatever).to.equal('computed')
          expect(executions).to.equal(1)
       })
 
       it('holds initial values in state if Observable has not emitted yet', () => {
          const computed = rootStore.compute$(state$ => Observable.never(), { whatever: 'initial' })
-         expect(computed.currentState.whatever).to.equal('initial')
-      })
-
-      /////////////
-      // UPDATE //
-      ///////////
-
-      it('can update normalized state', () => {
-         store.setFieldValues({ name: 'Bob' })
-         expect(state.name).to.equal('Bob')
-      })
-
-      it('can reset', () => {
-         store.setFieldValues({
-            name: 'Steve'
-         })
-         store.reset()
-         expect(state.name).to.equal('')
-         expect(state.available).to.equal(false)
+         expect(computed.currentComputedState.whatever).to.equal('initial')
       })
 
       ////////////
@@ -120,7 +116,7 @@ describe('LenrixStore.compute$()', () => {
       //////////
 
       it('holds initial state as current state', () => {
-         expect(store.currentState).to.deep.equal({
+         expect(store.currentComputedState).to.deep.equal({
             ...initialState,
             available: false
          })
@@ -137,9 +133,7 @@ describe('LenrixStore.compute$()', () => {
 
       it('computes values when state changes', () => {
          expect(state.available).to.equal(false)
-         store.setFieldValues({
-            name: 'Steve'
-         })
+         store.dispatch({ setName: 'Steve' })
          expect(state.available).to.equal(true)
          expect(stateTransitions).to.equal(3)
       })
@@ -148,7 +142,7 @@ describe('LenrixStore.compute$()', () => {
          const computedStore = rootStore.compute$(state$ => state$.mapTo({
             available: false
          }).delay(1), { available: true })
-         expect(computedStore.currentState.available).to.equal(true)
+         expect(computedStore.currentComputedState.available).to.equal(true)
       })
 
       it('emits new state even if new values have not yet been computed', () => {
@@ -158,7 +152,7 @@ describe('LenrixStore.compute$()', () => {
          }), { value$: 'initial' })
          computed.state$.subscribe(state => ++stateTransions)
 
-         rootStore.updateFields({ flag: value => !value })
+         rootStore.dispatch({ toggleFlag: undefined })
 
          expect(stateTransions).to.equal(2)
       })
@@ -166,89 +160,98 @@ describe('LenrixStore.compute$()', () => {
       it('computes values from initial normalized state') // TODO ???????
 
       describe('.focusPath() with computed values', () => {
-         let focusedStore: ComputedStore<State['todo'], ComputedValues>
+         let focusedStore: Store<{
+            state: State['todo']
+            computedValues: ComputedValues
+            actions: { toggleFlag: void, setName: string }
+            dependencies: {}
+         }>
          let focusedState: State['todo'] & ComputedValues
          let focusedStateTransitions: number
 
          beforeEach(() => {
             focusedStore = store.focusPath(['todo'], ['available'])
             focusedStateTransitions = 0
-            focusedStore.state$.subscribe(state => {
+            focusedStore.computedState$.subscribe(state => {
                focusedState = state
                ++focusedStateTransitions
             })
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.updateFields({
-               flag: value => !value
-            })
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(focusedState.available).to.equal(false)
-            rootStore.setFieldValues({ name: 'Steve' })
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })
       })
 
       describe('.focusFields() with computed values', () => {
-         let focusedStore: ComputedStore<Pick<State, 'todo'>, ComputedValues>
+         let focusedStore: Store<{
+            state: Pick<State, 'todo'>
+            computedValues: ComputedValues
+            actions: { toggleFlag: void, setName: string }
+            dependencies: {}
+         }>
          let focusedState: Pick<State, 'todo'> & ComputedValues
          let focusedStateTransitions: number
 
          beforeEach(() => {
             focusedStore = store.focusFields(['todo'], ['available'])
             focusedStateTransitions = 0
-            focusedStore.state$.subscribe(state => {
+            focusedStore.computedState$.subscribe(state => {
                focusedState = state
                ++focusedStateTransitions
             })
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.updateFields({
-               flag: value => !value
-            })
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(focusedState.available).to.equal(false)
-            rootStore.setFieldValues({ name: 'Steve' })
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })
       })
 
       describe('.recompose() with computed values', () => {
-         let focusedStore: ComputedStore<{ todoList: string[] }, ComputedValues>
+         let focusedStore: Store<{
+            state: { todoList: string[] }
+            computedValues: ComputedValues
+            actions: { toggleFlag: void, setName: string }
+            dependencies: {}
+         }>
          let focusedState: { todoList: string[] } & ComputedValues
          let focusedStateTransitions: number
 
          beforeEach(() => {
-            focusedStore = store.recompose({
-               todoList: store.lens.focusPath('todo', 'list')
-            }, ['available'])
+            focusedStore = store.recompose(_ => ({
+               todoList: _.focusPath('todo', 'list')
+            }), ['available'])
             focusedStateTransitions = 0
-            focusedStore.state$.subscribe(state => {
+            focusedStore.computedState$.subscribe(state => {
                focusedState = state
                ++focusedStateTransitions
             })
          })
 
          it('does not emit new state when unrelated slice of parent state changes', () => {
-            rootStore.updateFields({
-               flag: value => !value
-            })
+            rootStore.dispatch({ toggleFlag: undefined })
             expect(focusedStateTransitions).to.equal(1)
          })
 
          it('emits new state when value computed from parent normalized state is recomputed', () => {
             expect(state.available).to.equal(false)
-            rootStore.setFieldValues({ name: 'Steve' })
+            rootStore.dispatch({ setName: 'Steve' })
             expect(focusedState.available).to.equal(true)
             expect(focusedStateTransitions).to.equal(2)
          })

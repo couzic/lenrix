@@ -1,13 +1,25 @@
 import { expect } from 'chai'
-import { initialState, State, TodoState } from '../test/State'
 import { UnfocusedLens } from 'immutable-lens'
-import { Store } from './Store'
+
+import { initialState, State, TodoState } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { Store } from './Store'
 
 describe('LenrixStore.focusPath()', () => {
 
-   let rootStore: Store<State>
-   let store: Store<TodoState>
+   let rootStore: Store<{
+      state: State
+      computedValues: {}
+      actions: {}
+      dependencies: {}
+   }>
+   let store: Store<{
+      state: TodoState
+      computedValues: {}
+      actions: {}
+      dependencies: {}
+   }>
    let rootState: State
    let state: TodoState
    let rootLens: UnfocusedLens<State>
@@ -16,10 +28,10 @@ describe('LenrixStore.focusPath()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, {logger: silentLoggerOptions})
       store = rootStore.focusPath('todo')
-      rootLens = rootStore.lens
-      lens = store.lens
+      rootLens = rootStore.localLens
+      lens = store.localLens
       rootStateTransitions = 0
       stateTransitions = 0
       rootStore.state$.subscribe(newState => {
@@ -45,19 +57,6 @@ describe('LenrixStore.focusPath()', () => {
       expect(store.focusPath('input').path).to.equal('root.todo.input')
    })
 
-   /////////////
-   // UPDATE //
-   ///////////
-
-   it('can update', () => {
-      store.update(state => ({
-         ...state,
-         count: state.list.length
-      }))
-      expect(store.currentState.count).to.equal(3)
-      expect(stateTransitions).to.equal(2)
-   })
-
    ////////////
    // STATE //
    //////////
@@ -71,7 +70,10 @@ describe('LenrixStore.focusPath()', () => {
    })
 
    it('does not emit new state when unrelated slice of ParentState is updated', () => {
-      rootStore.updateFields({ flag: value => !value })
+      rootStore
+         .actionTypes<{ toggleFlag: void }>()
+         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .dispatch({ toggleFlag: undefined })
 
       expect(rootStateTransitions).to.equal(2)
       expect(stateTransitions).to.equal(1)
@@ -95,7 +97,7 @@ describe('LenrixStore.focusPath()', () => {
       const focused = rootStore
          .compute(state => ({ todoListLength: state.todo.list.length }))
          .focusPath(['todo'], ['todoListLength'])
-      expect(focused.currentState).to.deep.equal({
+      expect(focused.currentComputedState).to.deep.equal({
          ...initialState.todo,
          todoListLength: 3
       })
@@ -103,13 +105,19 @@ describe('LenrixStore.focusPath()', () => {
 
    it('number-focused store emits new state when value changes', () => {
       const focused = store.focusPath('count')
-      focused.update(value => value + 1)
+      focused
+         .actionTypes<{ incrementCount: void }>()
+         .actionHandlers(_ => ({ incrementCount: () => _.update(val => val + 1) }))
+         .dispatch({ incrementCount: undefined })
       expect(focused.currentState).to.equal(initialState.todo.count + 1)
    })
 
    it('array-focused store emits new state when value changes', () => {
       const focused = store.focusPath('list')
-      focused.setValue([])
+      focused
+         .actionTypes<{ clearTodos: void }>()
+         .actionHandlers(_ => ({ clearTodos: () => _.setValue([]) }))
+         .dispatch({ clearTodos: undefined })
       expect(focused.currentState).to.be.empty
    })
 
