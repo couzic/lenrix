@@ -10,6 +10,7 @@ import { createLens } from 'immutable-lens'
 import { Observable } from 'rxjs/Observable'
 
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 interface State {
@@ -46,7 +47,7 @@ describe('LenrixStore.compute$()', () => {
       dependencies: {}
    }>
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
          .actionTypes<{ setName: string }>()

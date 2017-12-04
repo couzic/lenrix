@@ -3,6 +3,7 @@ import { createLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore actions', () => {
@@ -18,7 +19,7 @@ describe('LenrixStore actions', () => {
    }>
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{
             clearTodoList: void
          }>()

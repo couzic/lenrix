@@ -5,6 +5,7 @@ import { createLens } from 'immutable-lens'
 
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.pluck()', () => {
@@ -21,7 +22,7 @@ describe('LenrixStore.pluck()', () => {
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState)
+      store = createStore(initialState, {logger: silentLoggerOptions})
          .compute(state => ({ todoListLength: state.todo.list.length }))
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))

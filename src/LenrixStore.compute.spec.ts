@@ -3,6 +3,7 @@ import { createLens } from 'immutable-lens'
 
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 interface ComputedValues {
@@ -33,7 +34,7 @@ describe('LenrixStore.compute()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{
             toggleFlag: void
             toggleOrder: void

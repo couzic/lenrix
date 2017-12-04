@@ -3,6 +3,7 @@ import { UnfocusedLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 type PickedState = Pick<State, 'counter' | 'todo'>
@@ -34,7 +35,7 @@ describe('LenrixStore.focusFields()', () => {
    }
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, {logger: silentLoggerOptions})
       store = rootStore.focusFields('counter', 'todo')
       rootLens = rootStore.localLens
       lens = store.localLens

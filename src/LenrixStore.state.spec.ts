@@ -3,6 +3,7 @@ import { UnfocusedLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore when unfocused', () => {
@@ -18,7 +19,7 @@ describe('LenrixStore when unfocused', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      store = createStore(initialState)
+      store = createStore(initialState, {logger: silentLoggerOptions})
       lens = store.localLens
       stateTransitions = 0
       store.state$.subscribe(newState => {

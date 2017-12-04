@@ -1,4 +1,3 @@
-export * from './ActionDispatchers'
 export * from './ComputedState'
 export * from './createStore'
 export * from './FocusedAction'

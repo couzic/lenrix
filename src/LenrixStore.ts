@@ -1,6 +1,7 @@
 import 'rxjs/add/observable/combineLatest'
 import 'rxjs/add/observable/of'
 import 'rxjs/add/operator/distinctUntilChanged'
+import 'rxjs/add/operator/filter'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/mergeMap'
 import 'rxjs/add/operator/pluck'
@@ -11,7 +12,6 @@ import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens } from '
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
-import { ActionDispatchers } from './ActionDispatchers'
 import { ComputedState } from './ComputedState'
 import { FocusedAction } from './FocusedAction'
 import { FocusedHandlers } from './FocusedHandlers'
@@ -97,7 +97,7 @@ export class LenrixStore<
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
       private readonly registerEpics: (epics: any) => void,
       private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta) => void,
-      actionDispatchers: ActionDispatchers<Type['actions']>,
+      private readonly dispatchCompute: (store: Store<Type>, previous: Type['computedValues'], next: Type['computedValues']) => void,
       public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
@@ -105,18 +105,11 @@ export class LenrixStore<
       this.dataSubject
          .map(dataToComputedState)
          .subscribe(this.computedStateSubject)
-      this.actionDispatchers = actionDispatchers
    }
 
    //////////////
    // ACTIONS //
    ////////////
-
-   private actionDispatchers: ActionDispatchers<Type['actions']>
-
-   get actions() {
-      return this.actionDispatchers
-   }
 
    actionTypes<NewActions>(): any {
       return this
@@ -126,7 +119,6 @@ export class LenrixStore<
       const handlers = focusHandlers(this.localLens)
       this.registerHandlers(handlers)
       const actionTypes = Object.keys(handlers)
-      const actions = {} as any
       const meta: ActionMeta = {
          store: {
             name: this.name || '',
@@ -134,14 +126,6 @@ export class LenrixStore<
             currentState: this.currentState,
             computedValues: this.currentComputedValues
          }
-      }
-      actionTypes.forEach(actionType => {
-         const handler = (handlers as any)[actionType]
-         actions[actionType] = (payload: any) => this.dispatchAction({ type: actionType, payload }, meta)
-      })
-      this.actionDispatchers = {
-         ...this.actionDispatchers as any,
-         ...actions
       }
       return this
    }
@@ -211,6 +195,7 @@ export class LenrixStore<
          const computedState = { ...data.state as any, ...data.computedValues as any }
          const newComputedValues = computer(computedState)
          if (typeof newComputedValues === 'function') throw Error('LenrixStore.compute() does not accept higher order functions as arguments')
+         this.dispatchCompute(this, data.computedValues, newComputedValues)
          return {
             ...data.computedValues as any,
             ...newComputedValues as any
@@ -231,7 +216,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          this.path + '.compute()'
          // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
       )
@@ -250,6 +235,7 @@ export class LenrixStore<
       ): StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> => {
          const { data, selected } = dataAndSelected
          const newComputedValues = computer(selected)
+         this.dispatchCompute(this, data.computedValues, newComputedValues)
          return {
             state: data.state,
             computedValues: { ...data.computedValues as any, ...newComputedValues as any }
@@ -267,7 +253,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          this.path + '.computeFrom()'
       )
    }
@@ -282,10 +268,13 @@ export class LenrixStore<
       const data$ = Observable.combineLatest(
          this.dataSubject,
          computedValues$,
-         (data, computedValues) => ({
-            state: data.state,
-            computedValues: { ...data.computedValues as any, ...computedValues as any }
-         })
+         (data, computedValues) => {
+            if (computedValues) this.dispatchCompute(this, data.computedValues, computedValues)
+            return {
+               state: data.state,
+               computedValues: { ...data.computedValues as any, ...computedValues as any }
+            }
+         }
       )
       const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
          ? {
@@ -300,7 +289,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
       )
    }
@@ -342,7 +331,7 @@ export class LenrixStore<
          registerHandlers,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          this.path + focusedLens.path
       )
    }
@@ -371,7 +360,7 @@ export class LenrixStore<
          this.registerHandlers as any,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          path
       )
    }
@@ -404,7 +393,7 @@ export class LenrixStore<
          registerHandlers,
          this.registerEpics,
          this.dispatchAction,
-         this.actionDispatchers,
+         this.dispatchCompute,
          path
       )
    }

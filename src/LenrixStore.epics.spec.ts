@@ -3,6 +3,7 @@ import 'rxjs/add/operator/mapTo'
 import { expect } from 'chai'
 
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 type State = {
@@ -39,7 +40,7 @@ describe('LenrixStore.epics()', () => {
    }>
 
    beforeEach(() => {
-      store = createStore(initialState)
+      store = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<Actions>()
          .actionHandlers(_ => ({
             incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),

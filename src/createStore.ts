@@ -10,6 +10,8 @@ import { Observable } from 'rxjs/Observable'
 import { FocusedAction } from './FocusedAction'
 import { FocusedHandlers } from './FocusedHandlers'
 import { ActionMeta, LenrixStore } from './LenrixStore'
+import { createLogger } from './logger/createLogger'
+import { LoggerOptions } from './logger/LoggerOptions'
 import { Store } from './Store'
 
 declare const process: undefined | {
@@ -21,13 +23,16 @@ declare const process: undefined | {
 export function createFocusableStore<State extends object & NotAnArray>(
    reducer: Reducer<State>,
    preloadedState: State,
-   enhancer?: StoreEnhancer<State>
+   enhancer?: StoreEnhancer<State>,
+   options?: { logger?: LoggerOptions }
 ): Store<{
    state: State
    computedValues: {}
    actions: {}
    dependencies: {}
 }> {
+
+   const userOptions = options || {}
 
    let updateHandlers = {} as Record<string, (payload: any) => Updater<State>>
    let epicHandlers = {} as Record<string, (payload$: Observable<any>) => Observable<any>>
@@ -50,6 +55,8 @@ export function createFocusableStore<State extends object & NotAnArray>(
       enhancer
    )
 
+   const logger = createLogger(reduxStore, userOptions.logger)
+
    const stateSubject = new BehaviorSubject(preloadedState)
 
    const subscription = reduxStore.subscribe(() => {
@@ -57,28 +64,21 @@ export function createFocusableStore<State extends object & NotAnArray>(
    })
 
    const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
-      const hasUpdateHandler = Object.keys(updateHandlers).indexOf(action.type) >= 0
-      const hasEpicHandler = Object.keys(epicHandlers).indexOf(action.type) >= 0
-      if (!hasUpdateHandler && !hasEpicHandler) {
-         reduxStore.dispatch({
-            type: '[MESSAGE]' + action.type,
-            payload: action.payload,
-            meta
-         })
+      const hasUpdateHandler = Boolean(updateHandlers[action.type])
+      const hasEpicHandler = Boolean(epicHandlers[action.type])
+      if (!hasUpdateHandler && !hasEpicHandler) { // MESSAGE
+         logger.message(action)
       }
-      if (hasUpdateHandler) {
+      if (hasUpdateHandler) { // UPDATE
+         logger.update(action)
          reduxStore.dispatch({
             type: '[UPDATE]' + action.type,
             payload: action.payload,
             meta
          })
       }
-      if (hasEpicHandler) {
-         reduxStore.dispatch({
-            type: '[EPIC]' + action.type,
-            payload: action.payload,
-            meta
-         })
+      if (hasEpicHandler) { // EPIC
+         logger.epic(action)
          const epic = epicHandlers[action.type]
          const action$ = epic(Observable.of(action.payload))
          action$.subscribe((actionOrActions: any) => {
@@ -111,6 +111,14 @@ export function createFocusableStore<State extends object & NotAnArray>(
       })
    }
 
+   const dispatchCompute = (store: Store<any>, previous: object, next: object) => {
+      const meta = {
+         previous,
+         next
+      } as any
+      logger.compute(previous, next)
+   }
+
    return new LenrixStore(
       state$.map(state => ({ state, computedValues: {} })),
       data => data.state as any,
@@ -118,16 +126,16 @@ export function createFocusableStore<State extends object & NotAnArray>(
       registerHandlers,
       registerEpics,
       dispatchAction,
-      {},
+      dispatchCompute,
       'root'
    )
 }
 
-export function createStore<State extends object>(initialState: State): Store<{
+export function createStore<State extends object>(initialState: State, options?: { logger?: LoggerOptions }): Store<{
    state: State
    computedValues: {}
    actions: {}
    dependencies: {}
 }> {
-   return createFocusableStore(state => state, initialState)
+   return createFocusableStore(state => state, initialState, undefined, options)
 }

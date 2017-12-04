@@ -3,6 +3,7 @@ import { UnfocusedLens } from 'immutable-lens'
 
 import { initialState, State, TodoState } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.focusPath()', () => {
@@ -27,7 +28,7 @@ describe('LenrixStore.focusPath()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, {logger: silentLoggerOptions})
       store = rootStore.focusPath('todo')
       rootLens = rootStore.localLens
       lens = store.localLens

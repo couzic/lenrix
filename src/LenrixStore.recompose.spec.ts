@@ -2,6 +2,7 @@ import { expect } from 'chai'
 
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.recompose()', () => {
@@ -30,7 +31,7 @@ describe('LenrixStore.recompose()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState)
+      rootStore = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
       store = rootStore.recompose(_ => ({

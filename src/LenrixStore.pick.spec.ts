@@ -3,6 +3,7 @@ import { createLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.pick()', () => {
@@ -19,7 +20,7 @@ describe('LenrixStore.pick()', () => {
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState)
+      store = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
       store.state$.subscribe(newState => state = newState)

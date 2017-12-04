@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { createLens } from 'immutable-lens'
 
 import { createStore } from './createStore'
+import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 interface State {
@@ -41,7 +42,7 @@ describe('LenrixStore.computeFrom()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      store = createStore(initialState)
+      store = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
       computedStore = store.computeFrom(_ => ({
