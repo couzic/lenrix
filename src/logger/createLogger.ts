@@ -13,7 +13,6 @@ const createMessageLogger = (reduxStore: Store<any>, options: LoggerOptions): Lo
          console.log('payload', action.payload)
          console.log('meta', action.meta)
          console.groupEnd()
-         console.log('[MESSAGE]' + action.type)
       }
       : doNothing
    const logToRedux = options.redux!.message
