@@ -22,7 +22,7 @@ describe('LenrixStore.pick()', () => {
    beforeEach(() => {
       store = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
       store.state$.subscribe(newState => state = newState)
    })
 

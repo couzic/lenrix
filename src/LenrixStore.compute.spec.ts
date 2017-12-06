@@ -39,7 +39,7 @@ describe('LenrixStore.compute()', () => {
             toggleFlag: void
             toggleOrder: void
          }>()
-         .actionHandlers(_ => ({
+         .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             toggleOrder: () => _.focusPath('sorting', 'order').update(order => order === 'descending' ? 'ascending' : 'descending')
          }))
@@ -125,7 +125,7 @@ describe('LenrixStore.compute()', () => {
       it('does not emit new state when unrelated slice of parent state changes', () => {
          const store = rootStore
             .actionTypes<{ incrementCounter: void }>()
-            .actionHandlers(_ => ({
+            .updates(_ => ({
                incrementCounter: () => _.focusPath('counter').update(counter => counter + 1)
             }))
          store.dispatch({ incrementCounter: undefined })
@@ -142,7 +142,7 @@ describe('LenrixStore.compute()', () => {
       it('emits new state when value computed from parent normalized state is recomputed', () => {
          rootStore
             .actionTypes<{ clearTodoList: void }>()
-            .actionHandlers(_ => ({
+            .updates(_ => ({
                clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })
@@ -163,7 +163,7 @@ describe('LenrixStore.compute()', () => {
       beforeEach(() => {
          focusedStore = store.focusFields(['sorting'], ['todoListLength', 'caret'])
             .actionTypes<{ toggleOrder: void }>()
-            .actionHandlers(_ => ({
+            .updates(_ => ({
                toggleOrder: () => _.focusPath('sorting', 'order').update(order => order === 'descending' ? 'ascending' : 'descending')
             }))
          focusedStateTransitions = 0
@@ -188,7 +188,7 @@ describe('LenrixStore.compute()', () => {
       it('emits new state when value computed from parent normalized state is recomputed', () => {
          rootStore
             .actionTypes<{ clearTodoList: void }>()
-            .actionHandlers(_ => ({
+            .updates(_ => ({
                clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })
@@ -225,7 +225,7 @@ describe('LenrixStore.compute()', () => {
       it('emits new state when computed value needs to be recomputed from normalized state', () => {
          focusedStore
             .actionTypes<{ clearTodoList: void }>()
-            .actionHandlers(_ => ({
+            .updates(_ => ({
                clearTodoList: () => _.focusPath('todoList').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })

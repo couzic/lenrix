@@ -23,7 +23,7 @@ describe('LenrixStore actions', () => {
          .actionTypes<{
             clearTodoList: void
          }>()
-         .actionHandlers(_ => ({
+         .updates(_ => ({
             clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
          }))
    })
@@ -58,7 +58,7 @@ describe('LenrixStore actions', () => {
       it('applies handler registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
-            .actionHandlers(_ => ({ clearList: () => _.focusPath('list').setValue([]) }))
+            .updates(_ => ({ clearList: () => _.focusPath('list').setValue([]) }))
             .dispatch({ type: 'clearList' })
 
          expect(store.currentState.list).to.be.empty
@@ -80,7 +80,7 @@ describe('LenrixStore actions', () => {
       it('applies handler registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
-            .actionHandlers(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
+            .updates(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
             .dispatch({ type: 'clearList' })
 
          expect(store.currentState.todo.list).to.be.empty
@@ -104,7 +104,7 @@ describe('LenrixStore actions', () => {
       it('applies handler registered on recomposed store', () => {
          store
             .actionTypes<{ clearRecomposedTodoList: void }>()
-            .actionHandlers(_ => ({ clearRecomposedTodoList: () => _.focusPath('todoList').setValue([]) }))
+            .updates(_ => ({ clearRecomposedTodoList: () => _.focusPath('todoList').setValue([]) }))
             .dispatch({ type: 'clearRecomposedTodoList' })
 
          expect(store.currentState.todoList).to.be.empty

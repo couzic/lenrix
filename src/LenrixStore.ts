@@ -115,7 +115,7 @@ export class LenrixStore<
       return this
    }
 
-   actionHandlers(focusHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) {
+   updates(focusHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) {
       const handlers = focusHandlers(this.localLens)
       this.registerHandlers(handlers)
       const actionTypes = Object.keys(handlers)

@@ -70,7 +70,7 @@ describe('LenrixStore.focusFields()', () => {
    it('does not emit new state when an update does not change any value', () => {
       store
          .actionTypes<{ doNothing: void }>()
-         .actionHandlers(_ => ({ doNothing: () => state => state }))
+         .updates(_ => ({ doNothing: () => state => state }))
          .dispatch({ doNothing: undefined })
       expect(stateTransitions).to.equal(1)
    })
@@ -78,7 +78,7 @@ describe('LenrixStore.focusFields()', () => {
    it('does not emit new state when an unrelated slice of parent state changes', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(1)
    })

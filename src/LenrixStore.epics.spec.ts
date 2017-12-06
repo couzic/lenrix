@@ -42,7 +42,7 @@ describe('LenrixStore.epics()', () => {
    beforeEach(() => {
       store = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<Actions>()
-         .actionHandlers(_ => ({
+         .updates(_ => ({
             incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),
             setCounter: (counter) => _.setFieldValues({ counter }),
             setTodoCount: (todoCount) => _.focusPath('todo', 'count').setValue(todoCount)

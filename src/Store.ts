@@ -37,14 +37,12 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   // TODO Rename to updates
-   actionHandlers(
+   updates(
       this: Store<Type & { state: object & NotAnArray }>,
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
    ): Store<Type>
 
-   // TODO Rename to updates
-   actionHandlers(
+   updates(
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
    ): Store<Type>
 

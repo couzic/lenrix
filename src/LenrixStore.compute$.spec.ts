@@ -49,9 +49,9 @@ describe('LenrixStore.compute$()', () => {
    beforeEach(() => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
          .actionTypes<{ setName: string }>()
-         .actionHandlers(_ => ({ setName: name => _.focusPath('name').setValue(name) }))
+         .updates(_ => ({ setName: name => _.focusPath('name').setValue(name) }))
    })
 
    describe('without initial values', () => {

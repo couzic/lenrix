@@ -72,7 +72,7 @@ describe('LenrixStore.focusPath()', () => {
    it('does not emit new state when unrelated slice of ParentState is updated', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
          .dispatch({ toggleFlag: undefined })
 
       expect(rootStateTransitions).to.equal(2)
@@ -107,7 +107,7 @@ describe('LenrixStore.focusPath()', () => {
       const focused = store.focusPath('count')
       focused
          .actionTypes<{ incrementCount: void }>()
-         .actionHandlers(_ => ({ incrementCount: () => _.update(val => val + 1) }))
+         .updates(_ => ({ incrementCount: () => _.update(val => val + 1) }))
          .dispatch({ incrementCount: undefined })
       expect(focused.currentState).to.equal(initialState.todo.count + 1)
    })
@@ -116,7 +116,7 @@ describe('LenrixStore.focusPath()', () => {
       const focused = store.focusPath('list')
       focused
          .actionTypes<{ clearTodos: void }>()
-         .actionHandlers(_ => ({ clearTodos: () => _.setValue([]) }))
+         .updates(_ => ({ clearTodos: () => _.setValue([]) }))
          .dispatch({ clearTodos: undefined })
       expect(focused.currentState).to.be.empty
    })

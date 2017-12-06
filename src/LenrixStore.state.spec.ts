@@ -45,7 +45,7 @@ describe('LenrixStore when unfocused', () => {
    it('emits new state when state is updated', () => {
       store
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(2)
    })
@@ -53,7 +53,7 @@ describe('LenrixStore when unfocused', () => {
    it('does not emit new state when an update does not change any value', () => {
       store
          .actionTypes<{ doNothing: void }>()
-         .actionHandlers(_ => ({ doNothing: () => state => state }))
+         .updates(_ => ({ doNothing: () => state => state }))
          .dispatch({ doNothing: undefined })
       expect(stateTransitions).to.equal(1)
    })

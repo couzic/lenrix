@@ -53,7 +53,7 @@ describe('LenrixStore.computeFrom()', () => {
             toggleFlag: void
             addToList: string
          }>()
-         .actionHandlers(_ => ({
+         .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             addToList: (name) => _.focusPath('todo', 'list').update(list => [...list, name])
          }))

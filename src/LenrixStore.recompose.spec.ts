@@ -33,7 +33,7 @@ describe('LenrixStore.recompose()', () => {
    beforeEach(() => {
       rootStore = createStore(initialState, {logger: silentLoggerOptions})
          .actionTypes<{ toggleFlag: void }>()
-         .actionHandlers(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
       store = rootStore.recompose(_ => ({
          counter: rootStore.localLens.focusPath('counter'),
          todoList: rootStore.localLens.focusPath('todo', 'list')
