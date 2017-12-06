@@ -244,6 +244,7 @@ export class LenrixStore<
       const data$ = this.dataSubject
          .map(select)
          .distinctUntilChanged((a, b) => shallowEquals(a.selected, b.selected))
+         .skip(1)
          .map(computeData)
       const initialData = computeData(select(this.initialData))
       return new LenrixStore(
