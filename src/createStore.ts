@@ -81,16 +81,12 @@ export function createFocusableStore<State extends object & NotAnArray>(
          logger.epic(action)
          const epic = epicHandlers[action.type]
          const action$ = epic(Observable.of(action.payload))
-         action$.subscribe((actionOrActions: any) => {
+         action$.subscribe((action: any) => {
             const meta = {} as any
-            if (actionOrActions.type) {
-               const { type, payload } = actionOrActions
-               dispatchAction({ type, payload }, meta)
-            } else {
-               Object.keys(actionOrActions).forEach(type => {
-                  dispatchAction({ type, payload: actionOrActions[type] }, meta)
-               })
-            }
+            const types = Object.keys(action)
+            if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
+            const type = types[0]
+            dispatchAction({ type, payload: action[type] }, meta)
          })
       }
    }

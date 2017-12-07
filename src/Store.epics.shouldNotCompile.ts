@@ -14,31 +14,52 @@ type State = {
 const state = {} as State
 
 interface Actions {
-   doSomething: string
-   doSomethingElse: number
-   doNothing: undefined
+   doString: string
+   doNumber: number
+   doNull: null
+   doVoid: void
+   doUndefined: undefined
+   doOptionalString: string | undefined
 }
 
 const store = createStore(state)
    .actionTypes<Actions>()
 
+// Mapping to empty object @shouldNotCompile
 store.epics({
-   doSomething: (payload$) => payload$.mapTo({ doSomethingElse: 42 })
+   doString: (payload$) => payload$.mapTo({})
 })
 
+// Dispatching unknown action type @shouldNotCompile
 store.epics({
-   doSomething: (payload$) => payload$.mapTo({ type: 'doSomethingElse' as 'doSomethingElse', payload: 42 })
+   doString: (payload$) => payload$.mapTo({ doUnknown: undefined })
 })
 
+// Mapping to wrong payload type @shouldNotCompile
 store.epics({
-   doSomething: (payload$) => payload$.mapTo({ doNothing: undefined })
+   doString: (payload$) => payload$.mapTo({ doNumber: '42' })
 })
 
+// Mapping to null payload @shouldNotCompile
 store.epics({
-   doSomething: (payload$) => payload$.mapTo({ type: 'doNothing' as 'doNothing', payload: undefined })
+   doString: (payload$) => payload$.mapTo({ doNumber: null })
 })
 
-// @shouldNotButDoesCompile
+// Mapping to undefined payload @shouldNotCompile
 store.epics({
-   doSomething: (payload$) => payload$.mapTo({ doSomething: undefined })
+   doString: (payload$) => payload$.mapTo({ doNumber: undefined })
+})
+
+////////////////////////////////////////////////////////
+// @shouldNotButDoesCompile - Require runtime checks //
+//////////////////////////////////////////////////////
+
+// Mapping with additional unknown payload type @shouldNotButDoesCompile
+store.epics({
+   doString: (payload$) => payload$.mapTo({ doNumber: 42, unknown: '' })
+})
+
+// Dispatching two types in same object @shouldNotButDoesCompile
+store.epics({
+   doString: (payload$) => payload$.mapTo({ doString: '', doNumber: 5 })
 })

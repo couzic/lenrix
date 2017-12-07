@@ -1,4 +1,4 @@
 
 export type ActionObject<Actions> = {
-   [ActionType in keyof Actions]: { type: ActionType, payload: Actions[ActionType] }
+   [ActionType in keyof Actions]: {[type in ActionType]: Actions[type]}
 }[keyof Actions]

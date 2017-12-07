@@ -6,7 +6,11 @@ import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
-describe('LenrixStore actions', () => {
+interface Actions {
+   clearTodoList: void
+}
+
+describe('LenrixStore.updates()', () => {
 
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
@@ -14,22 +18,20 @@ describe('LenrixStore actions', () => {
    let rootStore: Store<{
       state: State
       computedValues: {}
-      actions: { clearTodoList: void }
+      actions: Actions
       dependencies: {}
    }>
 
    beforeEach(() => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{
-            clearTodoList: void
-         }>()
+         .actionTypes<Actions>()
          .updates(_ => ({
             clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
          }))
    })
 
    describe('on root store', () => {
-      it('applies registered handler on dispatch', () => {
+      it('updates on dispatch', () => {
          rootStore.dispatch({ clearTodoList: undefined })
 
          expect(rootStore.currentState.todo.list).to.be.empty
@@ -44,68 +46,83 @@ describe('LenrixStore actions', () => {
    })
 
    describe('on path-focused store', () => {
-      let store: Store<any>
+      let store: Store<{
+         state: State['todo']
+         computedValues: {}
+         actions: Actions
+         dependencies: {}
+      }>
       beforeEach(() => {
          store = rootStore.focusPath('todo')
       })
 
-      it('applies handler registered on root store', () => {
-         store.dispatch({ type: 'clearTodoList' })
+      it('applies update registered on root store', () => {
+         store.dispatch({ clearTodoList: undefined })
 
          expect(store.currentState.list).to.be.empty
       })
 
-      it('applies handler registered on focused store', () => {
+      it('applies update registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
             .updates(_ => ({ clearList: () => _.focusPath('list').setValue([]) }))
-            .dispatch({ type: 'clearList' })
+            .dispatch({ clearList: undefined })
 
          expect(store.currentState.list).to.be.empty
       })
    })
 
    describe('on fields-focused store', () => {
-      let store: Store<any>
+      let store: Store<{
+         state: Pick<State, 'todo'>
+         computedValues: {}
+         actions: Actions
+         dependencies: {}
+      }>
       beforeEach(() => {
          store = rootStore.focusFields('todo')
       })
 
-      it('applies handler registered on root store', () => {
-         store.dispatch({ type: 'clearTodoList' })
+      it('applies update registered on root store', () => {
+         store.dispatch({ clearTodoList: undefined })
 
          expect(store.currentState.todo.list).to.be.empty
       })
 
-      it('applies handler registered on focused store', () => {
+      it('applies update registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
             .updates(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
-            .dispatch({ type: 'clearList' })
+            .dispatch({ clearList: undefined })
 
          expect(store.currentState.todo.list).to.be.empty
       })
    })
 
    describe('on recomposed store', () => {
-      let store: Store<any>
+      let store: Store<{
+         state: { todoList: State['todo']['list'] }
+         computedValues: {}
+         actions: Actions
+         dependencies: {}
+      }>
       beforeEach(() => {
          store = rootStore.recompose(_ => ({
             todoList: _.focusPath('todo', 'list')
          }))
       })
 
-      it('applies handler registered on root store', () => {
-         store.dispatch({ type: 'clearTodoList' })
+      it('applies update registered on root store', () => {
+         store.dispatch({ clearTodoList: undefined })
 
          expect(store.currentState.todoList).to.be.empty
       })
 
-      it('applies handler registered on recomposed store', () => {
+      it('applies update registered on recomposed store', () => {
          store
             .actionTypes<{ clearRecomposedTodoList: void }>()
             .updates(_ => ({ clearRecomposedTodoList: () => _.focusPath('todoList').setValue([]) }))
-            .dispatch({ type: 'clearRecomposedTodoList' })
+            .dispatch({ clearRecomposedTodoList: undefined })
 
          expect(store.currentState.todoList).to.be.empty
       })

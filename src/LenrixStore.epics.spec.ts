@@ -40,7 +40,7 @@ describe('LenrixStore.epics()', () => {
    }>
 
    beforeEach(() => {
-      store = createStore(initialState, {logger: silentLoggerOptions})
+      store = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<Actions>()
          .updates(_ => ({
             incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),
@@ -61,6 +61,17 @@ describe('LenrixStore.epics()', () => {
       store.dispatch({ buttonClicked: undefined })
       store.dispatch({ buttonClicked: undefined })
       expect(store.currentState.counter).to.equal(2)
+   })
+
+   it('throws error when dispatching two action types in same object', () => {
+      expect(() => {
+         createStore(initialState, { logger: silentLoggerOptions })
+            .actionTypes<Actions>()
+            .epics({
+               buttonClicked: ($) => $.mapTo({ setCounter: 0, incrementCounter: undefined })
+            })
+            .dispatch({ buttonClicked: undefined })
+      }).to.throw()
    })
 
 })

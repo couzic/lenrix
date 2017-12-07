@@ -141,15 +141,12 @@ export class LenrixStore<
       }
    }
 
-   dispatch(actionOrActions: any) {
-      if (actionOrActions.type) {
-         const { type, payload } = actionOrActions
-         this.dispatchAction({ type, payload }, this.makeActionMeta())
-      } else {
-         Object.keys(actionOrActions).forEach(type => {
-            this.dispatchAction({ type, payload: actionOrActions[type] }, this.makeActionMeta())
-         })
-      }
+   dispatch(action: any) {
+      const types = Object.keys(action)
+      if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
+      const type = types[0]
+      const payload = action[type]
+      this.dispatchAction({ type, payload }, this.makeActionMeta())
    }
 
    epics(epics: any): Store<Type> {

@@ -46,15 +46,14 @@ export interface Store<Type extends {
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
    ): Store<Type>
 
-   dispatch(actions: Partial<Type['actions']>): void
    dispatch(action: ActionObject<Type['actions']>): void
-   // TODO Implement
+   // TODO Implement ?
    // dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType]>(type: ActionType, payload: Payload): void
 
    // action$: Observable<Type['actions']>
 
    epics(epics: {
-      [ActionType in keyof Type['actions']]?: (payload$: Observable<Type['actions'][ActionType]>) => Observable<Partial<Type['actions']> | ActionObject<Type['actions']>>
+      [ActionType in keyof Type['actions']]?: (payload$: Observable<Type['actions'][ActionType]>) => Observable<ActionObject<Type['actions']>>
    }): Store<Type>
 
    ///////////
