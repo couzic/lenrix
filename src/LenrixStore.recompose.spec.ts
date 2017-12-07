@@ -56,7 +56,7 @@ describe('LenrixStore.recompose()', () => {
 
    it('has Lens', () => {
       const newList: TodoItem[] = []
-      const result = store.localLens.setFieldValues({ todoList: newList })(state)
+      const result = store.localLens.setFields({ todoList: newList })(state)
       expect(result.todoList).to.equal(newList)
    })
 

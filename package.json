@@ -37,24 +37,24 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
-    "immutable-lens": "^0.1.4",
+    "immutable-lens": "^0.2.0",
     "redux": "^3.7.2",
     "rxjs": "^5.4.2"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.5",
+    "@types/chai": "^4.0.8",
     "@types/mocha": "^2.2.44",
     "@types/redux": "^3.6.0",
     "chai": "^4.1.2",
     "chalk": "^2.3.0",
     "glob-promise": "^3.3.0",
-    "immutable-lens": "^0.1.7",
-    "mocha": "^3.5.3",
+    "immutable-lens": "^0.2.0",
+    "mocha": "^4.0.1",
     "ramda": "^0.25.0",
     "redux": "^3.7.2",
-    "rxjs": "^5.5.2",
+    "rxjs": "^5.5.5",
     "shx": "^0.2.2",
     "ts-node": "^3.2.1",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.2"
   }
 }

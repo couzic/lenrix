@@ -44,7 +44,7 @@ describe('LenrixStore.epics()', () => {
          .actionTypes<Actions>()
          .updates(_ => ({
             incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),
-            setCounter: (counter) => _.setFieldValues({ counter }),
+            setCounter: (counter) => _.setFields({ counter }),
             setTodoCount: (todoCount) => _.focusPath('todo', 'count').setValue(todoCount)
          }))
          .epics({
