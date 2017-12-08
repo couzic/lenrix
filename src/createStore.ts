@@ -152,7 +152,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
 
    const context: StoreContext = {
       registerEpics,
-      dispatchAction,
+      dispatchActionObject,
       dispatchCompute
    }
 

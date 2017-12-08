@@ -12,6 +12,7 @@ import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens } from '
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
+import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
@@ -139,12 +140,8 @@ export class LenrixStore<
       }
    }
 
-   dispatch(action: any) {
-      const types = Object.keys(action)
-      if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
-      const type = types[0]
-      const payload = action[type]
-      this.context.dispatchAction({ type, payload }, this.makeActionMeta())
+   dispatch(action: ActionObject<any>) {
+      this.context.dispatchActionObject(action, this.makeActionMeta())
    }
 
    epics(epics: any): Store<Type> {
