@@ -96,7 +96,7 @@ export class LenrixStore<
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
       private readonly registerEpics: (epics: any) => void,
-      private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta) => void,
+      private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta, store: Store<Type>) => void,
       private readonly dispatchCompute: (store: Store<Type>, previous: Type['computedValues'], next: Type['computedValues']) => void,
       public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
@@ -146,7 +146,7 @@ export class LenrixStore<
       if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
       const type = types[0]
       const payload = action[type]
-      this.dispatchAction({ type, payload }, this.makeActionMeta())
+      this.dispatchAction({ type, payload }, this.makeActionMeta(), this)
    }
 
    epics(epics: any): Store<Type> {

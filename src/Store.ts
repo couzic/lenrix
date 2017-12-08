@@ -8,6 +8,7 @@ import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
+import { LightStore } from './LightStore'
 import { MergedFields } from './MergedFields'
 
 export interface Store<Type extends {
@@ -53,7 +54,11 @@ export interface Store<Type extends {
    // action$: Observable<Type['actions']>
 
    epics(epics: {
-      [ActionType in keyof Type['actions']]?: (payload$: Observable<Type['actions'][ActionType]>) => Observable<ActionObject<Type['actions']>>
+      [ActionType in keyof Type['actions']]?: (
+         payload$: Observable<Type['actions'][ActionType]>,
+         store: LightStore<Type>,
+         dependencies: Type['dependencies']
+      ) => Observable<ActionObject<Type['actions']>>
    }): Store<Type>
 
    ///////////

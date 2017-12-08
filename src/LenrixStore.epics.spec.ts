@@ -74,4 +74,20 @@ describe('LenrixStore.epics()', () => {
       }).to.throw()
    })
 
+   it('gives registered epics access to store currentState', () => {
+      expect(store.currentState.todo.list.length).to.equal(0)
+      expect(store.currentState.todo.count).to.equal(0)
+      store.dispatch({ setCounter: 1 })
+      expect(store.currentState.counter).to.equal(1)
+      store.epics({
+         setTodoCount: (payload$, store) => payload$
+            .filter(payload => payload === store.currentState.todo.list.length)
+            .map(payload => ({ setCounter: payload }))
+      })
+
+      store.dispatch({ setTodoCount: 0 })
+
+      expect(store.currentState.counter).to.equal(0)
+   })
+
 })

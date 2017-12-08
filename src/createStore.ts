@@ -35,7 +35,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const userOptions = options || {}
 
    let updateHandlers = {} as Record<string, (payload: any) => Updater<State>>
-   let epicHandlers = {} as Record<string, (payload$: Observable<any>) => Observable<any>>
+   let epicHandlers = {} as Record<string, (payload$: Observable<any>, store: Store<any>) => Observable<any>>
 
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[MESSAGE]') || action.type.startsWith('[EPIC]')) return state
@@ -63,7 +63,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       stateSubject.next(reduxStore.getState())
    })
 
-   const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
+   const dispatchAction = (action: FocusedAction, meta: ActionMeta, store: any) => {
       const hasUpdateHandler = Boolean(updateHandlers[action.type])
       const hasEpicHandler = Boolean(epicHandlers[action.type])
       if (!hasUpdateHandler && !hasEpicHandler) { // MESSAGE
@@ -80,13 +80,13 @@ export function createFocusableStore<State extends object & NotAnArray>(
       if (hasEpicHandler) { // EPIC
          logger.epic(action)
          const epic = epicHandlers[action.type]
-         const action$ = epic(Observable.of(action.payload))
+         const action$ = epic(Observable.of(action.payload), store)
          action$.subscribe((action: any) => {
             const meta = {} as any
             const types = Object.keys(action)
             if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
             const type = types[0]
-            dispatchAction({ type, payload: action[type] }, meta)
+            dispatchAction({ type, payload: action[type] }, meta, store)
          })
       }
    }
