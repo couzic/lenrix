@@ -13,11 +13,11 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 
 import { ComputedState } from './ComputedState'
-import { FocusedAction } from './FocusedAction'
 import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
+import { StoreContext } from './StoreContext'
 
 export interface ActionMeta {
    store: {
@@ -95,9 +95,7 @@ export class LenrixStore<
       private readonly dataToComputedState: (data: StoreData<Type>) => ComputedState<Type>,
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
-      private readonly registerEpics: (epics: any, store: Store<Type>) => void,
-      private readonly dispatchAction: (action: FocusedAction, actionMeta: ActionMeta) => void,
-      private readonly dispatchCompute: (store: Store<Type>, previous: Type['computedValues'], next: Type['computedValues']) => void,
+      private readonly context: StoreContext,
       public readonly path: string) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
@@ -146,11 +144,11 @@ export class LenrixStore<
       if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
       const type = types[0]
       const payload = action[type]
-      this.dispatchAction({ type, payload }, this.makeActionMeta())
+      this.context.dispatchAction({ type, payload }, this.makeActionMeta())
    }
 
    epics(epics: any): Store<Type> {
-      this.registerEpics(epics, this)
+      this.context.registerEpics(epics, this as any)
       return this
    }
 
@@ -192,7 +190,7 @@ export class LenrixStore<
          const computedState = { ...data.state as any, ...data.computedValues as any }
          const newComputedValues = computer(computedState)
          if (typeof newComputedValues === 'function') throw Error('LenrixStore.compute() does not accept higher order functions as arguments')
-         this.dispatchCompute(this, data.computedValues, newComputedValues)
+         this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
          return {
             ...data.computedValues as any,
             ...newComputedValues as any
@@ -211,9 +209,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          this.path + '.compute()'
          // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
       )
@@ -232,7 +228,7 @@ export class LenrixStore<
       ): StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> => {
          const { data, selected } = dataAndSelected
          const newComputedValues = computer(selected)
-         this.dispatchCompute(this, data.computedValues, newComputedValues)
+         this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
          return {
             state: data.state,
             computedValues: { ...data.computedValues as any, ...newComputedValues as any }
@@ -249,9 +245,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          this.path + '.computeFrom()'
       )
    }
@@ -267,7 +261,7 @@ export class LenrixStore<
          this.dataSubject,
          computedValues$,
          (data, computedValues) => {
-            if (computedValues) this.dispatchCompute(this, data.computedValues, computedValues)
+            if (computedValues) this.context.dispatchCompute(this as any, data.computedValues, computedValues)
             return {
                state: data.state,
                computedValues: { ...data.computedValues as any, ...computedValues as any }
@@ -285,9 +279,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
       )
    }
@@ -327,9 +319,7 @@ export class LenrixStore<
             : { ...data.state, ...data.computedValues },
          toFocusedData(this.initialData),
          registerHandlers,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          this.path + focusedLens.path
       )
    }
@@ -356,9 +346,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toPickedData(this.initialData),
          this.registerHandlers as any,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          path
       )
    }
@@ -389,9 +377,7 @@ export class LenrixStore<
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toRecomposedData(this.initialData),
          registerHandlers,
-         this.registerEpics,
-         this.dispatchAction,
-         this.dispatchCompute,
+         this.context,
          path
       )
    }

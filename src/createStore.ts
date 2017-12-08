@@ -16,6 +16,7 @@ import { ActionMeta, LenrixStore } from './LenrixStore'
 import { createLogger } from './logger/createLogger'
 import { LoggerOptions } from './logger/LoggerOptions'
 import { Store } from './Store'
+import { StoreContext } from './StoreContext'
 
 declare const process: undefined | {
    env?: {
@@ -149,14 +150,18 @@ export function createFocusableStore<State extends object & NotAnArray>(
       logger.compute(previous, next)
    }
 
+   const context: StoreContext = {
+      registerEpics,
+      dispatchAction,
+      dispatchCompute
+   }
+
    return new LenrixStore(
       state$.map(state => ({ state, computedValues: {} })),
       data => data.state as any,
       { state: preloadedState, computedValues: {} },
       registerHandlers,
-      registerEpics,
-      dispatchAction,
-      dispatchCompute,
+      context,
       'root'
    )
 }
