@@ -1,3 +1,4 @@
+import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/mapTo'
 
 import { expect } from 'chai'
@@ -92,17 +93,17 @@ describe('LenrixStore.epics()', () => {
       expect(store.currentState.counter).to.equal(0)
    })
 
-   // xit('supports distinctUntilChanged()', () => {
-   //    expect(store.currentState.counter).to.equal(0)
-   //    store.epics({
-   //       setTodoCount: (payload$) => payload$
-   //          .distinctUntilChanged()
-   //          .mapTo({ incrementCounter: undefined })
-   //    })
-   //    store.dispatch({ setTodoCount: 42 })
-   //    expect(store.currentState.counter).to.equal(1)
-   //    store.dispatch({ setTodoCount: 42 })
-   //    expect(store.currentState.counter).to.equal(1)
-   // })
+   it('supports distinctUntilChanged()', () => {
+      expect(store.currentState.counter).to.equal(0)
+      store.epics({
+         setTodoCount: (payload$) => payload$
+            .distinctUntilChanged()
+            .mapTo({ incrementCounter: undefined })
+      })
+      store.dispatch({ setTodoCount: 42 })
+      expect(store.currentState.counter).to.equal(1)
+      store.dispatch({ setTodoCount: 42 })
+      expect(store.currentState.counter).to.equal(1)
+   })
 
 })
