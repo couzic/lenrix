@@ -79,9 +79,11 @@ describe('LenrixStore.epics()', () => {
       expect(store.currentState.todo.count).to.equal(0)
       store.dispatch({ setCounter: 1 })
       expect(store.currentState.counter).to.equal(1)
-      store.epics({
+
+      const todoStore = store.focusPath('todo')
+      todoStore.epics({
          setTodoCount: (payload$, store) => payload$
-            .filter(payload => payload === store.currentState.todo.list.length)
+            .filter(payload => payload === store.currentState.list.length)
             .map(payload => ({ setCounter: payload }))
       })
 
@@ -89,5 +91,18 @@ describe('LenrixStore.epics()', () => {
 
       expect(store.currentState.counter).to.equal(0)
    })
+
+   // xit('supports distinctUntilChanged()', () => {
+   //    expect(store.currentState.counter).to.equal(0)
+   //    store.epics({
+   //       setTodoCount: (payload$) => payload$
+   //          .distinctUntilChanged()
+   //          .mapTo({ incrementCounter: undefined })
+   //    })
+   //    store.dispatch({ setTodoCount: 42 })
+   //    expect(store.currentState.counter).to.equal(1)
+   //    store.dispatch({ setTodoCount: 42 })
+   //    expect(store.currentState.counter).to.equal(1)
+   // })
 
 })

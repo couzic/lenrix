@@ -1,11 +1,14 @@
+import 'rxjs/add/observable/merge'
 import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
+import 'rxjs/add/operator/switchMap'
 
 import { NotAnArray, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
+import { Subject } from 'rxjs/Subject'
 
 import { FocusedAction } from './FocusedAction'
 import { FocusedHandlers } from './FocusedHandlers'
@@ -32,10 +35,35 @@ export function createFocusableStore<State extends object & NotAnArray>(
    dependencies: {}
 }> {
 
+   const input$ = new Subject<{
+      action: FocusedAction
+      meta: object
+   }>()
+   const epics$ = new Subject<Record<string, {
+      epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>,
+      store: Store<any>
+   }>>()
+
+   const output$ = epics$.switchMap(epics => {
+      const actionTypes = Object.keys(epics)
+      return Observable.merge(actionTypes.map(actionType => {
+         const { epic, store } = epics[actionType]
+         const action$ = input$
+            .map(input => input.action)
+            .filter(action => action.type === actionType)
+         return epic(action$, store)
+      }))
+   })
+
+   output$.subscribe(o => console.log(o))
+
    const userOptions = options || {}
 
    let updateHandlers = {} as Record<string, (payload: any) => Updater<State>>
-   let epicHandlers = {} as Record<string, (payload$: Observable<any>, store: Store<any>) => Observable<any>>
+   let epicHandlers = {} as Record<string, {
+      epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>,
+      store: Store<any>
+   }>
 
    const augmentedReducer: Reducer<State> = (state, action) => {
       if (action.type.startsWith('[MESSAGE]') || action.type.startsWith('[EPIC]')) return state
@@ -63,7 +91,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       stateSubject.next(reduxStore.getState())
    })
 
-   const dispatchAction = (action: FocusedAction, meta: ActionMeta, store: any) => {
+   const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
       const hasUpdateHandler = Boolean(updateHandlers[action.type])
       const hasEpicHandler = Boolean(epicHandlers[action.type])
       if (!hasUpdateHandler && !hasEpicHandler) { // MESSAGE
@@ -78,15 +106,16 @@ export function createFocusableStore<State extends object & NotAnArray>(
          })
       }
       if (hasEpicHandler) { // EPIC
+         // input$.next({action, sto})
          logger.epic(action)
-         const epic = epicHandlers[action.type]
+         const { epic, store } = epicHandlers[action.type]
          const action$ = epic(Observable.of(action.payload), store)
          action$.subscribe((action: any) => {
             const meta = {} as any
             const types = Object.keys(action)
             if (types.length > 1) throw Error('Lenrix does not support (yet?) dispatch of multiple actions in single object')
             const type = types[0]
-            dispatchAction({ type, payload: action[type] }, meta, store)
+            dispatchAction({ type, payload: action[type] }, meta)
          })
       }
    }
@@ -100,10 +129,10 @@ export function createFocusableStore<State extends object & NotAnArray>(
       })
    }
 
-   const registerEpics = <Actions>(newEpics: any) => {
+   const registerEpics = <Actions>(newEpics: any, store: Store<any>) => {
       const actionTypes = Object.keys(newEpics)
       actionTypes.forEach(actionType => {
-         epicHandlers[actionType] = (newEpics as any)[actionType]
+         epicHandlers[actionType] = { epic: (newEpics as any)[actionType], store }
       })
    }
 
