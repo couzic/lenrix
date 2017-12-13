@@ -9,10 +9,12 @@ const doNothing = (...params: any[]) => { }
 const createMessageLogger = (reduxStore: Store<any>, options: LoggerOptions): Logger['message'] => {
    const logToConsole = options.console!.message
       ? (action: FocusedAction) => {
-         console.groupCollapsed('%c 🔎 MESSAGE', 'background-color: rgb(128, 128, 0); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
+         if (typeof console.groupCollapsed === 'function')
+            console.groupCollapsed('%c 🔎 MESSAGE', 'background-color: rgb(128, 128, 0); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
          console.log('payload', action.payload)
          console.log('meta', action.meta)
-         console.groupEnd()
+         if (typeof console.groupEnd === 'function')
+            console.groupEnd()
       }
       : doNothing
    const logToRedux = options.redux!.message
@@ -27,10 +29,12 @@ const createMessageLogger = (reduxStore: Store<any>, options: LoggerOptions): Lo
 const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
    return options.console!.update
       ? (action: FocusedAction) => {
-         console.groupCollapsed('%c 🔎 UPDATE', 'background-color: rgb(32, 128, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
+         if (typeof console.groupCollapsed === 'function')
+            console.groupCollapsed('%c 🔎 UPDATE', 'background-color: rgb(32, 128, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
          console.log('payload', action.payload)
          console.log('meta', action.meta)
-         console.groupEnd()
+         if (typeof console.groupEnd === 'function')
+            console.groupEnd()
       }
       : doNothing
 }
@@ -38,10 +42,12 @@ const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
 const createEpicLogger = (reduxStore: Store<any>, options: LoggerOptions): Logger['epic'] => {
    const logToConsole = options.console!.epic
       ? (action: FocusedAction) => {
-         console.groupCollapsed('%c 🔎 EPIC', 'background-color: rgb(128, 32, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
+         if (typeof console.groupCollapsed === 'function')
+            console.groupCollapsed('%c 🔎 EPIC', 'background-color: rgb(128, 32, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', action.type)
          console.log('payload', action.payload)
          console.log('meta', action.meta)
-         console.groupEnd()
+         if (typeof console.groupEnd === 'function')
+            console.groupEnd()
       }
       : doNothing
    const logToRedux = options.redux!.epic
@@ -54,13 +60,15 @@ const createEpicLogger = (reduxStore: Store<any>, options: LoggerOptions): Logge
 }
 
 const createComputeLogger = (reduxStore: Store<any>, options: LoggerOptions): Logger['compute'] => {
-   const loggableKeys = (previous: object, next: object): string[] => Object.keys(Object.assign(previous, next))
+   const loggableKeys = (previous: object, next: object): string[] => Object.keys({ ...previous, ...next })
    const logToConsole = options.console!.compute
       ? (previous: any, next: any) => {
-         const keys = Object.keys(Object.assign(previous, next))
-         console.groupCollapsed('%c 🔎 COMPUTE', 'background-color: rgb(32, 32, 128); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', keys)
+         const keys = loggableKeys(previous, next)
+         if (typeof console.groupCollapsed === 'function')
+            console.groupCollapsed('%c 🔎 COMPUTE', 'background-color: rgb(32, 32, 128); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', keys)
          keys.forEach(key => console.log(key, ':', previous[key], '→', next[key]))
-         console.groupEnd()
+         if (typeof console.groupEnd === 'function')
+            console.groupEnd()
       }
       : doNothing
    const logToRedux = options.redux!.compute

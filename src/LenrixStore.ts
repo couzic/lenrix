@@ -254,11 +254,15 @@ export class LenrixStore<
       initialValues?: ComputedValues
    ): any {
       const computedValues$ = computer$(this.computedStateSubject).startWith(initialValues)
+      let lastComputedValues = initialValues
       const data$ = Observable.combineLatest(
          this.dataSubject,
          computedValues$,
          (data, computedValues) => {
-            if (computedValues) this.context.dispatchCompute(this as any, data.computedValues, computedValues)
+            if (computedValues !== lastComputedValues) {
+               this.context.dispatchCompute(this as any, data.computedValues, computedValues)
+               lastComputedValues = computedValues
+            }
             return {
                state: data.state,
                computedValues: { ...data.computedValues as any, ...computedValues as any }
