@@ -20,8 +20,8 @@ const defaultConsoleLoggerOptions: LoggerOptions['console'] = {
 }
 
 const defaultReduxLoggerOptions: LoggerOptions['redux'] = {
-   message: true,
-   epic: true,
+   message: false,
+   epic: false,
    compute: false
 }
 
