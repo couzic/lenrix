@@ -80,7 +80,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       if (hasUpdateHandler) { // UPDATE
          logger.update(action)
          reduxStore.dispatch({
-            type: '[UPDATE]' + action.type,
+            type: action.type,
             payload: action.payload,
             meta
          })
@@ -100,11 +100,8 @@ export function createFocusableStore<State extends object & NotAnArray>(
    }>
 
    const augmentedReducer: Reducer<State> = (state, action) => {
-      if (action.type.startsWith('[MESSAGE]') || action.type.startsWith('[EPIC]')) return state
-      if (action.type.startsWith('[UPDATE]')) {
-         const actionType = action.type.split('[UPDATE]')[1]
-         const updateHandler = updateHandlers[actionType]
-         if (!updateHandler) return state
+      const updateHandler = updateHandlers[action.type]
+      if (updateHandler) {
          return updateHandler(action.payload)(state)
       } else {
          return reducer(state, action)

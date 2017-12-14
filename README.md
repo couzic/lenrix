@@ -1,52 +1,50 @@
 # lenrix
 
-#### Type-safe, reactive, lens-focused, immutable state management
+#### Type-safe, reactive, focusable redux stores
 
 ## Introduction
-lenrix is a Reactive alternative to Redux
+lenrix wraps a redux store with a richer API:
+ - Less boilerplate
+ - More type-safety
+ - Reactive programming with Epics (stolen from redux-observable)
+ - Focusable stores (Lenses, anyone ?)
 
 ## Quickstart
 
 ### Install
 ```sh
-$ npm i -S lenrix immutable-lens rxjs
+$ npm i -S lenrix immutable-lens redux rxjs
 ```
 
-### Create a store and define actions
+### Create a store and define actions and updates
 ```ts
-import {createStore} from 'lenrix'
-import {add} from 'ramda'
+import { createStore } from 'lenrix'
 
-export type State = {
-    counter: number
-}
+export const store = createStore({message: ''})
+   .actionTypes<{
+      setMessage: string
+   }>()
+   .updates(_ => ({
+      // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
+      // PICK THE ONE YOU PREFER !!!
+      setMessage: (message) => (state) => ({message})
+      setMessage: (message) => _.setFields({message})
+      setMessage: (message) => _.focusPath('message').setValue(message)
+      setMessage: _.focusPath('message').setValue()
+   }))
+```
 
-const initialState: State = {
-    counter: 0
-}
-
-export const store = createStore(initialState) 
-
-export const actions = {
-    increment() {
-        // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
-        store.update(state => ({counter: state.counter + 1}))
-        store.updateFields({counter: val => val + 1})
-        store.focusOn('counter').update(val => val + 1)
-        store.focusOn('counter').update(add(1)) // Using Ramda's automatically curryied functions
-    }
-}
+### Dispatch an action
+```ts
+store.dispatch({setMessage: 'Hello !!!'})
 ```
 
 ### Consume the store's state
 ```ts
-import {store, actions} from './store'
+import { store } from './store'
 
-// ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
-const counter1$: Observable<number> = store.state$.map(state => state.counter)
-const counter2$: Observable<number> = store.map(state => state.counter)
-const counter3$: Observable<number> = store.pluck('counter')
-const counter4$: Observable<number> = store.focusOn('counter').state$
+const message$: Observable<string> = store.pluck('message')
+const pick$: Observable<{message: string}> = store.pick('message')
 ```
 
 ## API
@@ -55,7 +53,7 @@ const counter4$: Observable<number> = store.focusOn('counter').state$
 
 #### `createStore()`
 ```typescript
-import {createStore} from 'lib'
+import {createStore} from 'lenrix'
 
 type State = {
    user: {
@@ -76,11 +74,9 @@ const store = createStore(initialState)
 
 ### Focus
 
-#### `focusOn()`
-
-#### `focusWith()`
-
 #### `focusPath()`
+
+#### `focusFields()`
 
 #### `recompose()`
 
@@ -88,10 +84,10 @@ const store = createStore(initialState)
 
 #### `pluck()`
 
-#### `map()`
-
 #### `pick()`
 
-#### `extract()`
+#### `cherryPick()`
 
-### Update
+### Updates
+
+### Epics
