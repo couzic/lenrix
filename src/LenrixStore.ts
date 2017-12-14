@@ -5,6 +5,7 @@ import 'rxjs/add/operator/filter'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/mergeMap'
 import 'rxjs/add/operator/pluck'
+import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
 
@@ -253,17 +254,19 @@ export class LenrixStore<
       computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
       initialValues?: ComputedValues
    ): any {
-      const computedValues$ = computer$(this.computedStateSubject).startWith(initialValues)
+      const computedValues$ = computer$(this.computedStateSubject)
+         .startWith(initialValues)
+         .scan((previous, next) => {
+            this.context.dispatchCompute(this as any, previous, next)
+            return next
+         })
       const data$ = Observable.combineLatest(
          this.dataSubject,
          computedValues$,
-         (data, computedValues) => {
-            if (computedValues) this.context.dispatchCompute(this as any, data.computedValues, computedValues)
-            return {
-               state: data.state,
-               computedValues: { ...data.computedValues as any, ...computedValues as any }
-            }
-         }
+         (data, computedValues) => ({
+            state: data.state,
+            computedValues: { ...data.computedValues as any, ...computedValues as any }
+         })
       )
       const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
          ? {
