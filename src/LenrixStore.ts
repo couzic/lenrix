@@ -8,6 +8,7 @@ import 'rxjs/add/operator/pluck'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/skip'
 import 'rxjs/add/operator/startWith'
+import 'rxjs/add/operator/withLatestFrom'
 
 import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
@@ -232,12 +233,19 @@ export class LenrixStore<
             computedValues: { ...data.computedValues as any, ...newComputedValues as any }
          }
       }
-      const data$ = this.dataSubject
+      const initalSelection = select(this.initialData)
+      const initialData = computeData(initalSelection)
+      const computedValues$ = this.dataSubject
          .map(select)
          .distinctUntilChanged((a, b) => shallowEquals(a.selected, b.selected))
          .skip(1)
          .map(computeData)
-      const initialData = computeData(select(this.initialData))
+         .startWith(initialData)
+         .map(data => data.computedValues)
+      const data$ = this.dataSubject
+         .map(data => data.state)
+         .withLatestFrom(computedValues$)
+         .map(([state, computedValues]) => ({ state, computedValues }))
       return new LenrixStore(
          data$ as any,
          (data: any) => ({ ...data.state, ...data.computedValues }),

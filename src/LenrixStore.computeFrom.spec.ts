@@ -114,6 +114,16 @@ describe('LenrixStore.computeFrom()', () => {
       expect(computations).to.equal(1)
       computedStore.dispatch({ addToList: 'Bob' })
       expect(computations).to.equal(2)
+      expect(stateTransitions).to.equal(2)
+      expect(computedStateTransitions).to.equal(2)
+   })
+
+   it('emits new state when updated even no computation is triggered', () => {
+      expect(stateTransitions).to.equal(1)
+      computedStore.dispatch({ toggleFlag: undefined })
+      expect(computations).to.equal(1)
+      expect(stateTransitions).to.equal(2)
+      expect(computedStateTransitions).to.equal(2)
    })
 
 })
