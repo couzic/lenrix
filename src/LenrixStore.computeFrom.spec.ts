@@ -118,7 +118,7 @@ describe('LenrixStore.computeFrom()', () => {
       expect(computedStateTransitions).to.equal(2)
    })
 
-   it('emits new state when updated even no computation is triggered', () => {
+   it('emits new state when updated even if no computation is triggered', () => {
       expect(stateTransitions).to.equal(1)
       computedStore.dispatch({ toggleFlag: undefined })
       expect(computations).to.equal(1)
