@@ -88,13 +88,14 @@ export class LenrixStore<
    //    return this.computedState$
    // }
 
-   // getState(this: LenrixStore<Type & { state: object & NotAnArray }, RootState>): ComputedState<Type>
+   // getState(this: LenrixSdatatore<Type & { state: object & NotAnArray }, RootState>): ComputedState<Type>
    // getState(): Type['state']
    // getState(): ComputedState<Type> | Type['state'] {
    //    return this.currentState
    // }
 
-   constructor(data$: Observable<StoreData<Type>>,
+   constructor(
+      data$: Observable<StoreData<Type>>,
       private readonly dataToComputedState: (data: StoreData<Type>) => ComputedState<Type>,
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
@@ -256,7 +257,49 @@ export class LenrixStore<
       )
    }
 
-   computeFromFields(...params: any[]): any { } // TODO implement
+   computeFromFields<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+      fields: K[],
+      computer: (fields: Pick<ComputedState<Type>, K>) => ComputedValues
+   ): any {
+      const select = (data: StoreData<Type>): { data: StoreData<Type>, selected: Pick<ComputedState<Type>, K> } => {
+         const selected = {} as any
+         const computedState = this.dataToComputedState(data)
+         fields.forEach(field => selected[field] = computedState[field])
+         return { data, selected }
+      }
+      const computeData = (
+         dataAndSelected: { data: StoreData<Type>, selected: Pick<ComputedState<Type>, K> }
+      ): StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> => {
+         const { data, selected } = dataAndSelected
+         const newComputedValues = computer(selected)
+         this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
+         return {
+            state: data.state,
+            computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+         }
+      }
+      const initalSelection = select(this.initialData)
+      const initialData = computeData(initalSelection)
+      const computedValues$ = this.dataSubject
+         .map(select)
+         .distinctUntilChanged((a, b) => shallowEquals(a.selected, b.selected))
+         .skip(1)
+         .map(computeData)
+         .startWith(initialData)
+         .map(data => data.computedValues)
+      const data$ = this.dataSubject
+         .map(data => data.state)
+         .withLatestFrom(computedValues$)
+         .map(([state, computedValues]) => ({ state, computedValues }))
+      return new LenrixStore(
+         data$,
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         this.initialData,
+         this.registerHandlers,
+         this.context,
+         this.path + '.computeFromFields()'
+      )
+   }
 
    compute$<ComputedValues>(
       computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
