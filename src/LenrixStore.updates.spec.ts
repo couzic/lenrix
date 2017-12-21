@@ -8,6 +8,7 @@ import { Store } from './Store'
 
 interface Actions {
    clearTodoList: void
+   resetCounter: void
 }
 
 describe('LenrixStore.updates()', () => {
@@ -28,6 +29,15 @@ describe('LenrixStore.updates()', () => {
          .updates(_ => ({
             clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
          }))
+         .updates({
+            resetCounter: () => (state) => ({ ...state, counter: 0 })
+         })
+   })
+
+   it('applies updates declared using no-lens object', () => {
+      expect(rootStore.currentState.counter).to.equal(42)
+      rootStore.dispatch({ resetCounter: undefined })
+      expect(rootStore.currentState.counter).to.equal(0)
    })
 
    describe('on root store', () => {

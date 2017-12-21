@@ -44,7 +44,8 @@ export interface Store<Type extends {
    ): Store<Type>
 
    updates(
-      focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
+      this: Store<Type & { state: object & NotAnArray }>,
+      focusedHandlers: FocusedHandlers<Type>
    ): Store<Type>
 
    dispatch(action: ActionObject<Type['actions']>): void

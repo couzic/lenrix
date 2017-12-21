@@ -117,8 +117,8 @@ export class LenrixStore<
       return this
    }
 
-   updates(focusHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) {
-      const handlers = focusHandlers(this.localLens)
+   updates(focusHandlers: ((lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) | FocusedHandlers<Type>) {
+      const handlers = typeof focusHandlers === 'function' ? focusHandlers(this.localLens) : focusHandlers
       this.registerHandlers(handlers)
       const actionTypes = Object.keys(handlers)
       const meta: ActionMeta = {
@@ -132,7 +132,7 @@ export class LenrixStore<
       return this
    }
 
-   makeActionMeta(): ActionMeta {
+   private makeActionMeta(): ActionMeta {
       return {
          store: {
             name: this.name,
