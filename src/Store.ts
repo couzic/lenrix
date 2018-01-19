@@ -39,12 +39,12 @@ export interface Store<Type extends {
    }>
 
    updates(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type>,
       focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
    ): Store<Type>
 
    updates(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type>,
       focusedHandlers: FocusedHandlers<Type>
    ): Store<Type>
 

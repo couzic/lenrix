@@ -16,11 +16,13 @@ import { Observable } from 'rxjs/Observable'
 
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
-import { FocusedHandlers } from './FocusedHandlers'
+import { FocusedHandlers } from './FocusedHandlers';
 import { FocusedSelection } from './FocusedSelection'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
+import { initialState } from '../test/State';
+import { StoreConfig } from './test-utils/StoreConfig';
 
 export interface ActionMeta {
    store: {
@@ -100,7 +102,8 @@ export class LenrixStore<
       private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
       private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
       private readonly context: StoreContext,
-      public readonly path: string) {
+      public readonly path: string,
+      private readonly __config: StoreConfig) {
       this.dataSubject = new BehaviorSubject(initialData)
       this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
       data$.subscribe(this.dataSubject)
@@ -118,6 +121,10 @@ export class LenrixStore<
    }
 
    updates(focusHandlers: ((lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) | FocusedHandlers<Type>) {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'updates', params: [focusHandlers] }]
+      }
       const handlers = typeof focusHandlers === 'function' ? focusHandlers(this.localLens) : focusHandlers
       this.registerHandlers(handlers)
       const actionTypes = Object.keys(handlers)
@@ -129,7 +136,15 @@ export class LenrixStore<
             computedValues: this.currentComputedValues
          }
       }
-      return this
+      return new LenrixStore(
+         this.dataSubject,
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         this.initialData,
+         this.registerHandlers,
+         this.context,
+         this.path,
+         config
+      )
    }
 
    private makeActionMeta(): ActionMeta {
@@ -148,8 +163,20 @@ export class LenrixStore<
    }
 
    epics(epics: any): Store<Type> {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'epics', params: [epics] }]
+      }
       this.context.registerEpics(epics, this as any)
-      return this
+      return new LenrixStore(
+         this.dataSubject,
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         this.initialData,
+         this.registerHandlers,
+         this.context,
+         this.path,
+         config
+      )
    }
 
    ///////////
@@ -186,6 +213,10 @@ export class LenrixStore<
    ////////////
 
    compute<ComputedValues>(computer: (state: ComputedState<Type>) => ComputedValues): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'compute', params: [computer] }]
+      }
       const dataToComputedValues = (data: StoreData<Type>): Type['computedValues'] & ComputedValues => {
          const computedState = { ...data.state as any, ...data.computedValues as any }
          const newComputedValues = computer(computedState)
@@ -210,8 +241,8 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.compute()'
-         // this.path + '.compute(' + Object.keys({}).join(', ') + ')'
+         this.path + '.compute()',
+         config
       )
    }
 
@@ -219,6 +250,10 @@ export class LenrixStore<
       selection: FocusedSelection<Type, Selection>,
       computer: (selection: Selection) => ComputedValues
    ): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'computeFrom', params: [selection, computer] }]
+      }
       const select = (data: StoreData<Type>): { data: StoreData<Type>, selected: Selection } => ({
          data,
          selected: cherryPick(this.dataToComputedState(data), selection(this.localLens))
@@ -253,7 +288,8 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.computeFrom()'
+         this.path + '.computeFrom()',
+         config
       )
    }
 
@@ -261,6 +297,10 @@ export class LenrixStore<
       fields: K[],
       computer: (fields: Pick<ComputedState<Type>, K>) => ComputedValues
    ): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'computeFromFields', params: [fields, computer] }]
+      }
       const select = (data: StoreData<Type>): { data: StoreData<Type>, selected: Pick<ComputedState<Type>, K> } => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
@@ -297,7 +337,8 @@ export class LenrixStore<
          this.initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.computeFromFields()'
+         this.path + '.computeFromFields()',
+         config
       )
    }
 
@@ -305,6 +346,10 @@ export class LenrixStore<
       computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
       initialValues?: ComputedValues
    ): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'compute$', params: [computer$, initialValues] }]
+      }
       const computedValues$ = computer$(this.computedStateSubject)
          .startWith(initialValues)
          .scan((previous, next) => {
@@ -331,7 +376,8 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')'
+         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')',
+         config
       )
    }
 
@@ -344,6 +390,10 @@ export class LenrixStore<
    //////////
 
    focusPath(...params: any[]): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'focusPath', params }]
+      }
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.localLens as any).focusPath(...keys)
       const computedValueKeys: (keyof Type['computedValues'])[] = (params.length === 2 && Array.isArray(params[1]))
@@ -371,11 +421,16 @@ export class LenrixStore<
          toFocusedData(this.initialData),
          registerHandlers,
          this.context,
-         this.path + focusedLens.path
+         this.path + focusedLens.path,
+         config
       )
    }
 
    focusFields(...params: any[]): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'focusFields', params }]
+      }
       const keys: (keyof Type['state'])[] = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const path = this.path + '.pick(' + keys.join(',') + ')'
       const pickFields = (state: Type['state']) => {
@@ -398,11 +453,16 @@ export class LenrixStore<
          toPickedData(this.initialData),
          this.registerHandlers as any,
          this.context,
-         path
+         path,
+         config
       )
    }
 
    recompose(...params: any[]): any {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'recompose', params }]
+      }
       const focusedSelection = params[0]
       const computedValueKeys: (keyof Type['computedValues'])[] = params[1] || []
       const fields = focusedSelection(this.localLens) as FieldLenses<Type['state'], any>
@@ -429,7 +489,8 @@ export class LenrixStore<
          toRecomposedData(this.initialData),
          registerHandlers,
          this.context,
-         path
+         path,
+         config
       )
    }
 

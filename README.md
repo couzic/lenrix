@@ -24,12 +24,18 @@ export const store = createStore({message: ''})
    .actionTypes<{
       setMessage: string
    }>()
-   .updates(_ => ({
-      // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
-      // PICK THE ONE YOU PREFER !!!
+   // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
+   // PICK THE ONE YOU PREFER !!!
+   .updates({
       setMessage: (message) => (state) => ({message})
+   })
+   .updates(_ => ({
       setMessage: (message) => _.setFields({message})
+   }))
+   .updates(_ => ({
       setMessage: (message) => _.focusPath('message').setValue(message)
+   }))
+   .updates(_ => ({
       setMessage: _.focusPath('message').setValue()
    }))
 ```

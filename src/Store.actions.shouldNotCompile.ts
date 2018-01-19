@@ -25,12 +25,6 @@ interface Actions {
 const store = createStore(state)
    .actionTypes<Actions>()
 
-// Defining updates on a primitive-focused store @shouldNotCompile
-store.focusPath('counter').updates({} as any)
-
-// Defining updates on a primitive-focused store @shouldNotCompile
-store.focusPath('todo', 'list').updates({} as any)
-
 // Dispatching empty object @shouldNotCompile
 store.dispatch({})
 
