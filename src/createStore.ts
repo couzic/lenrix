@@ -17,7 +17,6 @@ import { createLogger } from './logger/createLogger'
 import { LoggerOptions } from './logger/LoggerOptions'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
-import { initialState } from '../test/State';
 
 declare const process: undefined | {
    env?: {
@@ -161,7 +160,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       registerHandlers,
       context,
       'root',
-      { initialRootState: initialState, operations: [] }
+      { initialRootState: preloadedState, operations: [] }
    )
 }
 

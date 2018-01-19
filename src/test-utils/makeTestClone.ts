@@ -1,6 +1,5 @@
 import { Store } from '../Store';
 import { createStore } from '../createStore';
-import { initialState } from '../../test/State';
 import { silentLoggerOptions } from '../logger/silentLoggerOptions';
 import { StoreConfig } from './StoreConfig';
 
