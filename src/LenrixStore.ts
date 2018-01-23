@@ -23,6 +23,7 @@ import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { initialState } from '../test/State';
 import { StoreConfig } from './test-utils/StoreConfig';
+import { MergedFields } from './MergedFields';
 
 export interface ActionMeta {
    store: {
@@ -342,6 +343,10 @@ export class LenrixStore<
       )
    }
 
+   ////////////////////
+   // COMPUTE ASYNC //
+   //////////////////
+
    compute$<ComputedValues>(
       computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
       initialValues?: ComputedValues
@@ -381,7 +386,81 @@ export class LenrixStore<
       )
    }
 
-   computeFrom$(...params: any[]): any { }
+   computeFrom$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+      selection: FocusedSelection<Type, Selection>,
+      computer$: (selection$: Observable<Selection>) => Observable<ComputedValues>,
+      initialValues?: ComputedValues
+   ): any {
+      const select = (data: StoreData<Type>): { data: StoreData<Type>, selected: Selection } => ({
+         data,
+         selected: cherryPick(this.dataToComputedState(data), selection(this.localLens))
+      })
+      // const computeData = (
+      //    dataAndSelected: { data: StoreData<Type>, selected: Selection }
+      // ): StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> => {
+      //    const { data, selected } = dataAndSelected
+      //    const newComputedValues = computer$(selected)
+      // this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
+      //    return {
+      //       state: data.state,
+      //       computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+      //    }
+      // }
+      const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
+         ? {
+            state: this.initialData.state,
+            computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
+         }
+         : this.initialData
+      const data$ = this.dataSubject
+         .map(select)
+         .switchMap(({ data, selected }) =>
+            computer$(Observable.of(selected)).map(newComputedValues => {
+               this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
+               return {
+                  state: data.state,
+                  computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+               }
+            })
+         )
+         .startWith(initialData)
+      // .subscribe(_ => console.log(_))
+
+      // const selection$ = selected$.map(_ => _.selected)
+      // .map(computeData)
+      // console.log(selection)
+      // const focusedSelection =this.recompose( selection(this.localLens))
+      // const focusedState = this.computedStateSubject.map(state => focusedSelection.read(state))
+      // focusedState.subscribe(_ => console.log(_))
+      // console.log(this.localLens.recompose(selection(this.localLens)))
+      // const selection$ = this.dataSubject.map(select)
+      // const computed$ = computeData(selection$)
+      // const computedValues$ = computer$(selection$)
+      // .startWith(initialValues)
+      // .scan((previous, next) => {
+      //    this.context.dispatchCompute(this as any, previous, next)
+      //    return next
+      // })
+      // const data$ = Observable.combineLatest(
+      //    this.dataSubject,
+      //    computedValues$,
+      //    (data, computedValues) => ({
+      //       state: data.state,
+      //       computedValues: { ...data.computedValues as any, ...computedValues as any }
+      //    })
+      // )
+
+      return new LenrixStore(
+         data$,
+         // data$.skip(1),
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         initialData,
+         this.registerHandlers,
+         this.context,
+         this.path + '.computeFrom$()',
+         this.__config
+      )
+   }
 
    computeFromFields$(...params: any[]): any { }
 
