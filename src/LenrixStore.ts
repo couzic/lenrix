@@ -21,7 +21,6 @@ import { FocusedSelection } from './FocusedSelection'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
-import { initialState } from '../test/State';
 import { StoreConfig } from './test-utils/StoreConfig';
 import { MergedFields } from './MergedFields';
 
