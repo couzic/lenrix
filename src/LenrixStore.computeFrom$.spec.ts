@@ -75,14 +75,33 @@ describe('LenrixStore.computeFrom$()', () => {
       })
 
       it('emits new state without waiting for new computed values', () => {
-         const computingStore = rootStore.computeFrom$(_ => ({
-            flag: _.focusPath('flag')
-         }), state$ => Observable.of({ whatever: 'computed' }))
+         const computingStore = rootStore.computeFrom$(
+            _ => ({ theName: _.focusPath('name') }),
+            state$ => state$
+               .switchMap(state => isAvailable(state.theName))
+               .map(available => ({ available })))
          let computedStateTransitions = 0
-         computingStore.computedState$.subscribe(newState => ++computedStateTransitions)
+         computingStore.computedState$.subscribe(() => ++computedStateTransitions)
          expect(computedStateTransitions).to.equal(1)
-         computingStore.dispatch({ toggleFlag: undefined })
+         computingStore.dispatch({ setName: 'Steve' })
          expect(computedStateTransitions).to.equal(3)
+      })
+
+      it('emits with new values from state before new computed values', () => {
+         const computingStore = rootStore.computeFrom$(
+            _ => ({ theName: _.focusPath('name') }),
+            state$ => state$
+               .switchMap(state => isAvailable(state.theName))
+               .map(available => ({ available })))
+         let computedStates = []
+         computingStore.computedState$.subscribe(newState => computedStates.push(newState))
+         computingStore.dispatch({ setName: 'Steve' })
+         expect(computedStates).to.have.length(3)
+         expect(computedStates.map(({ name, available }) => ({ name, available }))).to.deep.equal([
+            { name: '', available: false },
+            { name: 'Steve', available: false },
+            { name: 'Steve', available: true }
+         ])
       })
 
    })
