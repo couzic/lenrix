@@ -391,13 +391,35 @@ export class LenrixStore<
       initialValues?: ComputedValues
    ): any {
       const select = (data: StoreData<Type>): Selection => cherryPick(this.dataToComputedState(data), selection(this.localLens))
+      return this.computeFromSelector$(select, computer$, initialValues)
+   }
+
+   computeFromFields$<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+      fields: K[],
+      computer$: (fields$: Observable<Pick<ComputedState<Type>, K>>) => Observable<ComputedValues>,
+      initialValues?: ComputedValues
+   ): any {
+      const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
+         const selected = {} as any
+         const computedState = this.dataToComputedState(data)
+         fields.forEach(field => selected[field] = computedState[field])
+         return selected
+      }
+      return this.computeFromSelector$(select, computer$, initialValues)
+   }
+
+   private computeFromSelector$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+      selector: (data: StoreData<Type>) => Selection,
+      computer$: (selection$: Observable<Selection>) => Observable<ComputedValues>,
+      initialValues?: ComputedValues
+   ): any {
       const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
          ? {
             state: this.initialData.state,
             computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
          }
          : this.initialData
-      const selection$ = this.dataSubject.map(select)
+      const selection$ = this.dataSubject.map(selector)
       const newComputedValues$ = computer$(selection$)
          .scan((previous, next) => {
             this.context.dispatchCompute(this as any, previous, next)
@@ -419,8 +441,6 @@ export class LenrixStore<
          this.__config
       )
    }
-
-   computeFromFields$(...params: any[]): any { }
 
    ////////////
    // FOCUS //
