@@ -23,7 +23,6 @@ import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { StoreConfig } from './test-utils/StoreConfig';
 import { MergedFields } from './MergedFields';
-import { initialState } from '../test/State';
 
 export interface ActionMeta {
    store: {
