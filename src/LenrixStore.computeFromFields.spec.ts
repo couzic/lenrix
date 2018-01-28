@@ -25,7 +25,6 @@ const initialState: State = {
 
 describe('LenrixStore.computeFromFields()', () => {
 
-   const lens = createLens<State>()
    let store: Store<{
       state: State
       computedValues: {}

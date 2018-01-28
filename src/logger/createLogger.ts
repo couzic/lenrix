@@ -64,9 +64,10 @@ const createComputeLogger = (reduxStore: Store<any>, options: LoggerOptions): Lo
    const logToConsole = options.console!.compute
       ? (previous: any, next: any) => {
          const keys = loggableKeys(previous, next)
+         const safePrevious = previous || {} // previous is undefined when computed values are logged for the first time
          if (typeof console.groupCollapsed === 'function')
             console.groupCollapsed('%c 🔎 COMPUTE', 'background-color: rgb(32, 32, 128); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;', keys)
-         keys.forEach(key => console.log(key, ':', previous[key], '→', next[key]))
+         keys.forEach(key => console.log(key, ':', safePrevious[key], '→', next[key]))
          if (typeof console.groupEnd === 'function')
             console.groupEnd()
       }
