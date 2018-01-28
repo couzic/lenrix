@@ -9,5 +9,7 @@ export interface StoreOperation {
    | 'computeFrom'
    | 'computeFromFields'
    | 'compute$'
+   | 'computeFrom$'
+   | 'computeFromFields$'
    params: any
 }

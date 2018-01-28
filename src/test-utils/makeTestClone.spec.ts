@@ -248,7 +248,6 @@ describe('makeTestClone()', () => {
       })
    })
 
-
    describe('cloned store with compute$() values', () => {
       let store: Store<{
          state: State
@@ -262,7 +261,59 @@ describe('makeTestClone()', () => {
          store = createStore(initialState, { logger: silentLoggerOptions })
             .compute$(state$ => state$.map(state => ({
                todoListLength: state.todo.list.length
-            })), { todoListLenght: 0 })
+            })), { todoListLength: 0 })
+         clonedStore = makeTestClone(store)
+      })
+
+      it('has same computed value', () => {
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+      })
+
+   })
+
+   describe('cloned store with computeFrom$() values', () => {
+      let store: Store<{
+         state: State
+         computedValues: { todoListLength: number }
+         actions: {}
+         dependencies: {}
+      }>
+      let clonedStore: typeof store
+
+      beforeEach(() => {
+         store = createStore(initialState, { logger: silentLoggerOptions })
+            .computeFrom$(
+            _ => ({ todoList: _.focusPath('todo', 'list') }),
+            selection$ => selection$.map(selection => ({
+               todoListLength: selection.todoList.length
+            })),
+            { todoListLength: 0 })
+         clonedStore = makeTestClone(store)
+      })
+
+      it('has same computed value', () => {
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+      })
+
+   })
+
+   describe('cloned store with computeFromFields$() values', () => {
+      let store: Store<{
+         state: State
+         computedValues: { todoListLength: number }
+         actions: {}
+         dependencies: {}
+      }>
+      let clonedStore: typeof store
+
+      beforeEach(() => {
+         store = createStore(initialState, { logger: silentLoggerOptions })
+            .computeFromFields$(
+            ['todo'],
+            selection$ => selection$.map(selection => ({
+               todoListLength: selection.todo.list.length
+            })),
+            { todoListLength: 0 })
          clonedStore = makeTestClone(store)
       })
 
