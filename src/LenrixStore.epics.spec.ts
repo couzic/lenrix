@@ -106,4 +106,16 @@ describe('LenrixStore.epics()', () => {
       expect(store.currentState.counter).to.equal(1)
    })
 
+   it('supports multiple epics for single action', () => {
+      expect(store.currentState.counter).to.equal(0)
+      store.epics({
+         setTodoCount: (payload$) => payload$.mapTo({ incrementCounter: undefined })
+      })
+      store.epics({
+         setTodoCount: (payload$) => payload$.mapTo({ incrementCounter: undefined })
+      })
+      store.dispatch({ setTodoCount: 42 })
+      expect(store.currentState.counter).to.equal(2)
+   })
+
 })

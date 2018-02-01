@@ -2,6 +2,7 @@ import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/switchMap'
+import 'rxjs/add/observable/merge'
 
 import { NotAnArray, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
@@ -41,22 +42,22 @@ export function createFocusableStore<State extends object & NotAnArray>(
       meta: object
    }>()
 
-   const epics$ = new Subject<Record<string, {
+   const epics$ = new Subject<Record<string, Array<{
       epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>,
       store: Store<any>
-   }>>()
+   }>>>()
 
    const output$ = epics$.switchMap(epics => {
       const actionTypes = Object.keys(epics)
       return Observable
          .of(...actionTypes)
          .mergeMap(actionType => {
-            const { epic, store } = epics[actionType]
             const action$ = input$
                .map(input => input.action)
                .filter(action => action.type === actionType)
                .map(action => action.payload)
-            return epic(action$, store)
+            const outputAction$ = epics[actionType].map(({ epic, store }) => epic(action$, store))
+            return Observable.merge(...outputAction$)
          })
    })
 
@@ -94,10 +95,10 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const userOptions = options || {}
 
    let updateHandlers = {} as Record<string, (payload: any) => Updater<State>>
-   let epicHandlers = {} as Record<string, {
+   let epicHandlers = {} as Record<string, Array<{
       epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>,
       store: Store<any>
-   }>
+   }>>
 
    const augmentedReducer: Reducer<State> = (state, action) => {
       const updateHandler = updateHandlers[action.type]
@@ -124,7 +125,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
 
    const state$ = stateSubject.distinctUntilChanged().skip(1)
 
-   const registerHandlers = <Actions>(newHandlers: FocusedHandlers<any>) => {
+   const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
          updateHandlers[actionType] = (newHandlers as any)[actionType]
@@ -134,7 +135,11 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const registerEpics = <Actions>(newEpics: any, store: Store<any>) => {
       const actionTypes = Object.keys(newEpics)
       actionTypes.forEach(actionType => {
-         epicHandlers[actionType] = { epic: (newEpics as any)[actionType], store }
+         const currentEpics = epicHandlers[actionType] || []
+         const newEpic = newEpics[actionType]
+         const nextEpics = [...currentEpics]
+         if (newEpic) nextEpics.push({ epic: newEpic, store })
+         epicHandlers[actionType] = nextEpics
       })
       epics$.next(epicHandlers)
    }
@@ -157,7 +162,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       state$.map(state => ({ state, computedValues: {} })),
       data => data.state as any,
       { state: preloadedState, computedValues: {} },
-      registerHandlers,
+      registerUpdates,
       context,
       'root',
       { initialRootState: preloadedState, operations: [] }
