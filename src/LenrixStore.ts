@@ -23,6 +23,8 @@ import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { StoreConfig } from './test-utils/StoreConfig';
 import { MergedFields } from './MergedFields';
+import { LightStore } from './LightStore';
+import { LenrixLightStore } from './LenrixLightStore';
 
 export interface ActionMeta {
    store: {
@@ -59,6 +61,8 @@ export class LenrixStore<
 
    private readonly dataSubject: BehaviorSubject<StoreData<Type>>
    private readonly computedStateSubject: BehaviorSubject<ComputedState<Type>>
+
+   private readonly light: LightStore<Type>
 
    get computedState$(): Observable<ComputedState<Type>> {
       return this.computedStateSubject
@@ -104,6 +108,7 @@ export class LenrixStore<
       private readonly context: StoreContext,
       public readonly path: string,
       private readonly __config: StoreConfig) {
+      this.light = new LenrixLightStore(this)
       this.dataSubject = new BehaviorSubject(initialData)
       this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
       data$.subscribe(this.dataSubject)
@@ -212,14 +217,14 @@ export class LenrixStore<
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(computer: (state: ComputedState<Type>) => ComputedValues): any {
+   compute<ComputedValues>(computer: (state: ComputedState<Type>, store: LightStore<Type>) => ComputedValues): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
          operations: [...this.__config.operations, { name: 'compute', params: [computer] }]
       }
       const dataToComputedValues = (data: StoreData<Type>): Type['computedValues'] & ComputedValues => {
          const computedState = { ...data.state as any, ...data.computedValues as any }
-         const newComputedValues = computer(computedState)
+         const newComputedValues = computer(computedState, this.light)
          if (typeof newComputedValues === 'function') throw Error('LenrixStore.compute() does not accept higher order functions as arguments')
          this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
          return {
@@ -248,7 +253,7 @@ export class LenrixStore<
 
    computeFrom<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
       selection: FocusedSelection<Type, Selection>,
-      computer: (selection: Selection) => ComputedValues
+      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
@@ -260,7 +265,7 @@ export class LenrixStore<
 
    computeFromFields<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
       fields: K[],
-      computer: (fields: Pick<ComputedState<Type>, K>) => ComputedValues
+      computer: (fields: Pick<ComputedState<Type>, K>, store?: LightStore<Type>) => ComputedValues
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
@@ -277,12 +282,12 @@ export class LenrixStore<
 
    private computeFromSelector<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
       selector: (data: StoreData<Type>) => Selection,
-      computer: (selection: Selection) => ComputedValues,
+      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues,
       config: StoreConfig
    ): any {
       const initialSelection = selector(this.initialData)
       const doCompute = (selection: Selection, previouslyComputedValues?: ComputedValues): ComputedValues => {
-         const computedValues = computer(selection)
+         const computedValues = computer(selection, this.light)
          this.context.dispatchCompute(this as any, previouslyComputedValues, computedValues)
          return computedValues
       }

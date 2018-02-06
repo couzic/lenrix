@@ -123,4 +123,20 @@ describe('LenrixStore.computeFromFields()', () => {
       expect(computedStateTransitions).to.equal(2)
    })
 
+   it('has access to light store with currentState', () => {
+      const computedStore = store.computeFromFields(['flag'], (state, store) => ({
+         computed: store.currentState.todo
+      }))
+      expect(computedStore.currentComputedState.computed).to.equal(store.currentState.todo)
+   })
+
+   it('throws error when dispatching action on light store', () => {
+      expect(() => store.computeFromFields(['flag'], (state, store) => {
+         (store as any).dispatch({ toggleFlag: undefined })
+         return ({
+            computed: store.currentState.todo
+         })
+      })).to.throw()
+   })
+
 })

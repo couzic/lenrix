@@ -240,6 +240,13 @@ describe('LenrixStore.compute()', () => {
       })
    })
 
+   it('has access to light store with currentState', () => {
+      const computedStore = store.compute((state, store) => ({
+         computed: store.currentState.todo
+      }))
+      expect(computedStore.currentComputedState.computed).to.equal(store.currentState.todo)
+   })
+
    /////////////////////
    // RUNTIME CHECKS //
    ///////////////////

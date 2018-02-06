@@ -126,4 +126,11 @@ describe('LenrixStore.computeFrom()', () => {
       expect(computedStateTransitions).to.equal(2)
    })
 
+   it('has access to light store with currentState', () => {
+      const computedStore = store.computeFrom(_ => ({ computed: _.focusPath('flag') }), (state, store) => ({
+         computed: store.currentState.todo
+      }))
+      expect(computedStore.currentComputedState.computed).to.equal(store.currentState.todo)
+   })
+
 })

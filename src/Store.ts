@@ -104,7 +104,7 @@ export interface Store<Type extends {
 
    compute<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer: (state: ComputedState<Type>) => ComputedValues
+      computer: (state: ComputedState<Type>, store?: LightStore<Type>) => ComputedValues
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -115,7 +115,7 @@ export interface Store<Type extends {
    computeFrom<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer: (selection: Selection) => ComputedValues
+      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -126,7 +126,7 @@ export interface Store<Type extends {
    computeFromFields<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
-      computer: (fields: Pick<ComputedState<Type>, K>) => ComputedValues
+      computer: (fields: Pick<ComputedState<Type>, K>, store?: LightStore<Type>) => ComputedValues
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
