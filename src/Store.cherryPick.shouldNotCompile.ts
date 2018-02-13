@@ -41,30 +41,30 @@ const lensExtractedState$: Observable<{ todoList: number[] }> = store.cherryPick
 // Cherry-picking with wrong lens source type @shouldNotCompile
 store.cherryPick(_ => ({ a: todoStore.localLens.focusPath('list') }))
 
+// Cherry-picking with number instead of Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: 42 }))
+
+// Cherry-picking with string instead of Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: 'counter' }))
+
+// Cherry-picking with object instead of Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: {} }))
+
+// Cherry-picking with array instead of Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: [] }))
+
+// Cherry-picking with function instead of Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: (state: { counter: string }) => null }))
+
+// Cherry-picking with null Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: null }))
+
+// Cherry-picking with undefined Lens @shouldNotCompile
+store.cherryPick(_ => ({ a: undefined }))
+
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////
 
 // Cherry-picking function @shouldNotButDoesCompile
 store.cherryPick(_ => () => 'counter')
-
-// Cherry-picking with null Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: null }))
-
-// Cherry-picking with undefined Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: undefined }))
-
-// Cherry-picking with number instead of Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: 42 }))
-
-// Cherry-picking with string instead of Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: 'counter' }))
-
-// Cherry-picking with object instead of Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: {} }))
-
-// Cherry-picking with array instead of Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: [] }))
-
-// Cherry-picking with function instead of Lens @shouldNotButDoesCompile
-store.cherryPick(_ => ({ a: (state: { counter: string }) => null }))

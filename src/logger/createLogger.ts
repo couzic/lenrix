@@ -4,7 +4,7 @@ import { FocusedAction } from '../FocusedAction'
 import { Logger } from './Logger'
 import { defaultLoggerOptions, LoggerOptions } from './LoggerOptions'
 
-const doNothing = (...params: any[]) => { }
+const doNothing: any = (...params: any[]) => { }
 
 const createMessageLogger = (reduxStore: Store<any>, options: LoggerOptions): Logger['message'] => {
    const logToConsole = options.console!.message

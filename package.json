@@ -42,11 +42,11 @@
     "rxjs": "^5.4.2"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.1",
-    "@types/mocha": "^2.2.46",
+    "@types/chai": "^4.1.2",
+    "@types/mocha": "^2.2.48",
     "@types/redux": "^3.6.0",
     "chai": "^4.1.2",
-    "chalk": "^2.3.0",
+    "chalk": "^2.3.1",
     "glob-promise": "^3.3.0",
     "immutable-lens": "^0.2.0",
     "mocha": "^5.0.0",
@@ -55,6 +55,6 @@
     "rxjs": "^5.5.6",
     "shx": "^0.2.2",
     "ts-node": "^4.1.0",
-    "typescript": "^2.6.2"
+    "typescript": "^2.7.1"
   }
 }
