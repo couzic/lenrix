@@ -62,6 +62,14 @@ export interface Store<Type extends {
       ) => Observable<ActionObject<Type['actions']>>
    }): Store<Type>
 
+   sideEffects(effects: {
+      [ActionType in keyof Type['actions']]?: (
+         payload: Type['actions'][ActionType],
+         store: LightStore<Type>,
+         dependencies: Type['dependencies']
+      ) => void
+   }): Store<Type>
+
    ///////////
    // READ //
    /////////
@@ -303,8 +311,8 @@ export interface Store<Type extends {
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
       CK extends keyof Type['computedValues']>(
-      path: [K1, K2],
-      computedValues: CK[]
+         path: [K1, K2],
+         computedValues: CK[]
       ): Store<{
          state: Type['state'][K1][K2]
          computedValues: Pick<Type['computedValues'], CK>
@@ -337,8 +345,8 @@ export interface Store<Type extends {
       K2 extends keyof Type['state'][K1],
       K3 extends keyof Type['state'][K1][K2],
       CK extends keyof Type['computedValues']>(
-      path: [K1, K2, K3],
-      computedValues: CK[]
+         path: [K1, K2, K3],
+         computedValues: CK[]
       ): Store<{
          state: Type['state'][K1][K2][K3]
          computedValues: Pick<Type['computedValues'], CK>

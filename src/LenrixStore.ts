@@ -184,6 +184,23 @@ export class LenrixStore<
       )
    }
 
+   sideEffects(effects: any): Store<Type> {
+      const config: StoreConfig = {
+         initialRootState: this.__config.initialRootState,
+         operations: [...this.__config.operations, { name: 'sideEffects', params: [effects] }]
+      }
+      this.context.registerSideEffects(effects, this as any)
+      return new LenrixStore(
+         this.dataSubject,
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         this.initialData,
+         this.registerHandlers,
+         this.context,
+         this.path,
+         config
+      )
+   }
+
    ///////////
    // READ //
    /////////

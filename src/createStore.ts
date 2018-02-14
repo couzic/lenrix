@@ -75,6 +75,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
       const hasUpdateHandler = Boolean(updateHandlers[action.type])
       const hasEpicHandler = Boolean(epicHandlers[action.type])
+      const hasSideEffectHandler = Boolean(sideEffectHandlers[action.type])
       if (!hasUpdateHandler && !hasEpicHandler) { // MESSAGE
          logger.message(action)
       }
@@ -90,6 +91,9 @@ export function createFocusableStore<State extends object & NotAnArray>(
          logger.epic(action)
          input$.next({ action, meta })
       }
+      if (hasSideEffectHandler) { // SIDE EFFECTS
+         sideEffectHandlers[action.type](action)
+      }
    }
 
    const userOptions = options || {}
@@ -99,6 +103,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>,
       store: Store<any>
    }>>
+   let sideEffectHandlers = {} as Record<string, (payload: any) => void>
 
    const augmentedReducer: Reducer<State> = (state, action) => {
       const updateHandler = updateHandlers[action.type]
@@ -144,6 +149,13 @@ export function createFocusableStore<State extends object & NotAnArray>(
       epics$.next(epicHandlers)
    }
 
+   const registerSideEffects = (effects: any, store: Store<any>) => {
+      const actionTypes = Object.keys(effects)
+      actionTypes.forEach(actionType => {
+         sideEffectHandlers[actionType] = (effects as any)[actionType]
+      })
+   }
+
    const dispatchCompute = (store: Store<any>, previous: object, next: object) => {
       const meta = {
          previous,
@@ -154,6 +166,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
 
    const context: StoreContext = {
       registerEpics,
+      registerSideEffects,
       dispatchActionObject,
       dispatchCompute
    }

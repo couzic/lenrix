@@ -5,6 +5,7 @@ export interface StoreOperation {
    | 'recompose'
    | 'updates'
    | 'epics'
+   | 'sideEffects'
    | 'compute'
    | 'computeFrom'
    | 'computeFromFields'
