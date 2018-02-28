@@ -92,7 +92,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
          input$.next({ action, meta })
       }
       if (hasSideEffectHandler) { // SIDE EFFECTS
-         sideEffectHandlers[action.type](action)
+         sideEffectHandlers[action.type](action.payload)
       }
    }
 

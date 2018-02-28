@@ -36,4 +36,14 @@ describe('LenrixStore.sideEffects()', () => {
       expect(flag).to.equal(true)
    })
 
+   it('has access to payload', () => {
+      let gotUrl = ''
+      rootStore.sideEffects({
+         navigateTo: ({ url }) => gotUrl = url
+      })
+
+      rootStore.dispatch({ navigateTo: { url: 'url' } })
+
+      expect(gotUrl).to.equal('url')
+   })
 })
