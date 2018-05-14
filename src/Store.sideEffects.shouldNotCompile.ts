@@ -9,7 +9,7 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 interface Actions {
    doString: string
@@ -20,15 +20,14 @@ interface Actions {
    doOptionalString: string | undefined
 }
 
-const store = createStore(state)
-   .actionTypes<Actions>()
+const store = createStore(state).actionTypes<Actions>()
 
 // Registering side effect for unknown action @shouldNotCompile
 store.sideEffects({
-   unknown: () => console.log('shouldNotCompile')
+   unknown: () => console.log('shouldNotCompile'),
 })
 
 // Registering side effect with wrong payload type @shouldNotCompile
 store.sideEffects({
-   doString: (s: number) => console.log('shouldNotCompile')
+   doString: (s: number) => console.log('shouldNotCompile'),
 })

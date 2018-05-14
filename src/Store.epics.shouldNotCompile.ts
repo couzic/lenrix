@@ -1,4 +1,4 @@
-import 'rxjs/add/operator/mapTo'
+import { mapTo } from 'rxjs/operators'
 
 import { createStore } from './createStore'
 
@@ -11,7 +11,7 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 interface Actions {
    doString: string
@@ -22,32 +22,31 @@ interface Actions {
    doOptionalString: string | undefined
 }
 
-const store = createStore(state)
-   .actionTypes<Actions>()
+const store = createStore(state).actionTypes<Actions>()
 
 // Mapping to empty object @shouldNotCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({})
+   doString: payload$ => payload$.pipe(mapTo({})),
 })
 
 // Dispatching unknown action type @shouldNotCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doUnknown: undefined })
+   doString: payload$ => payload$.pipe(mapTo({ doUnknown: undefined })),
 })
 
 // Mapping to wrong payload type @shouldNotCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doNumber: '42' })
+   doString: payload$ => payload$.pipe(mapTo({ doNumber: '42' })),
 })
 
 // Mapping to null payload @shouldNotCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doNumber: null })
+   doString: payload$ => payload$.pipe(mapTo({ doNumber: null })),
 })
 
 // Mapping to undefined payload @shouldNotCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doNumber: undefined })
+   doString: payload$ => payload$.pipe(mapTo({ doNumber: undefined })),
 })
 
 ////////////////////////////////////////////////////////
@@ -56,10 +55,10 @@ store.epics({
 
 // Mapping with additional unknown payload type @shouldNotButDoesCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doNumber: 42, unknown: '' })
+   doString: payload$ => payload$.pipe(mapTo({ doNumber: 42, unknown: '' })),
 })
 
 // Dispatching two types in same object @shouldNotButDoesCompile
 store.epics({
-   doString: (payload$) => payload$.mapTo({ doString: '', doNumber: 5 })
+   doString: payload$ => payload$.pipe(mapTo({ doString: '', doNumber: 5 })),
 })

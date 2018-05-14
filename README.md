@@ -48,7 +48,7 @@ export const store = createStore({message: ''})
    // ALL THESE ARE EQUIVALENT AND 100% TYPE SAFE
    // PICK THE ONE YOU PREFER !!!
    .updates({
-      setMessage: (message) => (state) => ({message})
+      setMessage: (message) => (state) => ({...state, message})
    })
    .updates(lens => ({
       setMessage: (message) => lens.setFields({message})

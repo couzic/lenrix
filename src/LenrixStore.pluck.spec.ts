@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/toArray'
-
 import { expect } from 'chai'
 import { createLens } from 'immutable-lens'
 
@@ -9,7 +7,6 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.pluck()', () => {
-
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
@@ -22,32 +19,32 @@ describe('LenrixStore.pluck()', () => {
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState, {logger: silentLoggerOptions})
-         .compute(state => ({ todoListLength: state.todo.list.length }))
+      store = createStore(initialState, { logger: silentLoggerOptions })
+         .compute(s => ({ todoListLength: s.todo.list.length }))
          .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
-      store.state$.subscribe(newState => state = newState)
+         .updates(_ => ({
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         }))
+      store.state$.subscribe(newState => (state = newState))
    })
 
    it('can pluck field', () => {
       const counter$ = store.pluck('counter')
       let counterValue = 0
-      counter$.subscribe(counter => counterValue = counter)
+      counter$.subscribe(counter => (counterValue = counter))
       expect(counterValue).to.equal(42)
    })
 
    it('can pluck path', () => {
       const list$ = store.pluck('todo', 'list')
       let list: TodoItem[] = []
-      list$.subscribe(l => list = l)
+      list$.subscribe(l => (list = l))
       expect(list).to.equal(initialState.todo.list)
    })
 
    it('can pluck computed value', () => {
       let lengths
-      store
-         .pluck('todoListLength')
-         .subscribe(l => lengths = l)
+      store.pluck('todoListLength').subscribe(l => (lengths = l))
       expect(lengths).to.equal(3)
    })
 
@@ -60,5 +57,4 @@ describe('LenrixStore.pluck()', () => {
 
       expect(transitions).to.equal(1)
    })
-
 })

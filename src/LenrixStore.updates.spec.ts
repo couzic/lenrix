@@ -12,7 +12,6 @@ interface Actions {
 }
 
 describe('LenrixStore.updates()', () => {
-
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
@@ -30,7 +29,7 @@ describe('LenrixStore.updates()', () => {
             clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
          }))
          .updates({
-            resetCounter: () => (state) => ({ ...state, counter: 0 })
+            resetCounter: () => state => ({ ...state, counter: 0 }),
          })
    })
 
@@ -48,9 +47,7 @@ describe('LenrixStore.updates()', () => {
       })
 
       it('root actions can be dispatched from path focused store', () => {
-         rootStore
-            .focusPath('todo')
-            .dispatch({ clearTodoList: undefined })
+         rootStore.focusPath('todo').dispatch({ clearTodoList: undefined })
          expect(rootStore.currentState.todo.list).to.be.empty
       })
    })
@@ -75,7 +72,9 @@ describe('LenrixStore.updates()', () => {
       it('applies update registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
-            .updates(_ => ({ clearList: () => _.focusPath('list').setValue([]) }))
+            .updates(_ => ({
+               clearList: () => _.focusPath('list').setValue([]),
+            }))
             .dispatch({ clearList: undefined })
 
          expect(store.currentState.list).to.be.empty
@@ -102,7 +101,9 @@ describe('LenrixStore.updates()', () => {
       it('applies update registered on focused store', () => {
          store
             .actionTypes<{ clearList: void }>()
-            .updates(_ => ({ clearList: () => _.focusPath('todo', 'list').setValue([]) }))
+            .updates(_ => ({
+               clearList: () => _.focusPath('todo', 'list').setValue([]),
+            }))
             .dispatch({ clearList: undefined })
 
          expect(store.currentState.todo.list).to.be.empty
@@ -118,7 +119,7 @@ describe('LenrixStore.updates()', () => {
       }>
       beforeEach(() => {
          store = rootStore.recompose(_ => ({
-            todoList: _.focusPath('todo', 'list')
+            todoList: _.focusPath('todo', 'list'),
          }))
       })
 
@@ -131,11 +132,13 @@ describe('LenrixStore.updates()', () => {
       it('applies update registered on recomposed store', () => {
          store
             .actionTypes<{ clearRecomposedTodoList: void }>()
-            .updates(_ => ({ clearRecomposedTodoList: () => _.focusPath('todoList').setValue([]) }))
+            .updates(_ => ({
+               clearRecomposedTodoList: () =>
+                  _.focusPath('todoList').setValue([]),
+            }))
             .dispatch({ clearRecomposedTodoList: undefined })
 
          expect(store.currentState.todoList).to.be.empty
       })
    })
-
 })

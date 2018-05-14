@@ -11,7 +11,6 @@ interface Actions {
 }
 
 describe('LenrixStore.dispatch()', () => {
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -20,12 +19,14 @@ describe('LenrixStore.dispatch()', () => {
    }>
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<Actions>()
+      rootStore = createStore(initialState, {
+         logger: silentLoggerOptions,
+      }).actionTypes<Actions>()
    })
 
    it('throws error when dispatching two action types in same object', () => {
-      expect(() => rootStore.dispatch({ doThis: undefined, doThat: undefined })).to.throw()
+      expect(() =>
+         rootStore.dispatch({ doThis: undefined, doThat: undefined }),
+      ).to.throw()
    })
-
 })

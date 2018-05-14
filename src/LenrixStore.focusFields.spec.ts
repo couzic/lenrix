@@ -9,7 +9,6 @@ import { Store } from './Store'
 type PickedState = Pick<State, 'counter' | 'todo'>
 
 describe('LenrixStore.focusFields()', () => {
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -31,11 +30,11 @@ describe('LenrixStore.focusFields()', () => {
 
    const initialPickedState: PickedState = {
       counter: initialState.counter,
-      todo: initialState.todo
+      todo: initialState.todo,
    }
 
    beforeEach(() => {
-      rootStore = createStore(initialState, {logger: silentLoggerOptions})
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
       store = rootStore.focusFields('counter', 'todo')
       rootLens = rootStore.localLens
       lens = store.localLens
@@ -70,7 +69,7 @@ describe('LenrixStore.focusFields()', () => {
    it('does not emit new state when an update does not change any value', () => {
       store
          .actionTypes<{ doNothing: void }>()
-         .updates(_ => ({ doNothing: () => state => state }))
+         .updates(_ => ({ doNothing: () => s => s }))
          .dispatch({ doNothing: undefined })
       expect(stateTransitions).to.equal(1)
    })
@@ -78,7 +77,9 @@ describe('LenrixStore.focusFields()', () => {
    it('does not emit new state when an unrelated slice of parent state changes', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(1)
    })
@@ -91,7 +92,7 @@ describe('LenrixStore.focusFields()', () => {
       const focused = rootStore.focusFields('counter', 'flag')
       expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,
-         flag: initialState.flag
+         flag: initialState.flag,
       })
    })
 
@@ -99,19 +100,18 @@ describe('LenrixStore.focusFields()', () => {
       const focused = rootStore.focusFields(['counter', 'flag'])
       expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,
-         flag: initialState.flag
+         flag: initialState.flag,
       })
    })
 
    it('can focus fields with computedValues', () => {
       const focused = rootStore
-         .compute(state => ({ todoListLength: state.todo.list.length }))
+         .compute(s => ({ todoListLength: s.todo.list.length }))
          .focusFields(['counter', 'flag'], ['todoListLength'])
       expect(focused.currentComputedState).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag,
-         todoListLength: 3
+         todoListLength: 3,
       })
    })
-
 })

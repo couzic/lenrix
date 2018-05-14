@@ -7,7 +7,6 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.focusPath()', () => {
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -28,7 +27,7 @@ describe('LenrixStore.focusPath()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState, {logger: silentLoggerOptions})
+      rootStore = createStore(initialState, { logger: silentLoggerOptions })
       store = rootStore.focusPath('todo')
       rootLens = rootStore.localLens
       lens = store.localLens
@@ -45,7 +44,7 @@ describe('LenrixStore.focusPath()', () => {
    })
 
    it('has Lens', () => {
-      const result = lens.updateFields({ count: (v) => v + 1 })(state)
+      const result = lens.updateFields({ count: v => v + 1 })(state)
       expect(result.count).to.equal(43)
    })
 
@@ -72,7 +71,9 @@ describe('LenrixStore.focusPath()', () => {
    it('does not emit new state when unrelated slice of ParentState is updated', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         }))
          .dispatch({ toggleFlag: undefined })
 
       expect(rootStateTransitions).to.equal(2)
@@ -95,11 +96,11 @@ describe('LenrixStore.focusPath()', () => {
 
    it('can focus path with computed values', () => {
       const focused = rootStore
-         .compute(state => ({ todoListLength: state.todo.list.length }))
+         .compute(s => ({ todoListLength: s.todo.list.length }))
          .focusPath(['todo'], ['todoListLength'])
       expect(focused.currentComputedState).to.deep.equal({
          ...initialState.todo,
-         todoListLength: 3
+         todoListLength: 3,
       })
    })
 
@@ -120,5 +121,4 @@ describe('LenrixStore.focusPath()', () => {
          .dispatch({ clearTodos: undefined })
       expect(focused.currentState).to.be.empty
    })
-
 })

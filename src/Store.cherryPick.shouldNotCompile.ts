@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 
 import { createStore } from './createStore'
 
@@ -11,7 +11,7 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 const store = createStore(state)
 const todoStore = store.focusPath('todo')
@@ -36,7 +36,9 @@ store.cherryPick(_ => 'counter')
 store.cherryPick(_ => [])
 
 // Assigning cherryPick to wrong lens-extracted variable type @shouldNotCompile
-const lensExtractedState$: Observable<{ todoList: number[] }> = store.cherryPick(_ => ({ todoList: todoLens.focusPath('list') }))
+const lensExtractedState$: Observable<{
+   todoList: number[]
+}> = store.cherryPick(_ => ({ todoList: todoLens.focusPath('list') }))
 
 // Cherry-picking with wrong lens source type @shouldNotCompile
 store.cherryPick(_ => ({ a: todoStore.localLens.focusPath('list') }))

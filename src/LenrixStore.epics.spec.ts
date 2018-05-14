@@ -1,7 +1,5 @@
-import 'rxjs/add/operator/distinctUntilChanged'
-import 'rxjs/add/operator/mapTo'
-
 import { expect } from 'chai'
+import { distinctUntilChanged, filter, map, mapTo } from 'rxjs/operators'
 
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
@@ -21,8 +19,8 @@ const initialState: State = {
    todo: {
       input: '',
       list: [],
-      count: 0
-   }
+      count: 0,
+   },
 }
 
 interface Actions {
@@ -44,12 +42,13 @@ describe('LenrixStore.epics()', () => {
       store = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<Actions>()
          .updates(_ => ({
-            incrementCounter: () => _.updateFields({ counter: (val) => val + 1 }),
-            setCounter: (counter) => _.setFields({ counter }),
-            setTodoCount: (todoCount) => _.focusPath('todo', 'count').setValue(todoCount)
+            incrementCounter: () => _.updateFields({ counter: val => val + 1 }),
+            setCounter: counter => _.setFields({ counter }),
+            setTodoCount: todoCount =>
+               _.focusPath('todo', 'count').setValue(todoCount),
          }))
          .epics({
-            buttonClicked: ($) => $.mapTo({ incrementCounter: undefined })
+            buttonClicked: $ => $.pipe(mapTo({ incrementCounter: undefined })),
          })
    })
 
@@ -69,9 +68,10 @@ describe('LenrixStore.epics()', () => {
          createStore(initialState, { logger: silentLoggerOptions })
             .actionTypes<Actions>()
             .epics({
-               buttonClicked: ($) => $.mapTo({ setCounter: 0, incrementCounter: undefined })
+               buttonClicked: $ =>
+                  $.pipe(mapTo({ setCounter: 0, incrementCounter: undefined })),
             })
-            .dispatch({ buttonClicked: undefined })
+            .dispatch({ buttonClicked: undefined, setCounter: 0 })
       }).to.throw()
    })
 
@@ -83,9 +83,13 @@ describe('LenrixStore.epics()', () => {
 
       const todoStore = store.focusPath('todo')
       todoStore.epics({
-         setTodoCount: (payload$, store) => payload$
-            .filter(payload => payload === store.currentState.list.length)
-            .map(payload => ({ setCounter: payload }))
+         setTodoCount: (payload$, lightStore) =>
+            payload$.pipe(
+               filter(
+                  payload => payload === lightStore.currentState.list.length,
+               ),
+               map(payload => ({ setCounter: payload })),
+            ),
       })
 
       store.dispatch({ setTodoCount: 0 })
@@ -96,9 +100,11 @@ describe('LenrixStore.epics()', () => {
    it('supports distinctUntilChanged()', () => {
       expect(store.currentState.counter).to.equal(0)
       store.epics({
-         setTodoCount: (payload$) => payload$
-            .distinctUntilChanged()
-            .mapTo({ incrementCounter: undefined })
+         setTodoCount: payload$ =>
+            payload$.pipe(
+               distinctUntilChanged(),
+               mapTo({ incrementCounter: undefined }),
+            ),
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(1)
@@ -109,13 +115,14 @@ describe('LenrixStore.epics()', () => {
    it('supports multiple epics for single action', () => {
       expect(store.currentState.counter).to.equal(0)
       store.epics({
-         setTodoCount: (payload$) => payload$.mapTo({ incrementCounter: undefined })
+         setTodoCount: payload$ =>
+            payload$.pipe(mapTo({ incrementCounter: undefined })),
       })
       store.epics({
-         setTodoCount: (payload$) => payload$.mapTo({ incrementCounter: undefined })
+         setTodoCount: payload$ =>
+            payload$.pipe(mapTo({ incrementCounter: undefined })),
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(2)
    })
-
 })

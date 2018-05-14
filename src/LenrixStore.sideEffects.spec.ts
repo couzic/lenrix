@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
@@ -11,7 +10,6 @@ interface Actions {
 }
 
 describe('LenrixStore.sideEffects()', () => {
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -20,15 +18,16 @@ describe('LenrixStore.sideEffects()', () => {
    }>
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<Actions>()
+      rootStore = createStore(initialState, {
+         logger: silentLoggerOptions,
+      }).actionTypes<Actions>()
    })
 
    it('triggers side effect', () => {
       let flag = false
-      const toggleFlag = () => flag = !flag
+      const toggleFlag = () => (flag = !flag)
       rootStore.sideEffects({
-         navigateTo: toggleFlag
+         navigateTo: toggleFlag,
       })
 
       rootStore.dispatch({ navigateTo: { url: 'whatever' } })
@@ -39,7 +38,7 @@ describe('LenrixStore.sideEffects()', () => {
    it('has access to payload', () => {
       let gotUrl = ''
       rootStore.sideEffects({
-         navigateTo: ({ url }) => gotUrl = url
+         navigateTo: ({ url }) => (gotUrl = url),
       })
 
       rootStore.dispatch({ navigateTo: { url: 'url' } })

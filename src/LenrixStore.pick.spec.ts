@@ -7,7 +7,6 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.pick()', () => {
-
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
@@ -20,16 +19,18 @@ describe('LenrixStore.pick()', () => {
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState, {logger: silentLoggerOptions})
+      store = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
-      store.state$.subscribe(newState => state = newState)
+         .updates(_ => ({
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         }))
+      store.state$.subscribe(newState => (state = newState))
    })
 
    it('picks fields', () => {
       const counterPick$ = store.pick('counter')
       let counterPick = {} as any
-      counterPick$.subscribe(value => counterPick = value)
+      counterPick$.subscribe(value => (counterPick = value))
       expect(counterPick).to.deep.equal({ counter: 42 })
    })
 
@@ -42,5 +43,4 @@ describe('LenrixStore.pick()', () => {
 
       expect(transitions).to.equal(1)
    })
-
 })

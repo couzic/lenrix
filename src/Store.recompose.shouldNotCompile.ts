@@ -9,13 +9,13 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 const store = createStore(state)
 const counterStore = store.focusPath('counter')
 const todoStore = store.focusPath('todo')
 const todoListStore = todoStore.focusPath('list')
-const computingStore = store.compute(state => ({ whatever: 'whatever' }))
+const computingStore = store.compute(s => ({ whatever: 'whatever' }))
 
 const lens = store.localLens
 const todoLens = lens.focusPath('todo')
@@ -45,4 +45,6 @@ store.recompose({})
 store.recompose(_ => ({ todoList: todoListStore.lens }))
 
 // Recomposing with wrong source type Lens @shouldNotCompile
-const recomposedStore = todoStore.recompose(_ => ({ todoList: todoLens.focusPath('list') }))
+const recomposedStore = todoStore.recompose(_ => ({
+   todoList: todoLens.focusPath('list'),
+}))

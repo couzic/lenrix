@@ -1,8 +1,5 @@
-import 'rxjs/add/operator/distinctUntilChanged'
-import 'rxjs/add/operator/map'
-
 import { NotAnArray, UnfocusedLens } from 'immutable-lens'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
@@ -11,13 +8,14 @@ import { FocusedSelection } from './FocusedSelection'
 import { LightStore } from './LightStore'
 import { MergedFields } from './MergedFields'
 
-export interface Store<Type extends {
-   state: any
-   computedValues: object
-   actions: object
-   dependencies: object
-}> {
-
+export interface Store<
+   Type extends {
+      state: any
+      computedValues: object
+      actions: object
+      dependencies: object
+   }
+> {
    name?: string
 
    readonly localLens: UnfocusedLens<Type['state']>
@@ -40,12 +38,14 @@ export interface Store<Type extends {
 
    updates(
       this: Store<Type>,
-      focusedHandlers: (lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>
+      focusedHandlers: (
+         lens: UnfocusedLens<Type['state']>,
+      ) => FocusedHandlers<Type>,
    ): Store<Type>
 
    updates(
       this: Store<Type>,
-      focusedHandlers: FocusedHandlers<Type>
+      focusedHandlers: FocusedHandlers<Type>,
    ): Store<Type>
 
    dispatch(action: ActionObject<Type['actions']>): void
@@ -54,21 +54,25 @@ export interface Store<Type extends {
 
    // action$: Observable<Type['actions']>
 
-   epics(epics: {
-      [ActionType in keyof Type['actions']]?: (
-         payload$: Observable<Type['actions'][ActionType]>,
-         store: LightStore<Type>,
-         dependencies: Type['dependencies']
-      ) => Observable<ActionObject<Type['actions']>>
-   }): Store<Type>
+   epics(
+      epics: {
+         [ActionType in keyof Type['actions']]?: (
+            payload$: Observable<Type['actions'][ActionType]>,
+            store: LightStore<Type>,
+            dependencies: Type['dependencies'],
+         ) => Observable<ActionObject<Type['actions']>>
+      },
+   ): Store<Type>
 
-   sideEffects(effects: {
-      [ActionType in keyof Type['actions']]?: (
-         payload: Type['actions'][ActionType],
-         store: LightStore<Type>,
-         dependencies: Type['dependencies']
-      ) => void
-   }): Store<Type>
+   sideEffects(
+      effects: {
+         [ActionType in keyof Type['actions']]?: (
+            payload: Type['actions'][ActionType],
+            store: LightStore<Type>,
+            dependencies: Type['dependencies'],
+         ) => void
+      },
+   ): Store<Type>
 
    ///////////
    // READ //
@@ -81,30 +85,45 @@ export interface Store<Type extends {
 
    cherryPick<Selection>(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>
+      selection: FocusedSelection<Type, Selection>,
    ): Observable<Selection>
 
-   pluck<
-      CS extends ComputedState<Type>,
-      K extends keyof CS>(key: K): Observable<CS[K]>
+   pluck<CS extends ComputedState<Type>, K extends keyof CS>(
+      key: K,
+   ): Observable<CS[K]>
 
    pluck<
       CS extends ComputedState<Type>,
       K1 extends keyof CS,
-      K2 extends keyof CS[K1]>(key1: K1, key2: K2): Observable<CS[K1][K2]>
+      K2 extends keyof CS[K1]
+   >(
+      key1: K1,
+      key2: K2,
+   ): Observable<CS[K1][K2]>
 
    pluck<
       CS extends ComputedState<Type>,
       K1 extends keyof CS,
       K2 extends keyof CS[K1],
-      K3 extends keyof CS[K1][K2]>(key1: K1, key2: K2, key3: K3): Observable<CS[K1][K2][K3]>
+      K3 extends keyof CS[K1][K2]
+   >(
+      key1: K1,
+      key2: K2,
+      key3: K3,
+   ): Observable<CS[K1][K2][K3]>
 
    pluck<
       CS extends ComputedState<Type>,
       K1 extends keyof CS,
       K2 extends keyof CS[K1],
       K3 extends keyof CS[K1][K2],
-      K4 extends keyof CS[K1][K2][K3]>(key1: K1, key2: K2, key3: K3, key4: K4): Observable<CS[K1][K2][K3][K4]>
+      K4 extends keyof CS[K1][K2][K3]
+   >(
+      key1: K1,
+      key2: K2,
+      key3: K3,
+      key4: K4,
+   ): Observable<CS[K1][K2][K3][K4]>
 
    //////////////
    // COMPUTE //
@@ -112,7 +131,10 @@ export interface Store<Type extends {
 
    compute<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer: (state: ComputedState<Type>, store?: LightStore<Type>) => ComputedValues
+      computer: (
+         state: ComputedState<Type>,
+         store: LightStore<Type>,
+      ) => ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -120,10 +142,16 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   computeFrom<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   computeFrom<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues
+      computer: (
+         selection: Selection,
+         store: LightStore<Type>,
+      ) => ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -131,10 +159,16 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   computeFromFields<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+   computeFromFields<
+      K extends keyof ComputedState<Type>,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
-      computer: (fields: Pick<ComputedState<Type>, K>, store?: LightStore<Type>) => ComputedValues
+      computer: (
+         fields: Pick<ComputedState<Type>, K>,
+         store: LightStore<Type>,
+      ) => ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -144,8 +178,10 @@ export interface Store<Type extends {
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
-      initialValues: ComputedValues
+      computer$: (
+         state$: Observable<ComputedState<Type>>,
+      ) => Observable<ComputedValues>,
+      initialValues: ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -155,19 +191,29 @@ export interface Store<Type extends {
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>
+      computer$: (
+         state$: Observable<ComputedState<Type>>,
+      ) => Observable<ComputedValues>,
    ): Store<{
       state: Type['state']
-      computedValues: MergedFields<Type['computedValues'], Partial<ComputedValues>>
+      computedValues: MergedFields<
+         Type['computedValues'],
+         Partial<ComputedValues>
+      >
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
-   computeFrom$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   computeFrom$<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer$: (selection$: Observable<Selection>) => Observable<ComputedValues>,
-      initialValues: ComputedValues
+      computer$: (
+         selection$: Observable<Selection>,
+      ) => Observable<ComputedValues>,
+      initialValues: ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -175,22 +221,35 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   computeFrom$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   computeFrom$<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer$: (selection$: Observable<Selection & Type['computedValues']>) => Observable<ComputedValues>,
+      computer$: (
+         selection$: Observable<Selection & Type['computedValues']>,
+      ) => Observable<ComputedValues>,
    ): Store<{
       state: Type['state']
-      computedValues: MergedFields<Type['computedValues'], Partial<ComputedValues>>
+      computedValues: MergedFields<
+         Type['computedValues'],
+         Partial<ComputedValues>
+      >
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
-   computeFromFields$<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+   computeFromFields$<
+      K extends keyof ComputedState<Type>,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
-      computer$: (fields$: Observable<Pick<ComputedState<Type>, K>>) => Observable<ComputedValues>,
-      initialValues: ComputedValues
+      computer$: (
+         fields$: Observable<Pick<ComputedState<Type>, K>>,
+      ) => Observable<ComputedValues>,
+      initialValues: ComputedValues,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<Type['computedValues'], ComputedValues>
@@ -198,13 +257,21 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   computeFromFields$<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+   computeFromFields$<
+      K extends keyof ComputedState<Type>,
+      ComputedValues extends object & NotAnArray
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
-      computer$: (fields$: Observable<Pick<ComputedState<Type>, K>>) => Observable<ComputedValues>
+      computer$: (
+         fields$: Observable<Pick<ComputedState<Type>, K>>,
+      ) => Observable<ComputedValues>,
    ): Store<{
       state: Type['state']
-      computedValues: MergedFields<Type['computedValues'], Partial<ComputedValues>>
+      computedValues: MergedFields<
+         Type['computedValues'],
+         Partial<ComputedValues>
+      >
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -225,7 +292,7 @@ export interface Store<Type extends {
 
    focusFields<K extends keyof Type['state']>(
       this: Store<Type & { state: object & NotAnArray }>,
-      keys: K[]
+      keys: K[],
    ): Store<{
       state: Pick<Type['state'], K>
       computedValues: {}
@@ -233,10 +300,13 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   focusFields<SK extends keyof Type['state'], CK extends keyof Type['computedValues']>(
+   focusFields<
+      SK extends keyof Type['state'],
+      CK extends keyof Type['computedValues']
+   >(
       this: Store<Type & { state: object & NotAnArray }>,
       keys: SK[],
-      computed: CK[]
+      computed: CK[],
    ): Store<{
       state: Pick<Type['state'], SK>
       computedValues: Pick<Type['computedValues'], CK>
@@ -244,7 +314,9 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   recompose<RecomposedState>(fields: FocusedSelection<Type, RecomposedState>): Store<{
+   recompose<RecomposedState>(
+      fields: FocusedSelection<Type, RecomposedState>,
+   ): Store<{
       state: RecomposedState
       computedValues: {}
       actions: Type['actions']
@@ -253,7 +325,7 @@ export interface Store<Type extends {
 
    recompose<RecomposedState, CK extends keyof Type['computedValues']>(
       fields: FocusedSelection<Type, RecomposedState>,
-      computedValues: CK[]
+      computedValues: CK[],
    ): Store<{
       state: RecomposedState
       computedValues: Pick<Type['computedValues'], CK>
@@ -262,7 +334,7 @@ export interface Store<Type extends {
    }>
 
    focusPath<K extends keyof Type['state']>(
-      key: K
+      key: K,
    ): Store<{
       state: Type['state'][K]
       computedValues: {}
@@ -271,7 +343,7 @@ export interface Store<Type extends {
    }>
 
    focusPath<K extends keyof Type['state']>(
-      path: [K]
+      path: [K],
    ): Store<{
       state: Type['state'][K]
       computedValues: {}
@@ -279,9 +351,12 @@ export interface Store<Type extends {
       dependencies: Type['dependencies']
    }>
 
-   focusPath<SK extends keyof Type['state'], CK extends keyof Type['computedValues']>(
+   focusPath<
+      SK extends keyof Type['state'],
+      CK extends keyof Type['computedValues']
+   >(
       path: [SK],
-      computedValues: CK[]
+      computedValues: CK[],
    ): Store<{
       state: Type['state'][SK]
       computedValues: Pick<Type['computedValues'], CK>
@@ -291,87 +366,85 @@ export interface Store<Type extends {
 
    focusPath<
       K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1]>(key1: K1, key2: K2): Store<{
-         state: Type['state'][K1][K2]
-         computedValues: {}
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
+      K2 extends keyof Type['state'][K1]
+   >(
+      key1: K1,
+      key2: K2,
+   ): Store<{
+      state: Type['state'][K1][K2]
+      computedValues: {}
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    focusPath<
       K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1]>(path: [K1, K2]): Store<{
-         state: Type['state'][K1][K2]
-         computedValues: {}
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
-
-   focusPath<
-      K1 extends keyof Type['state'],
-      K2 extends keyof Type['state'][K1],
-      CK extends keyof Type['computedValues']>(
-         path: [K1, K2],
-         computedValues: CK[]
-      ): Store<{
-         state: Type['state'][K1][K2]
-         computedValues: Pick<Type['computedValues'], CK>
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
+      K2 extends keyof Type['state'][K1]
+   >(
+      path: [K1, K2],
+   ): Store<{
+      state: Type['state'][K1][K2]
+      computedValues: {}
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    focusPath<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
-      K3 extends keyof Type['state'][K1][K2]>(key1: K1, key2: K2, key3: K3): Store<{
-         state: Type['state'][K1][K2][K3]
-         computedValues: {}
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
+      CK extends keyof Type['computedValues']
+   >(
+      path: [K1, K2],
+      computedValues: CK[],
+   ): Store<{
+      state: Type['state'][K1][K2]
+      computedValues: Pick<Type['computedValues'], CK>
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    focusPath<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
-      K3 extends keyof Type['state'][K1][K2]>(path: [K1, K2, K3]): Store<{
-         state: Type['state'][K1][K2][K3]
-         computedValues: {}
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
+      K3 extends keyof Type['state'][K1][K2]
+   >(
+      key1: K1,
+      key2: K2,
+      key3: K3,
+   ): Store<{
+      state: Type['state'][K1][K2][K3]
+      computedValues: {}
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
+
+   focusPath<
+      K1 extends keyof Type['state'],
+      K2 extends keyof Type['state'][K1],
+      K3 extends keyof Type['state'][K1][K2]
+   >(
+      path: [K1, K2, K3],
+   ): Store<{
+      state: Type['state'][K1][K2][K3]
+      computedValues: {}
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    focusPath<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
       K3 extends keyof Type['state'][K1][K2],
-      CK extends keyof Type['computedValues']>(
-         path: [K1, K2, K3],
-         computedValues: CK[]
-      ): Store<{
-         state: Type['state'][K1][K2][K3]
-         computedValues: Pick<Type['computedValues'], CK>
-         actions: Type['actions']
-         dependencies: Type['dependencies']
-      }>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      CK extends keyof Type['computedValues']
+   >(
+      path: [K1, K2, K3],
+      computedValues: CK[],
+   ): Store<{
+      state: Type['state'][K1][K2][K3]
+      computedValues: Pick<Type['computedValues'], CK>
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    // focusPath<K1 extends keyof State,
    //    K2 extends keyof State[K1],
@@ -419,5 +492,4 @@ export interface Store<Type extends {
    //    K5 extends keyof State[K1][K2][K3][K4],
    //    K6 extends keyof State[K1][K2][K3][K4][K5],
    //    K7 extends keyof State[K1][K2][K3][K4][K5][K6]>(path: [K1, K2, K3, K4, K5, K6, K7]): Store<State[K1][K2][K3][K4][K5][K6][K7]>
-
 }

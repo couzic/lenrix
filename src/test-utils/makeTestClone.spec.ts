@@ -1,12 +1,11 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
-import 'rxjs/add/operator/mapTo'
+import { map, mapTo } from 'rxjs/operators'
 
-import { initialState, State, TodoItem } from '../../test/State'
+import { initialState, State } from '../../test/State'
 import { createStore } from '../createStore'
 import { silentLoggerOptions } from '../logger/silentLoggerOptions'
 import { Store } from '../Store'
-import { makeTestClone } from './makeTestClone';
+import { makeTestClone } from './makeTestClone'
 
 interface ComputedValues {
    todoListLength: number
@@ -14,7 +13,6 @@ interface ComputedValues {
 }
 
 describe('makeTestClone()', () => {
-
    describe('cloned root store', () => {
       let store: Store<{
          state: State
@@ -29,7 +27,9 @@ describe('makeTestClone()', () => {
       beforeEach(() => {
          store = createStore(initialState, { logger: silentLoggerOptions })
             .actionTypes<{ toggleFlag: void }>()
-            .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+            .updates(_ => ({
+               toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            }))
          clonedStore = makeTestClone(store)
       })
 
@@ -46,7 +46,6 @@ describe('makeTestClone()', () => {
          clonedStore = makeTestClone(store)
          expect(clonedStore.currentState).to.deep.equal(initialState)
       })
-
    })
 
    describe('cloned path-focused store', () => {
@@ -59,14 +58,15 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions }).focusPath('todo')
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).focusPath('todo')
          clonedStore = makeTestClone(store)
       })
 
       it('initially has same current state', () => {
          expect(clonedStore.currentState).to.deep.equal(store.currentState)
       })
-
    })
 
    describe('cloned path-focused (twice) store', () => {
@@ -79,14 +79,15 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions }).focusPath('todo').focusPath('list')
+         store = createStore(initialState, { logger: silentLoggerOptions })
+            .focusPath('todo')
+            .focusPath('list')
          clonedStore = makeTestClone(store)
       })
 
       it('initially has same current state', () => {
          expect(clonedStore.currentState).to.deep.equal(store.currentState)
       })
-
    })
 
    describe('cloned fields-focused store', () => {
@@ -99,14 +100,15 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions }).focusFields('counter')
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).focusFields('counter')
          clonedStore = makeTestClone(store)
       })
 
       it('initially has same current state', () => {
          expect(clonedStore.currentState).to.deep.equal(store.currentState)
       })
-
    })
 
    describe('cloned recomposed store', () => {
@@ -119,21 +121,22 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions }).recompose(_ => ({ counter: _.focusPath('counter') }))
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).recompose(_ => ({ counter: _.focusPath('counter') }))
          clonedStore = makeTestClone(store)
       })
 
       it('initially has same current state', () => {
          expect(clonedStore.currentState).to.deep.equal(store.currentState)
       })
-
    })
 
    describe('cloned store with updaters', () => {
       let store: Store<{
          state: State
          computedValues: {}
-         actions: {}
+         actions: { toggleFlag: void }
          dependencies: {}
       }>
       let clonedStore: typeof store
@@ -141,7 +144,9 @@ describe('makeTestClone()', () => {
       beforeEach(() => {
          store = createStore(initialState, { logger: silentLoggerOptions })
             .actionTypes<{ toggleFlag: void }>()
-            .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+            .updates(_ => ({
+               toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            }))
          clonedStore = makeTestClone(store)
       })
 
@@ -150,23 +155,32 @@ describe('makeTestClone()', () => {
          clonedStore.dispatch({ toggleFlag: undefined })
          expect(clonedStore.currentState.flag).to.equal(true)
       })
-
    })
 
    describe('cloned store with epics', () => {
       let store: Store<{
          state: State
          computedValues: {}
-         actions: {}
+         actions: {
+            willToggleFlag: void
+            toggleFlag: void
+         }
          dependencies: {}
       }>
       let clonedStore: typeof store
 
       beforeEach(() => {
          store = createStore(initialState, { logger: silentLoggerOptions })
-            .actionTypes<{ willToggleFlag: void, toggleFlag: void }>()
-            .epics({ willToggleFlag: $ => $.mapTo({ toggleFlag: undefined }) })
-            .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+            .actionTypes<{
+               willToggleFlag: void
+               toggleFlag: void
+            }>()
+            .epics({
+               willToggleFlag: $ => $.pipe(mapTo({ toggleFlag: undefined })),
+            })
+            .updates(_ => ({
+               toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            }))
          clonedStore = makeTestClone(store)
       })
 
@@ -175,7 +189,6 @@ describe('makeTestClone()', () => {
          clonedStore.dispatch({ willToggleFlag: undefined })
          expect(clonedStore.currentState.flag).to.equal(true)
       })
-
    })
 
    describe('cloned store with computed values', () => {
@@ -188,17 +201,19 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .compute(state => ({
-               todoListLength: state.todo.list.length
-            }))
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).compute(state => ({
+            todoListLength: state.todo.list.length,
+         }))
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
-
    })
 
    describe('cloned store with computedFrom() values', () => {
@@ -211,19 +226,24 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .computeFrom(_ => ({
-               todoList: _.focusPath('todo', 'list')
-            }), ({ todoList }) => ({
-               todoListLength: todoList.length
-            }))
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).computeFrom(
+            _ => ({
+               todoList: _.focusPath('todo', 'list'),
+            }),
+            ({ todoList }) => ({
+               todoListLength: todoList.length,
+            }),
+         )
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
-
    })
 
    describe('cloned store with computedFromFields() values', () => {
@@ -236,15 +256,18 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .computeFromFields(['todo'], ({ todo }) => ({
-               todoListLength: todo.list.length
-            }))
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).computeFromFields(['todo'], ({ todo }) => ({
+            todoListLength: todo.list.length,
+         }))
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
    })
 
@@ -258,17 +281,25 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .compute$(state$ => state$.map(state => ({
-               todoListLength: state.todo.list.length
-            })), { todoListLength: 0 })
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).compute$(
+            state$ =>
+               state$.pipe(
+                  map(state => ({
+                     todoListLength: state.todo.list.length,
+                  })),
+               ),
+            { todoListLength: 0 },
+         )
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
-
    })
 
    describe('cloned store with computeFrom$() values', () => {
@@ -281,20 +312,26 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .computeFrom$(
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).computeFrom$(
             _ => ({ todoList: _.focusPath('todo', 'list') }),
-            selection$ => selection$.map(selection => ({
-               todoListLength: selection.todoList.length
-            })),
-            { todoListLength: 0 })
+            selection$ =>
+               selection$.pipe(
+                  map(selection => ({
+                     todoListLength: selection.todoList.length,
+                  })),
+               ),
+            { todoListLength: 0 },
+         )
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
-
    })
 
    describe('cloned store with computeFromFields$() values', () => {
@@ -307,20 +344,26 @@ describe('makeTestClone()', () => {
       let clonedStore: typeof store
 
       beforeEach(() => {
-         store = createStore(initialState, { logger: silentLoggerOptions })
-            .computeFromFields$(
+         store = createStore(initialState, {
+            logger: silentLoggerOptions,
+         }).computeFromFields$(
             ['todo'],
-            selection$ => selection$.map(selection => ({
-               todoListLength: selection.todo.list.length
-            })),
-            { todoListLength: 0 })
+            selection$ =>
+               selection$.pipe(
+                  map(selection => ({
+                     todoListLength: selection.todo.list.length,
+                  })),
+               ),
+            { todoListLength: 0 },
+         )
          clonedStore = makeTestClone(store)
       })
 
       it('has same computed value', () => {
-         expect(clonedStore.currentComputedState.todoListLength).to.equal(store.currentComputedState.todoListLength)
+         expect(clonedStore.currentComputedState.todoListLength).to.equal(
+            store.currentComputedState.todoListLength,
+         )
       })
-
    })
 
    // describe('')
@@ -372,5 +415,4 @@ describe('makeTestClone()', () => {
    //    clonedStore.dispatch({ toggleFlag: undefined })
    //    expect(clonedStore.currentState.flag).to.equal(true)
    // })
-
 })

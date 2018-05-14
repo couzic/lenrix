@@ -7,7 +7,6 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore when unfocused', () => {
-
    let store: Store<{
       state: State
       computedValues: {}
@@ -19,7 +18,7 @@ describe('LenrixStore when unfocused', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      store = createStore(initialState, {logger: silentLoggerOptions})
+      store = createStore(initialState, { logger: silentLoggerOptions })
       lens = store.localLens
       stateTransitions = 0
       store.state$.subscribe(newState => {
@@ -45,7 +44,9 @@ describe('LenrixStore when unfocused', () => {
    it('emits new state when state is updated', () => {
       store
          .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({ toggleFlag: () => _.focusPath('flag').update(flag => !flag) }))
+         .updates(_ => ({
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(2)
    })
@@ -53,9 +54,8 @@ describe('LenrixStore when unfocused', () => {
    it('does not emit new state when an update does not change any value', () => {
       store
          .actionTypes<{ doNothing: void }>()
-         .updates(_ => ({ doNothing: () => state => state }))
+         .updates(_ => ({ doNothing: () => s => s }))
          .dispatch({ doNothing: undefined })
       expect(stateTransitions).to.equal(1)
    })
-
 })

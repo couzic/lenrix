@@ -1,30 +1,29 @@
-import 'rxjs/add/observable/combineLatest'
-import 'rxjs/add/observable/of'
-import 'rxjs/add/operator/distinctUntilChanged'
-import 'rxjs/add/operator/filter'
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/mergeMap'
-import 'rxjs/add/operator/pluck'
-import 'rxjs/add/operator/scan'
-import 'rxjs/add/operator/skip'
-import 'rxjs/add/operator/startWith'
-import 'rxjs/add/operator/withLatestFrom'
-
-import { cherryPick, createLens, FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { Observable } from 'rxjs/Observable'
+import {
+   cherryPick,
+   createLens,
+   FieldLenses,
+   NotAnArray,
+   UnfocusedLens,
+} from 'immutable-lens'
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs'
+import {
+   distinctUntilChanged,
+   map,
+   scan,
+   skip,
+   startWith,
+} from 'rxjs/operators'
 
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
-import { FocusedHandlers } from './FocusedHandlers';
+import { FocusedHandlers } from './FocusedHandlers'
 import { FocusedSelection } from './FocusedSelection'
+import { LenrixLightStore } from './LenrixLightStore'
+import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
-import { StoreConfig } from './test-utils/StoreConfig';
-import { MergedFields } from './MergedFields';
-import { LightStore } from './LightStore';
-import { LenrixLightStore } from './LenrixLightStore';
+import { StoreConfig } from './test-utils/StoreConfig'
 
 export interface ActionMeta {
    store: {
@@ -35,29 +34,43 @@ export interface ActionMeta {
    }
 }
 
-export interface StoreData<Type extends {
-   state: any
-   computedValues: object
-}> {
+export interface StoreData<
+   Type extends {
+      state: any
+      computedValues: object
+   }
+> {
    state: Type['state']
    computedValues: Type['computedValues']
 }
 
-function dataEquals<Type extends { state: any, computedValues: object }>(
+function dataEquals<Type extends { state: any; computedValues: object }>(
    previous: StoreData<Type>,
-   next: StoreData<Type>
+   next: StoreData<Type>,
 ): boolean {
-   return shallowEquals(previous.state, next.state) && shallowEquals(previous.computedValues, next.computedValues)
+   return (
+      shallowEquals(previous.state, next.state) &&
+      shallowEquals(previous.computedValues, next.computedValues)
+   )
 }
 
 export class LenrixStore<
-   Type extends { state: any, computedValues: object, actions: object, dependencies: object },
-   RootState extends object> implements Store<Type> {
+   Type extends {
+      state: any
+      computedValues: object
+      actions: object
+      dependencies: object
+   },
+   RootState extends object
+> implements Store<Type> {
+   public name?: string
 
-   name?: string
-
-   readonly localLens: UnfocusedLens<Type['state']> = createLens<Type['state']>()
-   readonly localReadonlyLens: UnfocusedLens<ComputedState<Type>> = createLens<ComputedState<Type>>()
+   public readonly localLens: UnfocusedLens<Type['state']> = createLens<
+      Type['state']
+   >()
+   public readonly localReadonlyLens: UnfocusedLens<
+      ComputedState<Type>
+   > = createLens<ComputedState<Type>>()
 
    private readonly dataSubject: BehaviorSubject<StoreData<Type>>
    private readonly computedStateSubject: BehaviorSubject<ComputedState<Type>>
@@ -73,7 +86,7 @@ export class LenrixStore<
    }
 
    get state$(): Observable<Type['state']> {
-      return this.dataSubject.map(_ => _.state)
+      return this.dataSubject.pipe(map(_ => _.state))
    }
 
    get currentState(): Type['state'] {
@@ -81,7 +94,10 @@ export class LenrixStore<
    }
 
    get computedValues$(): Observable<Type['computedValues']> {
-      return this.dataSubject.map(data => data.computedValues).distinctUntilChanged()
+      return this.dataSubject.pipe(
+         map(data => data.computedValues),
+         distinctUntilChanged(),
+      )
    }
 
    get currentComputedValues(): Type['computedValues'] {
@@ -102,18 +118,28 @@ export class LenrixStore<
 
    constructor(
       data$: Observable<StoreData<Type>>,
-      private readonly dataToComputedState: (data: StoreData<Type>) => ComputedState<Type>,
-      private readonly initialData: { state: Type['state'], computedValues: Type['computedValues'] },
-      private readonly registerHandlers: (handlers: FocusedHandlers<Type>) => void,
+      private readonly dataToComputedState: (
+         data: StoreData<Type>,
+      ) => ComputedState<Type>,
+      private readonly initialData: {
+         state: Type['state']
+         computedValues: Type['computedValues']
+      },
+      private readonly registerHandlers: (
+         handlers: FocusedHandlers<Type>,
+      ) => void,
       private readonly context: StoreContext,
       public readonly path: string,
-      private readonly __config: StoreConfig) {
+      private readonly __config: StoreConfig,
+   ) {
       this.light = new LenrixLightStore(this)
       this.dataSubject = new BehaviorSubject(initialData)
-      this.computedStateSubject = new BehaviorSubject(dataToComputedState(initialData))
+      this.computedStateSubject = new BehaviorSubject(
+         dataToComputedState(initialData),
+      )
       data$.subscribe(this.dataSubject)
       this.dataSubject
-         .map(dataToComputedState)
+         .pipe(map(dataToComputedState))
          .subscribe(this.computedStateSubject)
    }
 
@@ -121,16 +147,26 @@ export class LenrixStore<
    // ACTIONS //
    ////////////
 
-   actionTypes<NewActions>(): any {
+   public actionTypes<NewActions>(): any {
       return this
    }
 
-   updates(focusHandlers: ((lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>) | FocusedHandlers<Type>) {
+   public updates(
+      focusHandlers:
+         | ((lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>)
+         | FocusedHandlers<Type>,
+   ) {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'updates', params: [focusHandlers] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'updates', params: [focusHandlers] },
+         ],
       }
-      const handlers = typeof focusHandlers === 'function' ? focusHandlers(this.localLens) : focusHandlers
+      const handlers =
+         typeof focusHandlers === 'function'
+            ? focusHandlers(this.localLens)
+            : focusHandlers
       this.registerHandlers(handlers)
       const actionTypes = Object.keys(handlers)
       const meta: ActionMeta = {
@@ -138,8 +174,8 @@ export class LenrixStore<
             name: this.name || '',
             path: this.path,
             currentState: this.currentState,
-            computedValues: this.currentComputedValues
-         }
+            computedValues: this.currentComputedValues,
+         },
       }
       return new LenrixStore(
          this.dataSubject,
@@ -148,7 +184,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path,
-         config
+         config,
       )
    }
 
@@ -158,19 +194,22 @@ export class LenrixStore<
             name: this.name,
             path: this.path,
             currentState: this.currentState,
-            computedValues: this.currentComputedValues
-         }
+            computedValues: this.currentComputedValues,
+         },
       }
    }
 
-   dispatch(action: ActionObject<any>) {
+   public dispatch(action: ActionObject<any>) {
       this.context.dispatchActionObject(action, this.makeActionMeta())
    }
 
-   epics(epics: any): Store<Type> {
+   public epics(epics: any): Store<Type> {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'epics', params: [epics] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'epics', params: [epics] },
+         ],
       }
       this.context.registerEpics(epics, this as any)
       return new LenrixStore(
@@ -180,14 +219,17 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path,
-         config
+         config,
       )
    }
 
-   sideEffects(effects: any): Store<Type> {
+   public sideEffects(effects: any): Store<Type> {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'sideEffects', params: [effects] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'sideEffects', params: [effects] },
+         ],
       }
       this.context.registerSideEffects(effects, this as any)
       return new LenrixStore(
@@ -197,7 +239,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path,
-         config
+         config,
       )
    }
 
@@ -205,58 +247,92 @@ export class LenrixStore<
    // READ //
    /////////
 
-   pick<K extends keyof ComputedState<Type>>(...keys: K[]): Observable<Pick<ComputedState<Type>, K>> {
-      return this.computedStateSubject.map(state => {
-         const subset = {} as any
-         keys.forEach(key => subset[key] = state[key])
-         return subset
-      }).distinctUntilChanged(shallowEquals)
+   public pick<K extends keyof ComputedState<Type>>(
+      ...keys: K[]
+   ): Observable<Pick<ComputedState<Type>, K>> {
+      return this.computedStateSubject.pipe(
+         map(state => {
+            const subset = {} as any
+            keys.forEach(key => (subset[key] = state[key]))
+            return subset
+         }),
+         distinctUntilChanged(shallowEquals),
+      )
    }
 
-   cherryPick<Selection>(
+   public cherryPick<Selection>(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>
+      selection: FocusedSelection<Type, Selection>,
    ): Observable<Selection> {
       const selectedFields = selection(this.localLens)
       if (typeof selectedFields === 'function')
-         throw Error('LenrixStore.cherryPick() does not accept higher order functions as arguments')
-      return this.state$.map(state => cherryPick(state, selectedFields)).distinctUntilChanged(shallowEquals)
+         throw Error(
+            'LenrixStore.cherryPick() does not accept higher order functions as arguments',
+         )
+      return this.state$.pipe(
+         map(state => cherryPick(state, selectedFields)),
+         distinctUntilChanged(shallowEquals),
+      )
    }
 
-   pluck(...params: any[]): Observable<any> {
+   public pluck(...params: any[]): Observable<any> {
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
-      return this.computedStateSubject
-         .map(state => keys.reduce((acc: any, key: any) => acc[key], state))
-         .distinctUntilChanged()
+      return this.computedStateSubject.pipe(
+         map(state => keys.reduce((acc: any, key: any) => acc[key], state)),
+         distinctUntilChanged(),
+      )
    }
 
    //////////////
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues>(computer: (state: ComputedState<Type>, store: LightStore<Type>) => ComputedValues): any {
+   public compute<ComputedValues>(
+      computer: (
+         state: ComputedState<Type>,
+         store: LightStore<Type>,
+      ) => ComputedValues,
+   ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'compute', params: [computer] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'compute', params: [computer] },
+         ],
       }
-      const dataToComputedValues = (data: StoreData<Type>): Type['computedValues'] & ComputedValues => {
-         const computedState = { ...data.state as any, ...data.computedValues as any }
+      const dataToComputedValues = (
+         data: StoreData<Type>,
+      ): Type['computedValues'] & ComputedValues => {
+         const computedState = {
+            ...(data.state as any),
+            ...(data.computedValues as any),
+         }
          const newComputedValues = computer(computedState, this.light)
-         if (typeof newComputedValues === 'function') throw Error('LenrixStore.compute() does not accept higher order functions as arguments')
-         this.context.dispatchCompute(this as any, data.computedValues, newComputedValues)
+         if (typeof newComputedValues === 'function')
+            throw Error(
+               'LenrixStore.compute() does not accept higher order functions as arguments',
+            )
+         this.context.dispatchCompute(
+            this as any,
+            data.computedValues,
+            newComputedValues,
+         )
          return {
-            ...data.computedValues as any,
-            ...newComputedValues as any
+            ...(data.computedValues as any),
+            ...(newComputedValues as any),
          }
       }
       const initialData: StoreData<Type> = {
          state: this.initialData.state,
-         computedValues: dataToComputedValues(this.initialData)
+         computedValues: dataToComputedValues(this.initialData),
       }
-      const data$ = this.dataSubject.skip(1).map(data => ({
-         state: data.state,
-         computedValues: dataToComputedValues(data)
-      }))
+      const data$ = this.dataSubject.pipe(
+         skip(1),
+         map(data => ({
+            state: data.state,
+            computedValues: dataToComputedValues(data),
+         })),
+      )
       return new LenrixStore(
          data$,
          (data: any) => ({ ...data.state, ...data.computedValues }),
@@ -264,69 +340,121 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path + '.compute()',
-         config
+         config,
       )
    }
 
-   computeFrom<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   public computeFrom<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       selection: FocusedSelection<Type, Selection>,
-      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues
+      computer: (
+         selection: Selection,
+         store: LightStore<Type>,
+      ) => ComputedValues,
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'computeFrom', params: [selection, computer] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'computeFrom', params: [selection, computer] },
+         ],
       }
-      const select = (data: StoreData<Type>): Selection => cherryPick(this.dataToComputedState(data), selection(this.localLens))
+      const select = (data: StoreData<Type>): Selection =>
+         cherryPick(this.dataToComputedState(data), selection(this.localLens))
       return this.computeFromSelector(select, computer, config)
    }
 
-   computeFromFields<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+   public computeFromFields<
+      K extends keyof ComputedState<Type>,
+      ComputedValues extends object & NotAnArray
+   >(
       fields: K[],
-      computer: (fields: Pick<ComputedState<Type>, K>, store?: LightStore<Type>) => ComputedValues
+      computer: (
+         fields: Pick<ComputedState<Type>, K>,
+         store: LightStore<Type>,
+      ) => ComputedValues,
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'computeFromFields', params: [fields, computer] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'computeFromFields', params: [fields, computer] },
+         ],
       }
       const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
-         fields.forEach(field => selected[field] = computedState[field])
+         fields.forEach(field => (selected[field] = computedState[field]))
          return selected
       }
       return this.computeFromSelector(select, computer, config)
    }
 
-   private computeFromSelector<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   private computeFromSelector<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       selector: (data: StoreData<Type>) => Selection,
-      computer: (selection: Selection, store?: LightStore<Type>) => ComputedValues,
-      config: StoreConfig
+      computer: (
+         selection: Selection,
+         store: LightStore<Type>,
+      ) => ComputedValues,
+      config: StoreConfig,
    ): any {
       const initialSelection = selector(this.initialData)
-      const doCompute = (selection: Selection, previouslyComputedValues?: ComputedValues): ComputedValues => {
+      const doCompute = (
+         selection: Selection,
+         previouslyComputedValues?: ComputedValues,
+      ): ComputedValues => {
          const computedValues = computer(selection, this.light)
-         this.context.dispatchCompute(this as any, previouslyComputedValues, computedValues)
+         this.context.dispatchCompute(
+            this as any,
+            previouslyComputedValues,
+            computedValues,
+         )
          return computedValues
       }
       const initialComputedValues = doCompute(initialSelection)
       const initialData = {
          state: this.initialData.state,
-         computedValues: { ...this.initialData.computedValues as any, ...initialComputedValues as any }
+         computedValues: {
+            ...(this.initialData.computedValues as any),
+            ...(initialComputedValues as any),
+         },
       }
-      const data$ = this.dataSubject
-         .map(data => ({ data, selection: selector(data) }))
-         .scan((previous, next) => {
-            const { data, selection } = next
-            const locallyComputedValues = shallowEquals(selection, previous.selection)
-               ? (previous as any).locallyComputedValues
-               : doCompute(next.selection, (previous as any).locallyComputedValues)
-            return { data, selection, locallyComputedValues }
-         }, { data: this.initialData, selection: initialSelection, locallyComputedValues: initialComputedValues })
-         .map(({ data, locallyComputedValues }) => ({
+      const data$ = this.dataSubject.pipe(
+         map(data => ({ data, selection: selector(data) })),
+         scan(
+            (previous, next) => {
+               const { data, selection } = next
+               const locallyComputedValues = shallowEquals(
+                  selection,
+                  previous.selection,
+               )
+                  ? (previous as any).locallyComputedValues
+                  : doCompute(
+                       next.selection,
+                       (previous as any).locallyComputedValues,
+                    )
+               return { data, selection, locallyComputedValues } as any // TODO Remove as any
+            },
+            {
+               data: this.initialData,
+               selection: initialSelection,
+               locallyComputedValues: initialComputedValues,
+            },
+         ),
+         map(({ data, locallyComputedValues }) => ({
             state: data.state,
-            computedValues: { ...data.computedValues as any, ...locallyComputedValues as any }
-         }))
-         .skip(1)
+            computedValues: {
+               ...(data.computedValues as any),
+               ...(locallyComputedValues as any),
+            },
+         })),
+         skip(1),
+      )
       return new LenrixStore(
          data$,
          (data: any) => ({ ...data.state, ...data.computedValues }),
@@ -334,7 +462,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path + '.computeFrom()',
-         config
+         config,
       )
    }
 
@@ -342,99 +470,166 @@ export class LenrixStore<
    // COMPUTE ASYNC //
    //////////////////
 
-   compute$<ComputedValues>(
-      computer$: (state$: Observable<ComputedState<Type>>) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+   public compute$<ComputedValues>(
+      computer$: (
+         state$: Observable<ComputedState<Type>>,
+      ) => Observable<ComputedValues>,
+      initialValues?: ComputedValues,
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'compute$', params: [computer$, initialValues] }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'compute$', params: [computer$, initialValues] },
+         ],
       }
-      const computedValues$ = computer$(this.computedStateSubject)
-         .startWith(initialValues)
-         .scan((previous, next) => {
+      const computedValues$ = computer$(this.computedStateSubject).pipe(
+         startWith(initialValues),
+         scan((previous, next) => {
             this.context.dispatchCompute(this as any, previous, next)
             return next
-         })
-      const data$ = Observable.combineLatest(
+         }),
+      )
+      const data$ = combineLatest(
          this.dataSubject,
          computedValues$,
          (data, computedValues) => ({
             state: data.state,
-            computedValues: { ...data.computedValues as any, ...computedValues as any }
-         })
+            computedValues: {
+               ...(data.computedValues as any),
+               ...(computedValues as any),
+            },
+         }),
       )
-      const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
+      const initialData: StoreData<{
+         state: Type['state']
+         computedValues: Type['computedValues'] & ComputedValues
+      }> = initialValues
          ? {
-            state: this.initialData.state,
-            computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
-         }
+              state: this.initialData.state,
+              computedValues: {
+                 ...(this.initialData.computedValues as any),
+                 ...(initialValues as any),
+              },
+           }
          : this.initialData
       return new LenrixStore(
-         data$.skip(1),
+         data$.pipe(skip(1)),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.compute$(' + Object.keys(initialValues || {}).join(', ') + ')',
-         config
+         this.path +
+            '.compute$(' +
+            Object.keys(initialValues || {}).join(', ') +
+            ')',
+         config,
       )
    }
 
-   computeFrom$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   public computeFrom$<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       selection: FocusedSelection<Type, Selection>,
-      computer$: (selection$: Observable<Selection>) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+      computer$: (
+         selection$: Observable<Selection>,
+      ) => Observable<ComputedValues>,
+      initialValues?: ComputedValues,
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'computeFrom$', params: [selection, computer$, initialValues] }]
+         operations: [
+            ...this.__config.operations,
+            {
+               name: 'computeFrom$',
+               params: [selection, computer$, initialValues],
+            },
+         ],
       }
-      const select = (data: StoreData<Type>): Selection => cherryPick(this.dataToComputedState(data), selection(this.localLens))
+      const select = (data: StoreData<Type>): Selection =>
+         cherryPick(this.dataToComputedState(data), selection(this.localLens))
       return this.computeFromSelector$(config, select, computer$, initialValues)
    }
 
-   computeFromFields$<K extends keyof ComputedState<Type>, ComputedValues extends object & NotAnArray>(
+   public computeFromFields$<
+      K extends keyof ComputedState<Type>,
+      ComputedValues extends object & NotAnArray
+   >(
       fields: K[],
-      computer$: (fields$: Observable<Pick<ComputedState<Type>, K>>) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+      computer$: (
+         fields$: Observable<Pick<ComputedState<Type>, K>>,
+      ) => Observable<ComputedValues>,
+      initialValues?: ComputedValues,
    ): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'computeFromFields$', params: [fields, computer$, initialValues] }]
+         operations: [
+            ...this.__config.operations,
+            {
+               name: 'computeFromFields$',
+               params: [fields, computer$, initialValues],
+            },
+         ],
       }
       const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
-         fields.forEach(field => selected[field] = computedState[field])
+         fields.forEach(field => (selected[field] = computedState[field]))
          return selected
       }
       return this.computeFromSelector$(config, select, computer$, initialValues)
    }
 
-   private computeFromSelector$<Selection extends object & NotAnArray, ComputedValues extends object & NotAnArray>(
+   private computeFromSelector$<
+      Selection extends object & NotAnArray,
+      ComputedValues extends object & NotAnArray
+   >(
       config: StoreConfig,
       selector: (data: StoreData<Type>) => Selection,
-      computer$: (selection$: Observable<Selection>) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+      computer$: (
+         selection$: Observable<Selection>,
+      ) => Observable<ComputedValues>,
+      initialValues?: ComputedValues,
    ): any {
-      const initialData: StoreData<{ state: Type['state'], computedValues: Type['computedValues'] & ComputedValues }> = initialValues
+      const initialData: StoreData<{
+         state: Type['state']
+         computedValues: Type['computedValues'] & ComputedValues
+      }> = initialValues
          ? {
-            state: this.initialData.state,
-            computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
-         }
+              state: this.initialData.state,
+              computedValues: {
+                 ...(this.initialData.computedValues as any),
+                 ...(initialValues as any),
+              },
+           }
          : this.initialData
-      const selection$ = this.dataSubject.map(selector)
-      const newComputedValues$ = computer$(selection$)
-         .scan((previous, next) => {
+      const newComputedValues$ = this.dataSubject.pipe(
+         map(selector),
+         computer$,
+         scan((previous, next) => {
             this.context.dispatchCompute(this as any, previous, next)
             return next
-         })
-      const data$ = Observable.combineLatest(this.dataSubject, newComputedValues$,
+         }),
+      )
+      // const selection$ = this.dataSubject.pipe(map(selector))
+      // const newComputedValues$ = computer$(selection$).pipe(
+      //    scan((previous, next) => {
+      //       this.context.dispatchCompute(this as any, previous, next)
+      //       return next
+      //    }),
+      // )
+      const data$ = combineLatest(
+         this.dataSubject,
+         newComputedValues$,
          (data, newComputedValues) => ({
             state: data.state,
-            computedValues: { ...data.computedValues as any, ...newComputedValues as any }
-         }))
+            computedValues: {
+               ...(data.computedValues as any),
+               ...(newComputedValues as any),
+            },
+         }),
+      )
 
       return new LenrixStore(
          data$,
@@ -443,7 +638,7 @@ export class LenrixStore<
          this.registerHandlers,
          this.context,
          this.path + '.computeFrom$()',
-         config
+         config,
       )
    }
 
@@ -451,108 +646,144 @@ export class LenrixStore<
    // FOCUS //
    //////////
 
-   focusPath(...params: any[]): any {
+   public focusPath(...params: any[]): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'focusPath', params }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'focusPath', params },
+         ],
       }
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.localLens as any).focusPath(...keys)
-      const computedValueKeys: (keyof Type['computedValues'])[] = (params.length === 2 && Array.isArray(params[1]))
-         ? params[1]
-         : []
+      const computedValueKeys: Array<keyof Type['computedValues']> =
+         params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toFocusedData = (data: StoreData<Type>) => {
          const state = focusedLens.read(data.state)
          const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         computedValueKeys.forEach(
+            key => (computedValues[key] = data.computedValues[key]),
+         )
          return { state, computedValues }
       }
-      const registerHandlers: (handlersToRegister: FocusedHandlers<any>) => void = (handlersToRegister) => {
+      const registerHandlers: (
+         handlersToRegister: FocusedHandlers<any>,
+      ) => void = handlersToRegister => {
          const handlers = {} as any
          Object.keys(handlersToRegister).forEach(actionType => {
             const handler = handlersToRegister[actionType] as any
-            handlers[actionType] = (payload: any) => focusedLens.update(handler(payload))
+            handlers[actionType] = (payload: any) =>
+               focusedLens.update(handler(payload))
          })
          return this.registerHandlers(handlers as any)
       }
       return new LenrixStore(
-         this.dataSubject.map(toFocusedData).distinctUntilChanged(dataEquals),
-         (data: any) => (Array.isArray(data.state) || typeof data.state !== 'object')
-            ? data.state
-            : { ...data.state, ...data.computedValues },
+         this.dataSubject.pipe(
+            map(toFocusedData),
+            distinctUntilChanged(dataEquals),
+         ),
+         (data: any) =>
+            Array.isArray(data.state) || typeof data.state !== 'object'
+               ? data.state
+               : { ...data.state, ...data.computedValues },
          toFocusedData(this.initialData),
          registerHandlers,
          this.context,
          this.path + focusedLens.path,
-         config
+         config,
       )
    }
 
-   focusFields(...params: any[]): any {
+   public focusFields(...params: any[]): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'focusFields', params }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'focusFields', params },
+         ],
       }
-      const keys: (keyof Type['state'])[] = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
+      const keys: Array<keyof Type['state']> = Array.isArray(params[0])
+         ? params[0]
+         : params // Handle spread keys
       const path = this.path + '.pick(' + keys.join(',') + ')'
       const pickFields = (state: Type['state']) => {
          const fields: Partial<Type['state']> = {}
-         keys.forEach(key => fields[key] = state[key])
+         keys.forEach(key => (fields[key] = state[key]))
          return fields
       }
-      const computedValueKeys: (keyof Type['computedValues'])[] = (params.length === 2 && Array.isArray(params[1]))
-         ? params[1]
-         : []
+      const computedValueKeys: Array<keyof Type['computedValues']> =
+         params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toPickedData = (data: StoreData<Type>) => {
          const state = pickFields(data.state)
          const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         computedValueKeys.forEach(
+            key => (computedValues[key] = data.computedValues[key]),
+         )
          return { state, computedValues }
       }
       return new LenrixStore(
-         this.dataSubject.map(toPickedData).distinctUntilChanged(dataEquals),
+         this.dataSubject.pipe(
+            map(toPickedData),
+            distinctUntilChanged(dataEquals),
+         ),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toPickedData(this.initialData),
          this.registerHandlers as any,
          this.context,
          path,
-         config
+         config,
       )
    }
 
-   recompose(...params: any[]): any {
+   public recompose(...params: any[]): any {
       const config: StoreConfig = {
          initialRootState: this.__config.initialRootState,
-         operations: [...this.__config.operations, { name: 'recompose', params }]
+         operations: [
+            ...this.__config.operations,
+            { name: 'recompose', params },
+         ],
       }
       const focusedSelection = params[0]
-      const computedValueKeys: (keyof Type['computedValues'])[] = params[1] || []
-      const fields = focusedSelection(this.localLens) as FieldLenses<Type['state'], any>
+      const computedValueKeys: Array<keyof Type['computedValues']> =
+         params[1] || []
+      const fields = focusedSelection(this.localLens) as FieldLenses<
+         Type['state'],
+         any
+      >
       // if (typeof params === 'function') throw Error('recompose() does not accept functions as arguments.') // TODO Test error message
       const recomposedLens = (this.localLens as any).recompose(fields)
       const path = this.path + '.' + recomposedLens.path
       const toRecomposedData = (data: StoreData<Type>) => {
          const state = recomposedLens.read(data.state)
          const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(key => computedValues[key] = data.computedValues[key])
+         computedValueKeys.forEach(
+            key => (computedValues[key] = data.computedValues[key]),
+         )
          return { state, computedValues }
       }
-      const registerHandlers: (handlersToRegister: FocusedHandlers<any>) => void = (handlersToRegister) => {
+      const registerHandlers: (
+         handlersToRegister: FocusedHandlers<any>,
+      ) => void = handlersToRegister => {
          const handlers = {} as any
          Object.keys(handlersToRegister).forEach(actionType => {
             const handler = handlersToRegister[actionType] as any
-            handlers[actionType] = (payload: any) => recomposedLens.update(handler(payload))
+            handlers[actionType] = (payload: any) =>
+               recomposedLens.update(handler(payload))
          })
          return this.registerHandlers(handlers as any)
       }
       return new LenrixStore(
-         this.dataSubject.map(toRecomposedData).distinctUntilChanged(dataEquals).skip(1),
+         this.dataSubject.pipe(
+            map(toRecomposedData),
+            distinctUntilChanged(dataEquals),
+            skip(1),
+         ),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toRecomposedData(this.initialData),
          registerHandlers,
          this.context,
          path,
-         config
+         config,
       )
    }
 
@@ -579,5 +810,4 @@ export class LenrixStore<
    //       this.path + '.computeJoin$()'
    //    )
    // }
-
 }

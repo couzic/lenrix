@@ -5,11 +5,11 @@ export const silentLoggerOptions: LoggerOptions = {
       message: false,
       update: false,
       epic: false,
-      compute: false
+      compute: false,
    },
    redux: {
       message: false,
       epic: false,
-      compute: false
-   }
+      compute: false,
+   },
 }

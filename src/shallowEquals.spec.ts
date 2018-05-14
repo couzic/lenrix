@@ -2,11 +2,13 @@ import { expect } from 'chai'
 
 import { shallowEquals } from './shallowEquals'
 
-const expectEqual = <T>(a: T, b: T) => expect(shallowEquals(a, b)).to.equal(true)
-const expectDifferent = <T>(a: T, b: T) => expect(shallowEquals(a, b)).to.equal(false)
+const expectEqual = <T>(a: T, b: T) =>
+   expect(shallowEquals(a, b)).to.equal(true)
+
+const expectDifferent = <T>(a: T, b: T) =>
+   expect(shallowEquals(a, b)).to.equal(false)
 
 describe('shallowEquals()', () => {
-
    it('compares two equal numbers', () => {
       expectEqual(1, 1)
    })
@@ -86,5 +88,4 @@ describe('shallowEquals()', () => {
    it('returns false when comparing undefined with null', () => {
       expectDifferent(undefined, null)
    })
-
 })

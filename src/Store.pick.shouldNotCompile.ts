@@ -1,5 +1,3 @@
-import { Observable } from 'rxjs/Observable'
-
 import { createStore } from './createStore'
 
 type State = {
@@ -11,7 +9,7 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 const store = createStore(state)
 const todoStore = store.focusPath('todo')

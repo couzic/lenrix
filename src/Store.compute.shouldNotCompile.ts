@@ -1,3 +1,5 @@
+import { map } from 'rxjs/operators'
+
 import { createStore } from './createStore'
 
 type State = {
@@ -9,7 +11,7 @@ type State = {
    }
 }
 
-const state = {} as State
+const state: State = {} as any
 
 const store = createStore(state)
 const counterStore = store.focusPath('counter')
@@ -24,36 +26,31 @@ const todoLens = lens.focusPath('todo')
 ////////////
 
 // Calling compute() @compiles
-store.compute(state => ({
-   todoListLength: state.todo.list.length
+store.compute(s => ({
+   todoListLength: s.todo.list.length,
 }))
 
 // Computing values with array @shouldNotCompile
-store.compute(state => [state.todo.list.length])
+store.compute(s => [s.todo.list.length])
 
 // Computing values on primitive-focused store @shouldNotCompile
-store
-   .focusPath('counter')
-   .compute((state: any) => ({ nothing: 'nothing' }))
+store.focusPath('counter').compute((s: any) => ({ nothing: 'nothing' }))
 
 // Computing values on array-focused store @shouldNotCompile
-store
-   .focusPath('todo', 'list')
-   .compute((state: any) => ({ nothing: 'nothing' }))
-
-// Assigning computed store with wrong ComputeValues type @shouldNotCompile
-const computedWithWrongType: ComputedStore<State, { todoListLength: 0 }> = store.compute(state => ({
-   todoListLength: state.todo.list.length
-}))
+store.focusPath('todo', 'list').compute((s: any) => ({ nothing: 'nothing' }))
 
 // Assigning non-initialized value to safe pointer @shouldNotCompile
-const computedWithoutInitialValues: number = store.compute$(state$ => state$.map(state => ({
-   nonInitialized: 42
-}))).currentState.nonInitialized
+const computedWithoutInitialValues: number = store.compute$(state$ =>
+   state$.pipe(
+      map(s => ({
+         nonInitialized: 42,
+      })),
+   ),
+).currentComputedState.nonInitialized
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////
 
 // Computing values with higher order function @shouldNotButDoesCompile
-store.compute(state => () => null)
+store.compute(s => () => null)
