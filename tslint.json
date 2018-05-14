@@ -1,5 +1,4 @@
 {
-  "defaultSeverity": "error",
   "extends": [
     "tslint:latest",
     "tslint-config-prettier"
@@ -22,7 +21,6 @@
     "unified-signatures": false,
     "forin": false,
     "variable-name": false,
-    "jsx-no-multiline-js": false,
     "no-var-requires": false,
     "object-literal-sort-keys": [false, "match-declaration-order"],
     "rxjs-collapse-imports": true,
