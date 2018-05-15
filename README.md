@@ -211,8 +211,27 @@ const pick$: Observable<{
 ### Actions and Updates
 
 #### `actionTypes()`
+Declare the store's actions and associated payload types. Calling this method will have absolutely no runtime effect, it's only use is to provide type information.
+```ts
+const store = createStore({name: 'Bob'})
+   .actionTypes<{setName: string}>()
+```
+
 #### `updates()`
+Once action types are defined, it is possible to register updates
+```ts
+const store = createStore({name: 'Bob'})
+   .actionTypes<{setName: string}>()
+   .updates(lens => ({
+      setName: lens.focusPath('name').setValue()
+   }))
+```
+
 #### `dispatch()`
+Dispatching an action can trigger a registered update
+```ts
+store.dispatch({setName: 'John'}) // Next state will be {name: 'John'}
+```
 
 ### Syncronously computed values
 
@@ -229,3 +248,7 @@ const pick$: Observable<{
 ### Epics
 
 #### `epics()`
+
+### Side effects
+
+#### `sideEffects()`
