@@ -2,13 +2,15 @@
 
 #### Type-safe, reactive, focusable redux stores
 
+> Redux + RxJS + TypeScript + Functional Lenses = ❤️ 
+
 ## Motivation
 
-A lot of people have complained about `redux`, some with good reason. And many have been drawn to other state management solutions.
+A lot of people have complained about `redux`, some with good reason. Many have been drawn to other state management solutions.
 
 > Don't throw the baby with the bathwater.
 
-Although we agree there must be a better solution than classical `redux`, we are not willing to sacrifice all the `redux` goodness you've heard so much about.
+Although we agree there must be a better way than classical `redux`, we are not willing to sacrifice all of the `redux` goodness you've heard so much about.
 
 > Making redux great again !
 
@@ -21,9 +23,9 @@ Although we agree there must be a better solution than classical `redux`, we are
 
 ## Features
 
- - Declarative API for deep state manipulation, powered by `immutable-lens`
- - Reactive state and selectors, powered by `rxjs`
- - Epics (just like `redux-observable`)
+ - Declarative API for deep state manipulation, powered by [`immutable-lens`](https://github.com/couzic/immutable-lens)
+ - Reactive state and selectors, powered by [`rxjs`](https://github.com/reactivex/rxjs)
+ - Epics (just like [`redux-observable`](https://github.com/redux-observable/redux-observable))
 
 `lenrix` stores a single state tree, just like `redux`, but provides a way to create multiple representations of that managed state, each focused on a precise subset. See the [Focus](#focus) section for more details.
 
@@ -31,7 +33,7 @@ Although we agree there must be a better solution than classical `redux`, we are
 
 ### Install
 ```sh
-$ npm i -S lenrix immutable-lens redux rxjs
+$ npm i -S lenrix redux rxjs immutable-lens
 ```
 
 ### rootStore.ts
@@ -47,7 +49,7 @@ export const rootStore = createStore(initialRootState)
       .actionTypes<{
          setMessage: string
       }>()
-      // REGISTER STATE UPDATERS (CURRIED REDUCERS)
+      // REGISTER STATE UPDATERS (~=CURRIED REDUCERS)
       .updates({
          setMessage: (message) => (state) => ({...state, message})
       }))
@@ -57,8 +59,8 @@ export const rootStore = createStore(initialRootState)
 ```ts
 import { rootStore } from './rootStore'
 
-const message$: Observable<string> = rootStore.pluck('message')
-const pick$: Observable<{message: string}> = rootStore.pick('message')
+const message$ = rootStore.pluck('message') // Observable<string> 
+const slice$ = rootStore.pick('message') // Observable<{message: string}>
 
 rootStore.dispatch({setMessage: 'Hello !!!'})
 ```
@@ -127,7 +129,7 @@ const slice = rootStore.focusFields('counter').state$ // Observable<{counter: nu
 ```
 
 #### `recompose()`
-Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees.
+Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -146,7 +148,7 @@ const recomposedState = rootStore
 
 ### Consuming the state
 
-It is recommended to always use one of these three methods when consuming the state. It will prevent future additions to the store's state to cause unnecessary computation or re-rendering.
+It is recommended to always use one of these three methods when consuming the state. They will perform the relevant reference equality checks to prevent any unnecessary re-rendering.
 
 #### `pluck()`
 Conceptually equivalent to `focusPath().state$`
@@ -176,7 +178,7 @@ const pick$ = rootStore.pick(
 ```
 
 #### `cherryPick()`
-Conceptually equivalent to `recompose().state$`
+Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -201,7 +203,7 @@ const store = createStore({name: 'Bob'})
 ```
 
 #### `updates()`
-Once action types are defined, it is possible to register type-safe updates. See `immutable-lens` documentation for more information on lenses.
+Once action types are defined, it is possible to register type-safe updates. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
 ```ts
 const store = createStore({name: 'Bob'})
    .actionTypes<{setName: string}>()
@@ -210,13 +212,13 @@ const store = createStore({name: 'Bob'})
    .updates({
       setMessage: (message) => (state) => ({...state, message})
    })
-   .updates(lens => ({ // immutable-lens
+   .updates(lens => ({
       setMessage: (message) => lens.setFields({message})
    }))
    .updates(lens => ({
       setMessage: (message) => lens.focusPath('message').setValue(message)
    }))
-   // Our personal favorite
+   // And if you like curry...
    .updates(lens => ({
       setMessage: lens.focusPath('message').setValue()
    }))
@@ -229,23 +231,90 @@ store.dispatch({setName: 'John'}) // Next state will be {name: 'John'}
 ```
 
 ## Computed values
-State should be normalized, derived data should be stored as computed values. `lenrix` guarantees that a computed value will never be recomputed unless necessary. If you encounter an exception to this rule, please consider it a bug and submit an issue.
+State should be normalized, derived data should be stored as computed values. In traditional redux, you would use selectors to compute values.
 
-### Syncronously computed values
+`lenrix` performs the most relevant reference equality checks to prevent unnecessary recomputation.
+
+### Synchronously computed values
 
 #### `compute()`
 ```ts
-const store = createStore({name: 'Bob'})
+createStore({name: 'Bob'})
    .compute(state => ({greeting: 'Hello, ' + state.name}))
+   .pick('greeting') // Observable<{greeting: string}>
+```
+#### `computeFromFields()`
+Specify the fields used for the computation in order to avoid useless re-computations.
+```ts
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFromFields(
+      ['name'],
+      ({name}) => ({greeting: 'Hello, ' + name})
+   )
+   .pick('greeting') // Observable<{greeting: string}>
 ```
 #### `computeFrom()`
-#### `computeFromFields()`
-
-### Asyncronously computed values
+Define computed values from state slices focused by lenses. The signature is similar to `recompose()` and `cherryPick()`.
+```ts
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFrom(
+      lens => ({name: lens.focusPath('name')}),
+      ({name}) => ({greeting: 'Hello, ' + name}))
+   .pick('greeting') // Observable<{greeting: string}>
+```
+### Asynchronously computed values
+Every synchronous value-computing operator has an asynchronous equivalent. Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see the [`defaultValues()`](#`defaultValues()`) operator.
 
 #### `compute$()`
-#### `computeFrom$()`
+```ts
+import { of } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
+
+createStore({name: 'Bob'})
+   .compute$(
+      switchMap(state => of({greeting: 'Hello, ' + state.name}))
+   )
+   .pick('greeting') // Observable<{greeting: string | undefined}>
+```
 #### `computeFromFields$()`
+```ts
+import { of } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
+
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFromFields$(
+      ['name'],
+      switchMap(({name}) => of({greeting: 'Hello, ' + name}))
+   )
+   .pick('greeting') // Observable<{greeting: string | undefined}>
+```
+#### `computeFrom$()`
+```ts
+import { of } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
+
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFrom$(
+      lens => ({name: lens.focusPath('name')}),
+      switchMap(({name}) => of({greeting: 'Hello, ' + name}))
+   .pick('greeting') // Observable<{greeting: string | undefined}>
+```
+
+#### `defaultValues()`
+Define default values for asynchronously computed values.
+```ts
+import { of } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
+
+createStore({name: 'Bob'})
+   .compute$(
+      switchMap(state => of({greeting: 'Hello, ' + state.name}))
+   )
+   .defaultValues({
+      greeting: ''
+   })
+   .pick('greeting') // Observable<{greeting: string}>
+```
 
 ### Epics
 
