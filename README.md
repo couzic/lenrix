@@ -129,7 +129,7 @@ const slice = rootStore.focusFields('counter').state$ // Observable<{counter: nu
 ```
 
 #### `recompose()`
-Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
+Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -178,7 +178,7 @@ const pick$ = rootStore.pick(
 ```
 
 #### `cherryPick()`
-Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
+Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -263,52 +263,50 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
    .pick('greeting') // Observable<{greeting: string}>
 ```
 ### Asynchronously computed values
-Every synchronous value-computing operator has an asynchronous equivalent. Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see the [`defaultValues()`](#`defaultValues()`) operator.
+Every synchronous value-computing operator has an asynchronous equivalent. Each of them accepts multiple RxJS operators, much like `Observable.pipe()`.
+
+Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see [`defaultValues()`](#`defaultValues()`).
 
 #### `compute$()`
 ```ts
-import { of } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 
 createStore({name: 'Bob'})
    .compute$(
-      switchMap(state => of({greeting: 'Hello, ' + state.name}))
+      map(state => ({greeting: 'Hello, ' + state.name}))
    )
    .pick('greeting') // Observable<{greeting: string | undefined}>
 ```
 #### `computeFromFields$()`
 ```ts
-import { of } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFromFields$(
       ['name'],
-      switchMap(({name}) => of({greeting: 'Hello, ' + name}))
+      map(({name}) => ({greeting: 'Hello, ' + name}))
    )
    .pick('greeting') // Observable<{greeting: string | undefined}>
 ```
 #### `computeFrom$()`
 ```ts
-import { of } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFrom$(
       lens => ({name: lens.focusPath('name')}),
-      switchMap(({name}) => of({greeting: 'Hello, ' + name}))
+      map(({name}) => ({greeting: 'Hello, ' + name}))
    .pick('greeting') // Observable<{greeting: string | undefined}>
 ```
 
 #### `defaultValues()`
 Define default values for asynchronously computed values.
 ```ts
-import { of } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 
 createStore({name: 'Bob'})
    .compute$(
-      switchMap(state => of({greeting: 'Hello, ' + state.name}))
+      map(({name}) => ({greeting: 'Hello, ' + name}))
    )
    .defaultValues({
       greeting: ''
@@ -319,6 +317,32 @@ createStore({name: 'Bob'})
 ### Epics
 
 #### `epics()`
+
+```ts
+import { pipe } from 'rxjs'
+import { map } from 'rxjs/operators'
+
+createStore({name: '', greeting: ''})
+   .actionTypes<{
+      setName: string
+      setGreeting: string
+   }>()
+   .updates(lens => ({
+      setName: name => lens.setFields({name}),
+      setGreeting: greeting => lens.setFields({greeting})
+   }))
+   .epics({
+      // WITH SINGLE OPERATOR...
+      setName: map(name => ({setGreeting: 'Hello, ' + name}))
+      // ... OR WITH MULTIPLE OPERATORS
+      setName: pipe(
+         map(name => 'Hello, ' + name),
+         map(greeting => ({setGreeting: greeting}))
+      )
+   })
+```
+
+##### Light access to store 
 
 ### Side effects
 
