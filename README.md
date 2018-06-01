@@ -1,8 +1,6 @@
 # lenrix
 
-#### Type-safe, reactive, focusable redux stores
-
-> Redux + RxJS + TypeScript + Functional Lenses = ❤️ 
+#### 🔎 + Redux + RxJS + TypeScript = ❤️ 
 
 ## Motivation
 
@@ -25,7 +23,7 @@ Although we agree there must be a better way than classical `redux`, we are not 
 
  - Declarative API for deep state manipulation, powered by [`immutable-lens`](https://github.com/couzic/immutable-lens)
  - Reactive state and selectors, powered by [`rxjs`](https://github.com/reactivex/rxjs)
- - Epics (just like [`redux-observable`](https://github.com/redux-observable/redux-observable))
+ - Epics, just like [`redux-observable`](https://github.com/redux-observable/redux-observable), our favorite redux middleware
 
 `lenrix` stores a single state tree, just like `redux`, but provides a way to create multiple representations of that managed state, each focused on a precise subset. See the [Focus](#focus) section for more details.
 
@@ -40,17 +38,15 @@ $ npm i -S lenrix redux rxjs immutable-lens
 ```ts
 import { createStore } from 'lenrix'
 
-const initialRootState = {message: ''}
-
-export type RootState = typeof initialRootState
+const initialRootState = {
+   message: ''
+}
 
 export const rootStore = createStore(initialRootState)
-      // DECLARE ACTION AND PAYLOAD TYPES
-      .actionTypes<{
+      .actionTypes<{ // DECLARE ACTION AND PAYLOAD TYPES
          setMessage: string
       }>()
-      // REGISTER STATE UPDATERS (~=CURRIED REDUCERS)
-      .updates({
+      .updates({ // REGISTER UPDATES (~= CURRIED REDUCERS)
          setMessage: (message) => (state) => ({...state, message})
       }))
 ```
@@ -95,6 +91,93 @@ export const store = createFocusableStore(
    initialRootState,
    (window as any).__REDUX_DEVTOOLS_EXTENSION__ && (window as any).__REDUX_DEVTOOLS_EXTENSION__()
 )
+```
+
+### Actions and Updates
+
+#### `actionTypes()`
+Declare the store's actions and associated payload types. Calling this method will have absolutely no runtime effect, all it does is provide information to the TypeScript compiler.
+```ts
+const store = createStore({name: 'Bob'})
+   .actionTypes<{
+      setName: string
+   }>()
+```
+
+#### `updates()`
+Once action types are defined, it is possible to register type-safe updates. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for `lens` API documentation.
+```ts
+const store = createStore({name: 'Bob'})
+   .actionTypes<{setName: string}>()
+   // THESE FOUR CALLS TO updates() ARE ALL EQUIVALENT AND 100% TYPE SAFE
+   // PICK THE ONE YOU PREFER
+   .updates({
+      setName: (name) => (state) => ({...state, name})
+   })
+   .updates(lens => ({
+      setName: (name) => lens.setFields({name})
+   }))
+   .updates(lens => ({
+      setName: (name) => lens.focusPath('name').setValue(name)
+   }))
+   // And if you like double curry...
+   .updates(lens => ({
+      setName: lens.focusPath('name').setValue()
+   }))
+```
+
+#### `dispatch()`
+Dispatching an action can trigger an [update](#updates), an [epic](#epics), or a [side effect](#sideEffects).
+```ts
+store.dispatch({setName: 'John'}) // Next state will be : {name: 'John'}
+```
+
+### Consuming the state
+
+The store provides the observable properties `state$` and `computedState$`.
+However, it is recommended to always use one of the three following methods when consuming the state. They will perform reference equality checks to prevent any unnecessary re-rendering.
+
+#### `pluck()`
+Conceptually equivalent to `focusPath().state$`
+```ts
+const rootStore = createStore({
+   user: {
+      name: 'Bob'
+   }
+})
+
+const userName$ = rootStore.pluck('user', 'name') // Observable<string> 
+```
+
+#### `pick()`
+Conceptually equivalent to `focusFields().state$`
+```ts
+const rootStore = createStore({
+   counter: 0,
+   user: 'Bob',
+   todoList: ['Write README']
+})
+
+const pick$ = rootStore.pick(
+   'user',
+   'todoList'
+) // Observable<{ user: string, todoList: string[] }>
+```
+
+#### `cherryPick()`
+Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
+```ts
+const rootStore = createStore({
+   counter: 0,
+   user: {
+      name: 'Bob'
+   }
+})
+
+const cherryPick$ = rootStore.cherryPick(lens => ({ // immutable-lens
+   counter: lens.focusPath('counter'),
+   userName: lens.focusPath('user', 'name')
+})) // Observable<{ counter: number, userName: string }>
 ```
 
 ### Focus
@@ -144,90 +227,6 @@ const recomposedState = rootStore
       userName: lens.focusPath('user', 'name')
    }))
    .state$ // Observable<{ counter: number, userName: string }>
-```
-
-### Consuming the state
-
-It is recommended to always use one of these three methods when consuming the state. They will perform the relevant reference equality checks to prevent any unnecessary re-rendering.
-
-#### `pluck()`
-Conceptually equivalent to `focusPath().state$`
-```ts
-const rootStore = createStore({
-   user: {
-      name: 'Bob'
-   }
-})
-
-const userName$ = rootStore.pluck('user', 'name') // Observable<string> 
-```
-
-#### `pick()`
-Conceptually equivalent to `focusFields().state$`
-```ts
-const rootStore = createStore({
-   counter: 0,
-   user: 'Bob',
-   todoList: ['Write README']
-})
-
-const pick$ = rootStore.pick(
-   'user',
-   'todoList'
-) // Observable<{ user: string, todoList: string[] }>
-```
-
-#### `cherryPick()`
-Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
-```ts
-const rootStore = createStore({
-   counter: 0,
-   user: {
-      name: 'Bob'
-   }
-})
-
-const cherryPick$ = rootStore.cherryPick(lens => ({ // immutable-lens
-   counter: lens.focusPath('counter'),
-   userName: lens.focusPath('user', 'name')
-})) // Observable<{ counter: number, userName: string }>
-```
-
-### Actions and Updates
-
-#### `actionTypes()`
-Declare the store's actions and associated payload types. Calling this method will have absolutely no runtime effect, all it does is provide information to the TypeScript compiler.
-```ts
-const store = createStore({name: 'Bob'})
-   .actionTypes<{setName: string}>()
-```
-
-#### `updates()`
-Once action types are defined, it is possible to register type-safe updates. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for the lens API documentation.
-```ts
-const store = createStore({name: 'Bob'})
-   .actionTypes<{setName: string}>()
-   // THESE FOUR CALLS TO updates() ARE ALL EQUIVALENT AND 100% TYPE SAFE
-   // PICK THE ONE YOU PREFER
-   .updates({
-      setMessage: (message) => (state) => ({...state, message})
-   })
-   .updates(lens => ({
-      setMessage: (message) => lens.setFields({message})
-   }))
-   .updates(lens => ({
-      setMessage: (message) => lens.focusPath('message').setValue(message)
-   }))
-   // And if you like curry...
-   .updates(lens => ({
-      setMessage: lens.focusPath('message').setValue()
-   }))
-```
-
-#### `dispatch()`
-Dispatching an action can trigger a registered update.
-```ts
-store.dispatch({setName: 'John'}) // Next state will be {name: 'John'}
 ```
 
 ## Computed values
@@ -342,8 +341,42 @@ createStore({name: '', greeting: ''})
    })
 ```
 
-##### Light access to store 
+##### Access to store 
+
+```ts
+import { mapTo } from 'rxjs/operators'
+
+createStore({name: '', greeting: ''})
+   .actionTypes<{
+      setName: string
+      setGreeting: string
+   }>()
+   .updates(lens => ({
+      setName: name => lens.setFields({name}),
+      setGreeting: greeting => lens.setFields({greeting})
+   }))
+   .epics({
+      setName: (payload$, store) => payload$.pipe(
+         mapTo({setGreeting: 'Hello, ' + store.currentState.name})
+      )
+   })
+```
 
 ### Side effects
 
 #### `sideEffects()`
+
+```ts
+createStore({ name: '' })
+   .actionTypes<{
+      setName: string 
+   }>()
+   .updates(lens => ({
+      setName: name => lens.setFields({name})
+   }))
+   .sideEffects({
+      setName: name => console.log(name)
+   })
+```
+
+### Dependency Injection

@@ -1,5 +1,5 @@
 import { NotAnArray, UnfocusedLens } from 'immutable-lens'
-import { Observable } from 'rxjs'
+import { Observable, OperatorFunction } from 'rxjs'
 
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
@@ -178,9 +178,7 @@ export interface Store<
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: (
-         state$: Observable<ComputedState<Type>>,
-      ) => Observable<ComputedValues>,
+      computer$: OperatorFunction<ComputedState<Type>, ComputedValues>,
       initialValues: ComputedValues,
    ): Store<{
       state: Type['state']
@@ -191,9 +189,7 @@ export interface Store<
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: (
-         state$: Observable<ComputedState<Type>>,
-      ) => Observable<ComputedValues>,
+      computer$: OperatorFunction<ComputedState<Type>, ComputedValues>,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<
@@ -210,9 +206,10 @@ export interface Store<
    >(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer$: (
-         selection$: Observable<Selection>,
-      ) => Observable<ComputedValues>,
+      computer$: OperatorFunction<
+         Selection & Type['computedValues'],
+         ComputedValues
+      >,
       initialValues: ComputedValues,
    ): Store<{
       state: Type['state']
@@ -227,9 +224,10 @@ export interface Store<
    >(
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
-      computer$: (
-         selection$: Observable<Selection & Type['computedValues']>,
-      ) => Observable<ComputedValues>,
+      computer$: OperatorFunction<
+         Selection & Type['computedValues'],
+         ComputedValues
+      >,
    ): Store<{
       state: Type['state']
       computedValues: MergedFields<

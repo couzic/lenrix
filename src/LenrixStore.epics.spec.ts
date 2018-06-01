@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { pipe } from 'rxjs'
 import { distinctUntilChanged, filter, map, mapTo } from 'rxjs/operators'
 
 import { createStore } from './createStore'
@@ -48,7 +49,7 @@ describe('LenrixStore.epics()', () => {
                _.focusPath('todo', 'count').setValue(todoCount),
          }))
          .epics({
-            buttonClicked: $ => $.pipe(mapTo({ incrementCounter: undefined })),
+            buttonClicked: mapTo({ incrementCounter: undefined }),
          })
    })
 
@@ -68,8 +69,10 @@ describe('LenrixStore.epics()', () => {
          createStore(initialState, { logger: silentLoggerOptions })
             .actionTypes<Actions>()
             .epics({
-               buttonClicked: $ =>
-                  $.pipe(mapTo({ setCounter: 0, incrementCounter: undefined })),
+               buttonClicked: mapTo({
+                  setCounter: 0,
+                  incrementCounter: undefined,
+               }),
             })
             .dispatch({ buttonClicked: undefined, setCounter: 0 })
       }).to.throw()
@@ -100,11 +103,10 @@ describe('LenrixStore.epics()', () => {
    it('supports distinctUntilChanged()', () => {
       expect(store.currentState.counter).to.equal(0)
       store.epics({
-         setTodoCount: payload$ =>
-            payload$.pipe(
-               distinctUntilChanged(),
-               mapTo({ incrementCounter: undefined }),
-            ),
+         setTodoCount: pipe(
+            distinctUntilChanged(),
+            mapTo({ incrementCounter: undefined }),
+         ),
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(1)
@@ -115,12 +117,10 @@ describe('LenrixStore.epics()', () => {
    it('supports multiple epics for single action', () => {
       expect(store.currentState.counter).to.equal(0)
       store.epics({
-         setTodoCount: payload$ =>
-            payload$.pipe(mapTo({ incrementCounter: undefined })),
+         setTodoCount: mapTo({ incrementCounter: undefined }),
       })
       store.epics({
-         setTodoCount: payload$ =>
-            payload$.pipe(mapTo({ incrementCounter: undefined })),
+         setTodoCount: mapTo({ incrementCounter: undefined }),
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(2)
