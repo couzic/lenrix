@@ -2,6 +2,53 @@
 
 #### 🔎 + Redux + RxJS + TypeScript = ❤️ 
 
+## Table of Contents
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Motivation](#motivation)
+- [Features](#features)
+- [Quickstart](#quickstart)
+  - [Install](#install)
+  - [rootStore.ts](#rootstorets)
+  - [storeConsumer.ts](#storeconsumerts)
+- [API](#api)
+  - [Create](#create)
+    - [`createStore()`](#createstore)
+    - [`createFocusableStore()`](#createfocusablestore)
+  - [Actions and Updates](#actions-and-updates)
+    - [`actionTypes()`](#actiontypes)
+    - [`updates()`](#updates)
+    - [`dispatch()`](#dispatch)
+  - [Consuming the state](#consuming-the-state)
+    - [`state$`](#state)
+    - [`computedState$`](#computedstate)
+    - [`pluck()`](#pluck)
+    - [`pick()`](#pick)
+    - [`cherryPick()`](#cherrypick)
+  - [Focus](#focus)
+    - [`focusPath()`](#focuspath)
+    - [`focusFields()`](#focusfields)
+    - [`recompose()`](#recompose)
+  - [Computed values (synchronous)](#computed-values-synchronous)
+    - [`compute()`](#compute)
+    - [`computeFromFields()`](#computefromfields)
+    - [`computeFrom()`](#computefrom)
+  - [Computed values (asynchronous)](#computed-values-asynchronous)
+    - [`compute$()`](#compute)
+    - [`computeFromFields$()`](#computefromfields)
+    - [`computeFrom$()`](#computefrom)
+    - [`defaultValues()`](#defaultvalues)
+  - [`epics()`](#epics)
+  - [Injected store](#injected-store)
+  - [`sideEffects()`](#sideeffects)
+  - [`dependencies()`](#dependencies)
+- [Testing](#testing)
+- [Logger](#logger)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Motivation
 
 A lot of people have complained about `redux`, some with good reason. Many have been drawn to other state management solutions.
@@ -23,9 +70,9 @@ Although we agree there must be a better way than classical `redux`, we are not 
 
  - Declarative API for deep state manipulation, powered by [`immutable-lens`](https://github.com/couzic/immutable-lens)
  - Reactive state and selectors, powered by [`rxjs`](https://github.com/reactivex/rxjs)
+ - Relevant reference equality checks performed out of the box
+ - Separate functional slices with [Focused Stores](#focus)
  - Epics, just like [`redux-observable`](https://github.com/redux-observable/redux-observable), our favorite redux middleware
-
-`lenrix` stores a single state tree, just like `redux`, but provides a way to create multiple representations of that managed state, each focused on a precise subset. See the [Focus](#focus) section for more details.
 
 ## Quickstart
 
@@ -133,9 +180,19 @@ store.dispatch({setName: 'John'}) // Next state will be : {name: 'John'}
 ```
 
 ### Consuming the state
+`lenrix` performs reference equality checks to prevent any unnecessary re-rendering.
 
-The store provides the observable properties `state$` and `computedState$`.
-However, it is recommended to always use one of the three following methods when consuming the state. They will perform reference equality checks to prevent any unnecessary re-rendering.
+The store provides the observable properties `state$` and `computedState$`. However, it is recommended to always use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
+
+#### `state$`
+```ts
+const store = createStore({name: 'Bob'})
+
+const state$ = store.state$ // Observable<{name: string}> 
+```
+
+#### `computedState$`
+Like `state$`, but the store's state is augmented with its [computed values](#computed-values-synchronous).
 
 #### `pluck()`
 Conceptually equivalent to `focusPath().state$`
@@ -229,12 +286,10 @@ const recomposedState = rootStore
    .state$ // Observable<{ counter: number, userName: string }>
 ```
 
-## Computed values
-State should be normalized, derived data should be stored as computed values. In traditional redux, you would use selectors to compute values.
+### Computed values (synchronous)
+State should be normalized, derived data should be declared as computed values. In traditional redux, you would probably use selectors for that.
 
-`lenrix` performs the most relevant reference equality checks to prevent unnecessary recomputation.
-
-### Synchronously computed values
+`lenrix` performs reference equality checks to prevent unnecessary recomputation.
 
 #### `compute()`
 ```ts
@@ -261,10 +316,10 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
       ({name}) => ({greeting: 'Hello, ' + name}))
    .pick('greeting') // Observable<{greeting: string}>
 ```
-### Asynchronously computed values
-Every synchronous value-computing operator has an asynchronous equivalent. Each of them accepts multiple RxJS operators, much like `Observable.pipe()`.
+### Computed values (asynchronous)
+Every synchronous value-computing operator has an asynchronous equivalent.
 
-Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see [`defaultValues()`](#`defaultValues()`).
+Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see [`defaultValues()`](#defaultValues()).
 
 #### `compute$()`
 ```ts
@@ -313,10 +368,8 @@ createStore({name: 'Bob'})
    .pick('greeting') // Observable<{greeting: string}>
 ```
 
-### Epics
-
-#### `epics()`
-
+### `epics()`
+Let an action dispatch another action, asynchronously. Since this feature is heavily inspired from [`redux-observable`](https://github.com/redux-observable/redux-observable), we encourage you to go check their [documentation](https://redux-observable.js.org/docs/basics/Epics.html).
 ```ts
 import { pipe } from 'rxjs'
 import { map } from 'rxjs/operators'
@@ -341,31 +394,7 @@ createStore({name: '', greeting: ''})
    })
 ```
 
-##### Access to store 
-
-```ts
-import { mapTo } from 'rxjs/operators'
-
-createStore({name: '', greeting: ''})
-   .actionTypes<{
-      setName: string
-      setGreeting: string
-   }>()
-   .updates(lens => ({
-      setName: name => lens.setFields({name}),
-      setGreeting: greeting => lens.setFields({greeting})
-   }))
-   .epics({
-      setName: (payload$, store) => payload$.pipe(
-         mapTo({setGreeting: 'Hello, ' + store.currentState.name})
-      )
-   })
-```
-
-### Side effects
-
-#### `sideEffects()`
-
+### `sideEffects()`
 ```ts
 createStore({ name: '' })
    .actionTypes<{
@@ -379,4 +408,57 @@ createStore({ name: '' })
    })
 ```
 
-### Dependency Injection
+### Injected `store` and `dependencies`
+
+A light version of the store and its registered dependencies are available when using the following operators :
+ - [`compute()`](#compute)
+ - [`compute$()`](#compute$)
+ - [`computeFrom()`](#computeFrom)
+ - [`computeFrom$()`](#computeFrom$)
+ - [`computeFromFields()`](#computeFromFields)
+ - [`computeFromFields$()`](#computeFromFields$)
+ - [`epics()`](#epics)
+ - [`sideEffects()`](#sideEffects)
+
+```ts
+createStore({ name: '' })
+   .dependencies({
+      greeter: (name: string) => 'Hello, ' + name
+   })
+   .compute((state, store, {greeter}) => ({
+      greeting: greeter(store.currentState.name)
+   }))
+```
+
+```ts
+import { mapTo } from 'rxjs/operators'
+
+createStore({name: '', greeting: ''})
+   .actionTypes<{
+      setName: string
+      setGreeting: string
+   }>()
+   .updates(lens => ({
+      setName: name => lens.setFields({name}),
+      setGreeting: greeting => lens.setFields({greeting})
+   }))
+   .dependencies({
+      greeter: (name: string) => 'Hello, ' + name
+   })
+   .epics({
+      setName: (payload$, store, {greeter}) => payload$.pipe(
+         mapTo({setGreeting: greeter(store.currentState.name)})
+      )
+   })
+```
+
+## Testing
+
+> Testing an action creator, a reducer and a selector in isolation.
+
+![Man in three pieces. Legs running in place. Torso doing push-ups. Head reading.](https://cdn-images-1.medium.com/max/1600/0*eCs8GoVZVksoQtQx.gif)
+> "Looks like it’s working !"
+
+## Logger
+
+
