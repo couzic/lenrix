@@ -182,7 +182,7 @@ store.dispatch({setName: 'John'}) // Next state will be : {name: 'John'}
 ### Consuming the state
 `lenrix` performs reference equality checks to prevent any unnecessary re-rendering.
 
-The store provides the observable properties `state$` and `computedState$`. However, it is recommended to always use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
+The store provides the observable properties `state$` and `computedState$`. However, we recommend you to use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
 
 #### `state$`
 ```ts
@@ -239,9 +239,9 @@ const cherryPick$ = rootStore.cherryPick(lens => ({ // immutable-lens
 
 ### Focus
 
-Most UI components only interact with a small part of the whole state tree. A focused store provides read and update access to a precise subset of the full state, specifically tailored for a component or group of components.
+Most UI components only interact with a small part of the whole state tree. A focused store provides read and update access to a precise subset of the full state. Typically, you will create a focused store for a specific component or group of components.
 
-All focus operations return a full-fledged store. Remember that a focused store is just a proxy for the root store, there always is a single source of truth.
+All focus operations return a full-fledged store. But remember that a focused store is just a proxy for the root store, there always is a single source of truth.
 
 #### `focusPath()`
 ```ts
@@ -255,7 +255,9 @@ const rootStore = createStore({
 const userStore = rootStore.focusPath('user')
 const userNameStore = userStore.focusPath('name')
 // OR
-const userNameStore = rootStore.focusPath('user', 'name') 
+const userNameStore = rootStore.focusPath('user', 'name')
+
+userNameStore.state$ // Observable<string>
 ```
 
 #### `focusFields()`
@@ -265,25 +267,37 @@ const rootStore = createStore({
    username: 'Bob'
 })
 
-const slice = rootStore.focusFields('counter').state$ // Observable<{counter: number}> 
+const counterStore = rootStore.focusFields('counter')
+
+counterStore.state$ // Observable<{counter: number}> 
 ```
 
 #### `recompose()`
 Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
 ```ts
 const rootStore = createStore({
-   counter: 0,
-   user: {
-      name: 'Bob'
+   a: {
+      b: {
+         c: {
+            d: string
+         }
+      }
+   },
+   e: {
+      f: {
+         g: {
+            h: string
+         }
+      }
    }
 })
 
-const recomposedState = rootStore
+rootStore
    .recompose(lens => ({ // immutable-lens
-      counter: lens.focusPath('counter'),
-      userName: lens.focusPath('user', 'name')
+      d: lens.focusPath('a', 'b', 'c', 'd'),
+      h: lens.focusPath('e', 'f', 'g', 'h')
    }))
-   .state$ // Observable<{ counter: number, userName: string }>
+   .state$ // Observable<{ d: string, h: string }>
 ```
 
 ### Computed values (synchronous)
@@ -408,6 +422,15 @@ createStore({ name: '' })
    })
 ```
 
+### `dependencies()`
+The simplest dependency injection mechanism we could think of. Dependencies will be accessible in [various operators](#Injected_store_and_dependencies). Those dependencies can then be overriden in [test setups](#testing).
+```ts
+createStore({ name: '' })
+   .dependencies({
+      greeter: (name: string) => 'Hello, ' + name
+   })
+```
+
 ### Injected `store` and `dependencies`
 
 A light version of the store and its registered dependencies are available when using the following operators :
@@ -458,6 +481,37 @@ createStore({name: '', greeting: ''})
 
 ![Man in three pieces. Legs running in place. Torso doing push-ups. Head reading.](https://cdn-images-1.medium.com/max/1600/0*eCs8GoVZVksoQtQx.gif)
 > "Looks like it’s working !"
+
+A `lenrix` store is considered a cohesive unit of functionality (unit as in Unit Testing). We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
+
+We believe store testing should essentially consist in:
+- Dispatching actions
+- Making assertions on the state
+- Checking that proper calls where made on external dependencies
+
+<!-- 
+Testing in `redux` usually implies testing in isolation the architectural pieces that together form the application's state management system. It kind of makes sense to test them in isolation, since they are supposed to be pure functions.
+
+Testing in `lenrix` is a completely different approach. Well, technically, in most cases it would still be possible to write tests the `redux` way, but we would like to suggest an alternative. The main idea is very simple :
+> Dispatch an action and make assertions on the state
+
+Consider a `redux` store. It's an object holding the application's whole state, which can be a massive, complex and deep JavaScript plain object. Such complexity can be hard to maintain, so tricks like `combineReducers()` have been invented to allow some kind of concern separation. The store maintains not only the whole state, but also all the operations that can make changes to that state, in the form of reducers (well, technically there's only one reducer, but let's not bother with the technical details right now). So a store is really :
+> state + operations to change the state
+
+Looks a lot like an object to me (as in Object-Oriented Programming). A store has a well encapsulated state, the only way to change it is to interact with the store's public API. It even has a typical `getState()` accessor. State of the art OOP !
+
+Of course there are major differences between a classical object and a `redux` store, I'm just trying to point out that conceptually, a store can be thought of as a an object with state and behavior. And how do you test an object with state and behavior ? Here's the first thing I can think of :
+> Call a method and make assertions on the state
+
+Let's translate this in `redux` lingo :
+> Dispatch an action and make assertions on the state
+
+I hear you asking : "Isn't it the same thing as testing the reducer in isolation ?"
+
+In simple cases, yes, the outcome would be identical. However, in real-life situations where middleware is involved, a single action can trigger a chain of actions. Dispatching an action would effectively trigger the middleware, testing the reducer in isolation would not.
+-->
+
+
 
 ## Logger
 
