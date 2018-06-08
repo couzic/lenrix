@@ -482,12 +482,51 @@ createStore({name: '', greeting: ''})
 ![Man in three pieces. Legs running in place. Torso doing push-ups. Head reading.](https://cdn-images-1.medium.com/max/1600/0*eCs8GoVZVksoQtQx.gif)
 > "Looks like it’s working !"
 
-A `lenrix` store is considered a cohesive unit of functionality (unit as in Unit Testing). We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
+A `lenrix` store is considered a cohesive **unit** of functionality (as in Unit Testing). We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
 
 We believe store testing should essentially consist in:
 - Dispatching actions
-- Making assertions on the state
-- Checking that proper calls where made on external dependencies
+- [Asserting the state](#simple-synchronous-test)
+- Asserting that expected actions were dispatched
+- Asserting that expected calls were made on external dependencies
+
+### `cloneIsolated()`
+[Focused stores](#focus) provide a way to separate your state management code into functional slices. Each store should therefore be tested in isolation of their sibling stores.
+<!-- However, since a focused store explicitely depends on their parent store, the SUT (System Under Test) will be the whole ascending hierarchy -->
+```ts
+import {createStore} from 'lenrix'
+import {cloneIsolated} from 'lenrix/test-utils'
+
+const store = createStore({name: ''})
+
+const clonedStore = clonedIsolated(store)
+```
+
+### State assertions
+#### `rootStore.ts`
+```ts
+export const rootStore = createStore({name: ''})
+   .actionTypes<{setName: string}>()
+   .updates(lens => ({setName: lens.focusPath('name').setValue()}))
+```
+#### `rootStore.spec.ts`
+```ts
+import 'jest'
+import {cloneIsolated} from 'lenrix/test-utils'
+import {rootStore} from './rootStore'
+
+test('rootStore updates name when "setName" dispatched', () => {
+   const store = cloneIsolated(rootStore)
+
+   store.dispatch({setName: 'Bob'})
+
+   expect(store.currentState.name).toEqual('Bob')
+})
+```
+
+### 
+
+
 
 <!-- 
 Testing in `redux` usually implies testing in isolation the architectural pieces that together form the application's state management system. It kind of makes sense to test them in isolation, since they are supposed to be pure functions.

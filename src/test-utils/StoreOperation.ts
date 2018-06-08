@@ -12,5 +12,5 @@ export interface StoreOperation {
       | 'compute$'
       | 'computeFrom$'
       | 'computeFromFields$'
-   params: any
+   params: any[]
 }

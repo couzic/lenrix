@@ -7,7 +7,7 @@ import {
    map,
    mergeMap,
    skip,
-   switchMap,
+   switchMap
 } from 'rxjs/operators'
 
 import { ActionObject } from './ActionObject'
@@ -31,7 +31,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
    reducer: Reducer<State>,
    preloadedState: State,
    enhancer?: StoreEnhancer<State>,
-   options?: { logger?: LoggerOptions },
+   options?: { logger?: LoggerOptions }
 ): Store<{
    state: State
    computedValues: {}
@@ -49,7 +49,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
          Array<{
             epic: (
                payload$: Observable<any>,
-               store: Store<any>,
+               store: Store<any>
             ) => Observable<any>
             store: Store<any>
          }>
@@ -64,15 +64,15 @@ export function createFocusableStore<State extends object & NotAnArray>(
                const action$ = input$.pipe(
                   map(input => input.action),
                   filter(action => action.type === actionType),
-                  map(action => action.payload),
+                  map(action => action.payload)
                )
                const outputAction$ = epics[actionType].map(({ epic, store }) =>
-                  epic(action$, store),
+                  epic(action$, store)
                )
                return merge(...outputAction$)
-            }),
+            })
          )
-      }),
+      })
    )
 
    output$.subscribe(action => dispatchActionObject(action))
@@ -82,7 +82,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       const types = Object.keys(action)
       if (types.length > 1)
          throw Error(
-            'Lenrix does not support (yet?) dispatch of multiple actions in single object',
+            'Lenrix does not support (yet?) dispatch of multiple actions in single object'
          )
       const type = types[0]
       const payload = action[type]
@@ -103,7 +103,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
          reduxStore.dispatch({
             type: action.type,
             payload: action.payload,
-            meta,
+            meta
          })
       }
       if (hasEpicHandler) {
@@ -141,7 +141,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const reduxStore = createReduxStore(
       augmentedReducer,
       preloadedState as any,
-      enhancer,
+      enhancer
    )
 
    const logger = createLogger(reduxStore, userOptions.logger)
@@ -152,7 +152,10 @@ export function createFocusableStore<State extends object & NotAnArray>(
       stateSubject.next(reduxStore.getState())
    })
 
-   const state$ = stateSubject.pipe(distinctUntilChanged(), skip(1))
+   const state$ = stateSubject.pipe(
+      distinctUntilChanged(),
+      skip(1)
+   )
 
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
@@ -183,11 +186,11 @@ export function createFocusableStore<State extends object & NotAnArray>(
    const dispatchCompute = (
       store: Store<any>,
       previous: object,
-      next: object,
+      next: object
    ) => {
       const meta = {
          previous,
-         next,
+         next
       } as any
       logger.compute(previous, next)
    }
@@ -196,7 +199,7 @@ export function createFocusableStore<State extends object & NotAnArray>(
       registerEpics,
       registerSideEffects,
       dispatchActionObject,
-      dispatchCompute,
+      dispatchCompute
    }
 
    return new LenrixStore(
@@ -206,13 +209,13 @@ export function createFocusableStore<State extends object & NotAnArray>(
       registerUpdates,
       context,
       'root',
-      { initialRootState: preloadedState, operations: [] },
+      { initialRootState: preloadedState, operations: [] }
    )
 }
 
 export function createStore<State extends object>(
    initialState: State,
-   options?: { logger?: LoggerOptions },
+   options?: { logger?: LoggerOptions }
 ): Store<{
    state: State
    computedValues: {}
@@ -223,6 +226,6 @@ export function createStore<State extends object>(
       state => state || initialState,
       initialState,
       undefined,
-      options,
+      options
    )
 }
