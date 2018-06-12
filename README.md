@@ -11,8 +11,6 @@
 - [Features](#features)
 - [Quickstart](#quickstart)
   - [Install](#install)
-  - [rootStore.ts](#rootstorets)
-  - [storeConsumer.ts](#storeconsumerts)
 - [API](#api)
   - [Create](#create)
     - [`createStore()`](#createstore)
@@ -41,10 +39,16 @@
     - [`computeFrom$()`](#computefrom)
     - [`defaultValues()`](#defaultvalues)
   - [`epics()`](#epics)
-  - [Injected store](#injected-store)
   - [`sideEffects()`](#sideeffects)
   - [`dependencies()`](#dependencies)
+  - [Injected `store` and `dependencies`](#injected-store-and-dependencies)
 - [Testing](#testing)
+  - [Test Setup](#test-setup)
+    - [Root store](#root-store)
+    - [Focused stores](#focused-stores)
+  - [Asserting state](#asserting-state)
+  - [Asserting dispatched actions](#asserting-dispatched-actions)
+  - [Asserting calls on dependencies](#asserting-calls-on-dependencies)
 - [Logger](#logger)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -62,7 +66,7 @@ Although we agree there must be a better way than classical `redux`, we are not 
 `lenrix` is a `redux` store wrapper that :
  - Dramatically reduces boilerplate
  - Eliminates the need for thunky middleware and selector libraries
- - Makes no compromise on type safety
+ - Makes no compromise on type-safety
  - Embraces reactive programming
  - Prevents unnecessary re-rendering
 
@@ -77,11 +81,11 @@ Although we agree there must be a better way than classical `redux`, we are not 
 ## Quickstart
 
 ### Install
-```sh
-$ npm i -S lenrix redux rxjs immutable-lens
+```bash
+npm install --save lenrix redux rxjs immutable-lens
 ```
 
-### rootStore.ts
+**`rootStore.ts`**
 ```ts
 import { createStore } from 'lenrix'
 
@@ -98,7 +102,7 @@ export const rootStore = createStore(initialRootState)
       }))
 ```
 
-### storeConsumer.ts
+**`storeConsumer.ts`**
 ```ts
 import { rootStore } from './rootStore'
 
@@ -308,8 +312,8 @@ State should be normalized, derived data should be declared as computed values. 
 #### `compute()`
 ```ts
 createStore({name: 'Bob'})
-   .compute(state => ({greeting: 'Hello, ' + state.name}))
-   .pick('greeting') // Observable<{greeting: string}>
+   .compute(state => ({message: 'Hello, ' + state.name}))
+   .pick('message') // Observable<{message: string}>
 ```
 #### `computeFromFields()`
 Specify the fields used for the computation in order to avoid useless re-computations.
@@ -317,9 +321,9 @@ Specify the fields used for the computation in order to avoid useless re-computa
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFromFields(
       ['name'],
-      ({name}) => ({greeting: 'Hello, ' + name})
+      ({name}) => ({message: 'Hello, ' + name})
    )
-   .pick('greeting') // Observable<{greeting: string}>
+   .pick('message') // Observable<{message: string}>
 ```
 #### `computeFrom()`
 Define computed values from state slices focused by lenses. The signature is similar to `recompose()` and `cherryPick()`.
@@ -327,8 +331,8 @@ Define computed values from state slices focused by lenses. The signature is sim
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFrom(
       lens => ({name: lens.focusPath('name')}),
-      ({name}) => ({greeting: 'Hello, ' + name}))
-   .pick('greeting') // Observable<{greeting: string}>
+      ({name}) => ({message: 'Hello, ' + name}))
+   .pick('message') // Observable<{message: string}>
 ```
 ### Computed values (asynchronous)
 Every synchronous value-computing operator has an asynchronous equivalent.
@@ -337,13 +341,19 @@ Note that asynchronously computed values are initially undefined. If you want th
 
 #### `compute$()`
 ```ts
-import { map } from 'rxjs/operators'
+import { map, pipe } from 'rxjs/operators'
 
 createStore({name: 'Bob'})
    .compute$(
-      map(state => ({greeting: 'Hello, ' + state.name}))
+      // WITH SINGLE OPERATOR...
+      map(state => ({message: 'Hello, ' + state.name}))
+      // ... OR WITH MULTIPLE OPERATORS
+      pipe(
+         map(state => state.name),
+         map(name => ({message: 'Hello, ' + name}))
+      )
    )
-   .pick('greeting') // Observable<{greeting: string | undefined}>
+   .pick('message') // Observable<{message: string | undefined}>
 ```
 #### `computeFromFields$()`
 ```ts
@@ -352,9 +362,9 @@ import { map } from 'rxjs/operators'
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFromFields$(
       ['name'],
-      map(({name}) => ({greeting: 'Hello, ' + name}))
+      map(({name}) => ({message: 'Hello, ' + name}))
    )
-   .pick('greeting') // Observable<{greeting: string | undefined}>
+   .pick('message') // Observable<{message: string | undefined}>
 ```
 #### `computeFrom$()`
 ```ts
@@ -363,8 +373,8 @@ import { map } from 'rxjs/operators'
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFrom$(
       lens => ({name: lens.focusPath('name')}),
-      map(({name}) => ({greeting: 'Hello, ' + name}))
-   .pick('greeting') // Observable<{greeting: string | undefined}>
+      map(({name}) => ({message: 'Hello, ' + name}))
+   .pick('message') // Observable<{message: string | undefined}>
 ```
 
 #### `defaultValues()`
@@ -374,12 +384,12 @@ import { map } from 'rxjs/operators'
 
 createStore({name: 'Bob'})
    .compute$(
-      map(({name}) => ({greeting: 'Hello, ' + name}))
+      map(({name}) => ({message: 'Hello, ' + name}))
    )
    .defaultValues({
-      greeting: ''
+      message: ''
    })
-   .pick('greeting') // Observable<{greeting: string}>
+   .pick('message') // Observable<{message: string}>
 ```
 
 ### `epics()`
@@ -388,27 +398,28 @@ Let an action dispatch another action, asynchronously. Since this feature is hea
 import { pipe } from 'rxjs'
 import { map } from 'rxjs/operators'
 
-createStore({name: '', greeting: ''})
+createStore({name: '', message: ''})
    .actionTypes<{
       setName: string
-      setGreeting: string
+      setMessage: string
    }>()
    .updates(lens => ({
       setName: name => lens.setFields({name}),
-      setGreeting: greeting => lens.setFields({greeting})
+      setMessage: message => lens.setFields({message})
    }))
    .epics({
       // WITH SINGLE OPERATOR...
-      setName: map(name => ({setGreeting: 'Hello, ' + name}))
+      setName: map(name => ({setMessage: 'Hello, ' + name}))
       // ... OR WITH MULTIPLE OPERATORS
       setName: pipe(
          map(name => 'Hello, ' + name),
-         map(greeting => ({setGreeting: greeting}))
+         map(message => ({setMessage: message}))
       )
    })
 ```
 
 ### `sideEffects()`
+Declare synchronous side effects to be executed in response to actions. Useful for pushing to browser history, stuff like that...
 ```ts
 createStore({ name: '' })
    .actionTypes<{
@@ -449,7 +460,7 @@ createStore({ name: '' })
       greeter: (name: string) => 'Hello, ' + name
    })
    .compute((state, store, {greeter}) => ({
-      greeting: greeter(store.currentState.name)
+      message: greeter(store.currentState.name)
    }))
 ```
 
@@ -482,58 +493,140 @@ createStore({name: '', greeting: ''})
 ![Man in three pieces. Legs running in place. Torso doing push-ups. Head reading.](https://cdn-images-1.medium.com/max/1600/0*eCs8GoVZVksoQtQx.gif)
 > "Looks like it’s working !"
 
-A `lenrix` store is considered a cohesive **unit** of functionality (as in Unit Testing). We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
+Testing in `redux` usually implies testing in isolation the pieces that together form the application's state management system. It seems reasonable, since they are supposed to be pure functions.
 
-We believe store testing should essentially consist in:
+Testing in `lenrix` follows a different approach. Well, technically, in most cases it would still be possible to write tests the `redux` way, but that's not what we had in mind when we designed it.
+
+A `lenrix` store is to be considered a cohesive **unit** of functionality. We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
+
+As a consequence, we believe store testing should essentially consist in :
+- Initializing state
+- Injecting [`dependencies`](#dependencies()) (`http`, `localStorage`...)
 - Dispatching actions
-- [Asserting the state](#simple-synchronous-test)
-- Asserting that expected actions were dispatched
-- Asserting that expected calls were made on external dependencies
+- [Asserting state](#asserting-state) (normalized state + computed values)
 
-### `cloneIsolated()`
-[Focused stores](#focus) provide a way to separate your state management code into functional slices. Each store should therefore be tested in isolation of their sibling stores.
-<!-- However, since a focused store explicitely depends on their parent store, the SUT (System Under Test) will be the whole ascending hierarchy -->
+In some cases, testing might also consist in :
+- [Asserting dispatched actions](#asserting-dispatched-actions)
+- [Asserting calls on dependencies](#asserting-calls-on-dependencies)
+
+### Test Setup
+Each test should run in isolation, therefore we need to create a new store for each test. The most straightforward way is to wrap all store creation code in factory functions.
+
+#### Root store
+**`RootStore.ts`**
 ```ts
-import {createStore} from 'lenrix'
-import {cloneIsolated} from 'lenrix/test-utils'
+import { createStore } from 'lenrix'
 
-const store = createStore({name: ''})
+export const initialRootState = {
+   user: {
+      name: ''
+   }
+}
 
-const clonedStore = clonedIsolated(store)
+export type RootState = typeof initialRootState
+
+export const createRootStore = (initialState: RootState = initialRootState) => createStore(initialState)
+
+export type RootStore = ReturnType<typeof createRootStore>
 ```
 
-### State assertions
-#### `rootStore.ts`
-```ts
-export const rootStore = createStore({name: ''})
-   .actionTypes<{setName: string}>()
-   .updates(lens => ({setName: lens.focusPath('name').setValue()}))
-```
-#### `rootStore.spec.ts`
+**`RootStore.spec.ts`**
 ```ts
 import 'jest'
-import {cloneIsolated} from 'lenrix/test-utils'
-import {rootStore} from './rootStore'
+import { createRootStore, RootStore } from './RootStore'
 
-test('rootStore updates name when "setName" dispatched', () => {
-   const store = cloneIsolated(rootStore)
+describe('RootStore', () => {
+   let store: RootStore
 
-   store.dispatch({setName: 'Bob'})
-
-   expect(store.currentState.name).toEqual('Bob')
+   beforeEach(() => {
+      store = createRootStore()
+   })
 })
 ```
 
-### 
+#### Focused stores
+[Focused stores](#focus) provide a way to separate your state management code into vertical, functional slices. Therefore, focused stores should be tested in isolation of their sibling stores. However, since a focused store explicitely depends on their parent store, the whole store's ascending hierarchy will be active, up to the root store.
 
+**`UserStore.ts`**
+```ts
+import { createStore } from 'lenrix'
+import { RootStore } from './RootStore'
 
+export const createUserStore = (rootStore: RootStore) => rootStore.focusPath('user')
+
+export type UserStore = ReturnType<typeof createUserStore>
+```
+
+**`UserStore.spec.ts`**
+```ts
+import 'jest'
+import { createRootStore, initialRootState, RootStore } from './RootStore'
+import { createUserStore, UserStore } from './UserStore'
+
+describe('UserStore', () => {
+   let store: UserStore
+
+   beforeEach(() => {
+      const rootStore = createRootStore()
+      store = createUserStore(rootStore)
+   })
+})
+```
+
+### Asserting state
+Most tests should limit themselves to dispatching actions and verifying that the state has correctly updated.
+
+The distinction between normalized state and computed values should be kept hidden as an implementation detail. Tests should not make assumptions about a value being either computed or part of the normalized state, as it is subject to change without breaking public API nor general behavior.
+
+**`RootStore.ts`**
+```ts
+import { createStore } from 'lenrix'
+
+export const createRootStore = (initialState = {name: ''}) => createStore(initialState)
+   .actionTypes<{
+      setName: string
+   }>()
+   .updates(lens => ({
+      setName: (name) => lens.setFields({name})
+   }))
+   .compute(({name}) => ({
+      message: 'Hello, ' + name
+   }))
+
+export type RootStore = ReturnType<typeof createRootStore>
+```
+
+**`RootStore.spec.ts`**
+```ts
+import 'jest'
+import { createRootStore, RootStore } from './RootStore'
+
+describe('RootStore', () => {
+   let store: RootStore
+
+   beforeEach(() => {
+      store = createRootStore()
+   })
+
+   test('updates name when "setName" dispatched', () => {
+      store.dispatch({setName: 'Bob'})
+
+      expect(store.currentState.name).toEqual('Bob')
+   })
+
+   test('updates message when "setName" dispatched', () => {
+      store.dispatch({setName: 'Steve'})
+
+      expect(store.currentState.message).toEqual('Hello, Steve')
+   })
+})
+```
+
+### Asserting dispatched actions
+
+### Asserting calls on dependencies
 
 <!-- 
-Testing in `redux` usually implies testing in isolation the architectural pieces that together form the application's state management system. It kind of makes sense to test them in isolation, since they are supposed to be pure functions.
-
-Testing in `lenrix` is a completely different approach. Well, technically, in most cases it would still be possible to write tests the `redux` way, but we would like to suggest an alternative. The main idea is very simple :
-> Dispatch an action and make assertions on the state
-
 Consider a `redux` store. It's an object holding the application's whole state, which can be a massive, complex and deep JavaScript plain object. Such complexity can be hard to maintain, so tricks like `combineReducers()` have been invented to allow some kind of concern separation. The store maintains not only the whole state, but also all the operations that can make changes to that state, in the form of reducers (well, technically there's only one reducer, but let's not bother with the technical details right now). So a store is really :
 > state + operations to change the state
 
@@ -549,8 +642,6 @@ I hear you asking : "Isn't it the same thing as testing the reducer in isolation
 
 In simple cases, yes, the outcome would be identical. However, in real-life situations where middleware is involved, a single action can trigger a chain of actions. Dispatching an action would effectively trigger the middleware, testing the reducer in isolation would not.
 -->
-
-
 
 ## Logger
 
