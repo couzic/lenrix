@@ -30,7 +30,7 @@ describe('LenrixStore.focusFields()', () => {
 
    const initialPickedState: PickedState = {
       counter: initialState.counter,
-      todo: initialState.todo,
+      todo: initialState.todo
    }
 
    beforeEach(() => {
@@ -78,7 +78,7 @@ describe('LenrixStore.focusFields()', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(1)
@@ -92,7 +92,7 @@ describe('LenrixStore.focusFields()', () => {
       const focused = rootStore.focusFields('counter', 'flag')
       expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,
-         flag: initialState.flag,
+         flag: initialState.flag
       })
    })
 
@@ -100,7 +100,7 @@ describe('LenrixStore.focusFields()', () => {
       const focused = rootStore.focusFields(['counter', 'flag'])
       expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,
-         flag: initialState.flag,
+         flag: initialState.flag
       })
    })
 
@@ -111,7 +111,7 @@ describe('LenrixStore.focusFields()', () => {
       expect(focused.currentComputedState).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag,
-         todoListLength: 3,
+         todoListLength: 3
       })
    })
 })

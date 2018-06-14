@@ -20,8 +20,8 @@ const initialState: State = {
    todo: {
       input: '',
       list: [],
-      count: 0,
-   },
+      count: 0
+   }
 }
 
 interface Actions {
@@ -46,10 +46,10 @@ describe('LenrixStore.epics()', () => {
             incrementCounter: () => _.updateFields({ counter: val => val + 1 }),
             setCounter: counter => _.setFields({ counter }),
             setTodoCount: todoCount =>
-               _.focusPath('todo', 'count').setValue(todoCount),
+               _.focusPath('todo', 'count').setValue(todoCount)
          }))
          .epics({
-            buttonClicked: mapTo({ incrementCounter: undefined }),
+            buttonClicked: mapTo({ incrementCounter: undefined })
          })
    })
 
@@ -71,8 +71,8 @@ describe('LenrixStore.epics()', () => {
             .epics({
                buttonClicked: mapTo({
                   setCounter: 0,
-                  incrementCounter: undefined,
-               }),
+                  incrementCounter: undefined
+               })
             })
             .dispatch({ buttonClicked: undefined, setCounter: 0 })
       }).to.throw()
@@ -89,10 +89,10 @@ describe('LenrixStore.epics()', () => {
          setTodoCount: (payload$, lightStore) =>
             payload$.pipe(
                filter(
-                  payload => payload === lightStore.currentState.list.length,
+                  payload => payload === lightStore.currentState.list.length
                ),
-               map(payload => ({ setCounter: payload })),
-            ),
+               map(payload => ({ setCounter: payload }))
+            )
       })
 
       store.dispatch({ setTodoCount: 0 })
@@ -105,8 +105,8 @@ describe('LenrixStore.epics()', () => {
       store.epics({
          setTodoCount: pipe(
             distinctUntilChanged(),
-            mapTo({ incrementCounter: undefined }),
-         ),
+            mapTo({ incrementCounter: undefined })
+         )
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(1)
@@ -117,10 +117,10 @@ describe('LenrixStore.epics()', () => {
    it('supports multiple epics for single action', () => {
       expect(store.currentState.counter).to.equal(0)
       store.epics({
-         setTodoCount: mapTo({ incrementCounter: undefined }),
+         setTodoCount: mapTo({ incrementCounter: undefined })
       })
       store.epics({
-         setTodoCount: mapTo({ incrementCounter: undefined }),
+         setTodoCount: mapTo({ incrementCounter: undefined })
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(2)

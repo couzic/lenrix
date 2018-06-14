@@ -46,5 +46,5 @@ store.recompose(_ => ({ todoList: todoListStore.lens }))
 
 // Recomposing with wrong source type Lens @shouldNotCompile
 const recomposedStore = todoStore.recompose(_ => ({
-   todoList: todoLens.focusPath('list'),
+   todoList: todoLens.focusPath('list')
 }))

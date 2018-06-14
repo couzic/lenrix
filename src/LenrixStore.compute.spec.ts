@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
@@ -12,9 +11,6 @@ interface ComputedValues {
 }
 
 describe('LenrixStore.compute()', () => {
-   const lens = createLens<State>()
-   const todoListLens = lens.focusPath('todo', 'list')
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -30,7 +26,6 @@ describe('LenrixStore.compute()', () => {
    }>
 
    let state: State & ComputedValues
-   let stateTransitions: number
 
    beforeEach(() => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
@@ -41,21 +36,22 @@ describe('LenrixStore.compute()', () => {
          .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             toggleOrder: () =>
-               _.focusPath('sorting', 'order').update(
-                  order =>
-                     order === 'descending' ? 'ascending' : 'descending',
-               ),
+               _
+                  .focusPath('sorting', 'order')
+                  .update(
+                     order =>
+                        order === 'descending' ? 'ascending' : 'descending'
+                  )
          }))
       store = rootStore.compute(s => ({
          todoListLength: s.todo.list.length,
          caret: (s.sorting.order === 'ascending' ? 'up' : 'down') as
             | 'up'
-            | 'down',
+            | 'down'
       }))
-      stateTransitions = 0
+      const st = store.compute(() => ({ toto: 'tata' }))
       store.computedState$.subscribe(newState => {
          state = newState
-         ++stateTransitions
       })
    })
 
@@ -68,7 +64,7 @@ describe('LenrixStore.compute()', () => {
       rootStore.compute(s => {
          ++executions
          return {
-            whatever: 'whatever',
+            whatever: 'whatever'
          }
       })
       expect(executions).to.equal(1)
@@ -82,7 +78,7 @@ describe('LenrixStore.compute()', () => {
       expect(store.currentComputedState).to.deep.equal({
          ...rootStore.currentState,
          todoListLength: rootStore.currentState.todo.list.length,
-         caret: 'up',
+         caret: 'up'
       })
    })
 
@@ -90,7 +86,7 @@ describe('LenrixStore.compute()', () => {
       expect(state).to.deep.equal({
          ...rootStore.currentState,
          todoListLength: rootStore.currentState.todo.list.length,
-         caret: 'up',
+         caret: 'up'
       })
    })
 
@@ -102,10 +98,10 @@ describe('LenrixStore.compute()', () => {
 
    it('passes computed values to child compute() store', () => {
       const childStore = store.compute(s => ({
-         computedOnChild: s.caret,
+         computedOnChild: s.caret
       }))
       expect(childStore.currentComputedState.computedOnChild).to.equal(
-         state.caret,
+         state.caret
       )
    })
 
@@ -122,7 +118,7 @@ describe('LenrixStore.compute()', () => {
       beforeEach(() => {
          focusedStore = store.focusPath(
             ['sorting'],
-            ['todoListLength', 'caret'],
+            ['todoListLength', 'caret']
          )
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(s => {
@@ -136,7 +132,7 @@ describe('LenrixStore.compute()', () => {
             .actionTypes<{ incrementCounter: void }>()
             .updates(_ => ({
                incrementCounter: () =>
-                  _.focusPath('counter').update(counter => counter + 1),
+                  _.focusPath('counter').update(counter => counter + 1)
             }))
          storeWithUpdates.dispatch({ incrementCounter: undefined })
          expect(focusedStateTransitions).to.equal(1)
@@ -153,7 +149,7 @@ describe('LenrixStore.compute()', () => {
          rootStore
             .actionTypes<{ clearTodoList: void }>()
             .updates(_ => ({
-               clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
+               clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })
          expect(focusedState.todoListLength).to.equal(0)
@@ -176,10 +172,12 @@ describe('LenrixStore.compute()', () => {
             .actionTypes<{ toggleOrder: void }>()
             .updates(_ => ({
                toggleOrder: () =>
-                  _.focusPath('sorting', 'order').update(
-                     order =>
-                        order === 'descending' ? 'ascending' : 'descending',
-                  ),
+                  _
+                     .focusPath('sorting', 'order')
+                     .update(
+                        order =>
+                           order === 'descending' ? 'ascending' : 'descending'
+                     )
             }))
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(s => {
@@ -204,7 +202,7 @@ describe('LenrixStore.compute()', () => {
          rootStore
             .actionTypes<{ clearTodoList: void }>()
             .updates(_ => ({
-               clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
+               clearTodoList: () => _.focusPath('todo', 'list').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })
          expect(focusedState.todoListLength).to.equal(0)
@@ -224,9 +222,9 @@ describe('LenrixStore.compute()', () => {
       beforeEach(() => {
          focusedStore = store.recompose(
             _ => ({
-               todoList: _.focusPath('todo', 'list'),
+               todoList: _.focusPath('todo', 'list')
             }),
-            ['todoListLength', 'caret'],
+            ['todoListLength', 'caret']
          )
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(s => {
@@ -244,7 +242,7 @@ describe('LenrixStore.compute()', () => {
          focusedStore
             .actionTypes<{ clearTodoList: void }>()
             .updates(_ => ({
-               clearTodoList: () => _.focusPath('todoList').setValue([]),
+               clearTodoList: () => _.focusPath('todoList').setValue([])
             }))
             .dispatch({ clearTodoList: undefined })
          expect(focusedState.todoListLength).to.equal(0)
@@ -260,10 +258,10 @@ describe('LenrixStore.compute()', () => {
 
    it('has access to light store with currentState', () => {
       const computedStore = store.compute((s, lightStore) => ({
-         computed: lightStore!.currentState.todo, // TODO Remove "!"
+         computed: lightStore!.currentState.todo // TODO Remove "!"
       }))
       expect(computedStore.currentComputedState.computed).to.equal(
-         store.currentState.todo,
+         store.currentState.todo
       )
    })
 
@@ -273,7 +271,7 @@ describe('LenrixStore.compute()', () => {
 
    it('throws error when computing values with higher order function', () => {
       expect(() => store.compute(() => () => null)).to.throw(
-         'compute() does not accept higher order functions',
+         'compute() does not accept higher order functions'
       )
    })
 })

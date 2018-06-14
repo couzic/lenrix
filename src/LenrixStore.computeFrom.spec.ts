@@ -18,9 +18,9 @@ const initialState: State = {
    name: '',
    todo: {
       input: '',
-      list: [],
+      list: []
    },
-   flag: false,
+   flag: false
 }
 
 describe('LenrixStore.computeFrom()', () => {
@@ -55,18 +55,18 @@ describe('LenrixStore.computeFrom()', () => {
          .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             addToList: name =>
-               _.focusPath('todo', 'list').update(list => [...list, name]),
+               _.focusPath('todo', 'list').update(list => [...list, name])
          }))
       computedStore = store.computeFrom(
          _ => ({
-            todoList: _.focusPath('todo', 'list'),
+            todoList: _.focusPath('todo', 'list')
          }),
          selection => {
             ++computations
             return {
-               todoListLength: selection.todoList.length,
+               todoListLength: selection.todoList.length
             }
-         },
+         }
       )
       computedStore.state$.subscribe(s => {
          state = s
@@ -94,7 +94,7 @@ describe('LenrixStore.computeFrom()', () => {
 
    it('initially has computed values in current computed state', () => {
       expect(computedStore.currentComputedState.todoListLength).to.equal(
-         initialState.todo.list.length,
+         initialState.todo.list.length
       )
    })
 
@@ -135,8 +135,8 @@ describe('LenrixStore.computeFrom()', () => {
       const cs = store.computeFrom(
          _ => ({ computed: _.focusPath('flag') }),
          (s, lightStore) => ({
-            computed: lightStore.currentState.todo,
-         }),
+            computed: lightStore.currentState.todo
+         })
       )
       expect(cs.currentComputedState.computed).to.equal(store.currentState.todo)
    })

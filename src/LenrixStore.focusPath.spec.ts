@@ -72,7 +72,7 @@ describe('LenrixStore.focusPath()', () => {
       rootStore
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
          .dispatch({ toggleFlag: undefined })
 
@@ -100,7 +100,7 @@ describe('LenrixStore.focusPath()', () => {
          .focusPath(['todo'], ['todoListLength'])
       expect(focused.currentComputedState).to.deep.equal({
          ...initialState.todo,
-         todoListLength: 3,
+         todoListLength: 3
       })
    })
 

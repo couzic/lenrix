@@ -10,6 +10,6 @@ export type FocusedHandlers<
    }
 > = {
    [ActionType in keyof Type['actions']]?: (
-      payload: Type['actions'][ActionType],
+      payload: Type['actions'][ActionType]
    ) => FocusedUpdater<Type> | Updater<Type['state']>
 }

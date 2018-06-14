@@ -45,7 +45,7 @@ describe('LenrixStore when unfocused', () => {
       store
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
          .dispatch({ toggleFlag: undefined })
       expect(stateTransitions).to.equal(2)

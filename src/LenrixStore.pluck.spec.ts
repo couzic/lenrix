@@ -23,7 +23,7 @@ describe('LenrixStore.pluck()', () => {
          .compute(s => ({ todoListLength: s.todo.list.length }))
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
       store.state$.subscribe(newState => (state = newState))
    })

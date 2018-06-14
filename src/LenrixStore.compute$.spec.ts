@@ -20,9 +20,9 @@ const initialState: State = {
    name: '',
    todo: {
       input: '',
-      list: [],
+      list: []
    },
-   flag: false,
+   flag: false
 }
 
 interface ComputedValues {
@@ -43,11 +43,11 @@ describe('LenrixStore.compute$()', () => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
          .actionTypes<{ setName: string }>()
          .updates(_ => ({
-            setName: name => _.focusPath('name').setValue(name),
+            setName: name => _.focusPath('name').setValue(name)
          }))
    })
 
@@ -59,7 +59,7 @@ describe('LenrixStore.compute$()', () => {
 
       it('computed values are defined if computer has emitted', () => {
          const computed = rootStore.compute$(state$ =>
-            of({ whatever: 'computed' }),
+            of({ whatever: 'computed' })
          )
          expect(computed.currentComputedState.whatever).to.equal('computed')
       })
@@ -80,9 +80,9 @@ describe('LenrixStore.compute$()', () => {
             state$ =>
                state$.pipe(
                   switchMap(s => isAvailable(s.name)),
-                  map(available => ({ available })),
+                  map(available => ({ available }))
                ),
-            { available: true },
+            { available: true }
          )
          stateTransitions = 0
          store.computedState$.subscribe(newState => {
@@ -103,9 +103,9 @@ describe('LenrixStore.compute$()', () => {
                   map(s => {
                      ++executions
                      return { whatever: 'computed' }
-                  }),
+                  })
                ),
-            { whatever: 'initial' },
+            { whatever: 'initial' }
          )
          expect(what.currentComputedState.whatever).to.equal('computed')
          expect(executions).to.equal(1)
@@ -113,7 +113,7 @@ describe('LenrixStore.compute$()', () => {
 
       it('holds initial values in state if Observable has not emitted yet', () => {
          const computed = rootStore.compute$(state$ => never(), {
-            whatever: 'initial',
+            whatever: 'initial'
          })
          expect(computed.currentComputedState.whatever).to.equal('initial')
       })
@@ -125,7 +125,7 @@ describe('LenrixStore.compute$()', () => {
       it('holds initial state as current state', () => {
          expect(store.currentComputedState).to.deep.equal({
             ...initialState,
-            available: false,
+            available: false
          })
          expect(stateTransitions).to.equal(1)
       })
@@ -133,7 +133,7 @@ describe('LenrixStore.compute$()', () => {
       it('holds initial state as state stream', () => {
          expect(state).to.deep.equal({
             ...initialState,
-            available: false,
+            available: false
          })
          expect(stateTransitions).to.equal(1)
       })
@@ -150,11 +150,11 @@ describe('LenrixStore.compute$()', () => {
             state$ =>
                state$.pipe(
                   mapTo({
-                     available: false,
+                     available: false
                   }),
-                  delay(1),
+                  delay(1)
                ),
-            { available: true },
+            { available: true }
          )
          expect(computedStore.currentComputedState.available).to.equal(true)
       })
@@ -166,10 +166,10 @@ describe('LenrixStore.compute$()', () => {
                state$.pipe(
                   delay(1),
                   mapTo({
-                     value$: 'computed',
-                  }),
+                     value$: 'computed'
+                  })
                ),
-            { value$: 'initial' },
+            { value$: 'initial' }
          )
          computed.state$.subscribe(s => ++stateTransions)
 
@@ -257,9 +257,9 @@ describe('LenrixStore.compute$()', () => {
          beforeEach(() => {
             focusedStore = store.recompose(
                _ => ({
-                  todoList: _.focusPath('todo', 'list'),
+                  todoList: _.focusPath('todo', 'list')
                }),
-               ['available'],
+               ['available']
             )
             focusedStateTransitions = 0
             focusedStore.computedState$.subscribe(s => {

@@ -20,9 +20,9 @@ const initialState: State = {
    name: '',
    todo: {
       input: '',
-      list: [],
+      list: []
    },
-   flag: false,
+   flag: false
 }
 
 interface ComputedValues {
@@ -43,18 +43,18 @@ describe('LenrixStore.computeFromFields$()', () => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
          .actionTypes<{ setName: string }>()
          .updates(_ => ({
-            setName: name => _.focusPath('name').setValue(name),
+            setName: name => _.focusPath('name').setValue(name)
          }))
    })
 
    describe('without initial values', () => {
       it('computed values are undefined if computer has not emitted yet', () => {
          const computed = rootStore.computeFromFields$(['flag'], state$ =>
-            never(),
+            never()
          )
          expect(computed.currentComputedState).to.deep.equal(initialState)
          expect((computed.currentComputedState as any).whatever).to.be.undefined
@@ -62,11 +62,11 @@ describe('LenrixStore.computeFromFields$()', () => {
 
       it('computed values are defined if computer has emitted', () => {
          const computed = rootStore.computeFromFields$(['flag'], state$ =>
-            of({ whatever: 'computed' }),
+            of({ whatever: 'computed' })
          )
          expect(computed.currentComputedState).to.deep.equal({
             ...initialState,
-            whatever: 'computed',
+            whatever: 'computed'
          })
       })
 
@@ -74,12 +74,12 @@ describe('LenrixStore.computeFromFields$()', () => {
          const computingStore = rootStore.computeFromFields$(['name'], state$ =>
             state$.pipe(
                switchMap(state => isAvailable(state.name)),
-               map(available => ({ available })),
-            ),
+               map(available => ({ available }))
+            )
          )
          let computedStateTransitions = 0
          computingStore.computedState$.subscribe(
-            () => ++computedStateTransitions,
+            () => ++computedStateTransitions
          )
          expect(computedStateTransitions).to.equal(1)
          computingStore.dispatch({ setName: 'Steve' })
@@ -90,21 +90,21 @@ describe('LenrixStore.computeFromFields$()', () => {
          const computingStore = rootStore.computeFromFields$(['name'], state$ =>
             state$.pipe(
                switchMap(state => isAvailable(state.name)),
-               map(available => ({ available })),
-            ),
+               map(available => ({ available }))
+            )
          )
          const computedStates: any[] = []
          computingStore.computedState$.subscribe(newState =>
-            computedStates.push(newState),
+            computedStates.push(newState)
          )
          computingStore.dispatch({ setName: 'Steve' })
          expect(computedStates).to.have.length(3)
          expect(
-            computedStates.map(({ name, available }) => ({ name, available })),
+            computedStates.map(({ name, available }) => ({ name, available }))
          ).to.deep.equal([
             { name: '', available: false },
             { name: 'Steve', available: false },
-            { name: 'Steve', available: true },
+            { name: 'Steve', available: true }
          ])
       })
    })
@@ -125,9 +125,9 @@ describe('LenrixStore.computeFromFields$()', () => {
             state$ =>
                state$.pipe(
                   switchMap(state => isAvailable(state.name)),
-                  map(available => ({ available })),
+                  map(available => ({ available }))
                ),
-            { available: true },
+            { available: true }
          )
          computedStateTransitions = 0
          store.computedState$.subscribe(newState => {
@@ -145,9 +145,9 @@ describe('LenrixStore.computeFromFields$()', () => {
                   map(state => {
                      ++executions
                      return { whatever: 'computed' }
-                  }),
+                  })
                ),
-            { whatever: 'initial' },
+            { whatever: 'initial' }
          )
          expect(what.currentComputedState.whatever).to.equal('computed')
          expect(executions).to.equal(1)
@@ -157,11 +157,11 @@ describe('LenrixStore.computeFromFields$()', () => {
          const neverComputedStore = rootStore.computeFromFields$(
             ['flag'],
             state$ => never(),
-            { whatever: 'initial' },
+            { whatever: 'initial' }
          )
          expect(neverComputedStore.currentComputedState).to.deep.equal({
             ...initialState,
-            whatever: 'initial',
+            whatever: 'initial'
          })
       })
 
@@ -170,7 +170,7 @@ describe('LenrixStore.computeFromFields$()', () => {
          const neverComputedStore = rootStore.computeFromFields$(
             ['name'],
             state$ => never(),
-            { whatever: 'initial' },
+            { whatever: 'initial' }
          )
          neverComputedStore.state$.subscribe(state => ++stateTransions)
 

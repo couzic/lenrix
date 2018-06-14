@@ -33,11 +33,11 @@ describe('LenrixStore.recompose()', () => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
       store = rootStore.recompose(_ => ({
          counter: rootStore.localLens.focusPath('counter'),
-         todoList: rootStore.localLens.focusPath('todo', 'list'),
+         todoList: rootStore.localLens.focusPath('todo', 'list')
       }))
       rootStateTransitions = 0
       stateTransitions = 0
@@ -68,7 +68,7 @@ describe('LenrixStore.recompose()', () => {
    it('holds initial state as current state', () => {
       expect(store.currentState).to.deep.equal({
          counter: initialState.counter,
-         todoList: initialState.todo.list,
+         todoList: initialState.todo.list
       })
       expect(store.currentState.todoList).to.equal(initialState.todo.list)
    })
@@ -76,7 +76,7 @@ describe('LenrixStore.recompose()', () => {
    it('holds initial state as state stream', () => {
       expect(state).to.deep.equal({
          counter: initialState.counter,
-         todoList: initialState.todo.list,
+         todoList: initialState.todo.list
       })
       expect(state.todoList).to.equal(initialState.todo.list)
    })
@@ -101,16 +101,16 @@ describe('LenrixStore.recompose()', () => {
          .compute(s => ({ todoListLength: s.todo.list.length }))
          .recompose(
             _ => ({
-               todoList: _.focusPath('todo', 'list'),
+               todoList: _.focusPath('todo', 'list')
             }),
-            ['todoListLength'],
+            ['todoListLength']
          )
       expect(recomposed.currentComputedState).to.deep.equal({
          todoList: initialState.todo.list,
-         todoListLength: 3,
+         todoListLength: 3
       })
       expect(recomposed.currentState.todoList).to.deep.equal(
-         initialState.todo.list,
+         initialState.todo.list
       )
    })
 })

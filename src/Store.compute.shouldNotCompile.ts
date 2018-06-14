@@ -27,7 +27,7 @@ const todoLens = lens.focusPath('todo')
 
 // Calling compute() @compiles
 store.compute(s => ({
-   todoListLength: s.todo.list.length,
+   todoListLength: s.todo.list.length
 }))
 
 // Computing values with array @shouldNotCompile
@@ -43,9 +43,9 @@ store.focusPath('todo', 'list').compute((s: any) => ({ nothing: 'nothing' }))
 const computedWithoutInitialValues: number = store.compute$(state$ =>
    state$.pipe(
       map(s => ({
-         nonInitialized: 42,
-      })),
-   ),
+         nonInitialized: 42
+      }))
+   )
 ).currentComputedState.nonInitialized
 
 ////////////////////////////////////////////////////////

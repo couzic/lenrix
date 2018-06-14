@@ -19,7 +19,7 @@ describe('LenrixStore.sideEffects()', () => {
 
    beforeEach(() => {
       rootStore = createStore(initialState, {
-         logger: silentLoggerOptions,
+         logger: silentLoggerOptions
       }).actionTypes<Actions>()
    })
 
@@ -27,7 +27,7 @@ describe('LenrixStore.sideEffects()', () => {
       let flag = false
       const toggleFlag = () => (flag = !flag)
       rootStore.sideEffects({
-         navigateTo: toggleFlag,
+         navigateTo: toggleFlag
       })
 
       rootStore.dispatch({ navigateTo: { url: 'whatever' } })
@@ -38,7 +38,7 @@ describe('LenrixStore.sideEffects()', () => {
    it('has access to payload', () => {
       let gotUrl = ''
       rootStore.sideEffects({
-         navigateTo: ({ url }) => (gotUrl = url),
+         navigateTo: ({ url }) => (gotUrl = url)
       })
 
       rootStore.dispatch({ navigateTo: { url: 'url' } })

@@ -16,16 +16,16 @@ const defaultConsoleLoggerOptions: LoggerOptions['console'] = {
    message: true,
    update: true,
    epic: true,
-   compute: true,
+   compute: true
 }
 
 const defaultReduxLoggerOptions: LoggerOptions['redux'] = {
    message: false,
    epic: false,
-   compute: false,
+   compute: false
 }
 
 export const defaultLoggerOptions: LoggerOptions = {
    console: defaultConsoleLoggerOptions,
-   redux: defaultReduxLoggerOptions,
+   redux: defaultReduxLoggerOptions
 }

@@ -20,13 +20,13 @@ describe('LenrixStore.dispatch()', () => {
 
    beforeEach(() => {
       rootStore = createStore(initialState, {
-         logger: silentLoggerOptions,
+         logger: silentLoggerOptions
       }).actionTypes<Actions>()
    })
 
    it('throws error when dispatching two action types in same object', () => {
       expect(() =>
-         rootStore.dispatch({ doThis: undefined, doThat: undefined }),
+         rootStore.dispatch({ doThis: undefined, doThat: undefined })
       ).to.throw()
    })
 })

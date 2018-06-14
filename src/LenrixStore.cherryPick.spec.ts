@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
@@ -7,9 +6,6 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
 
 describe('LenrixStore.cherryPick()', () => {
-   const lens = createLens<State>()
-   const todoListLens = lens.focusPath('todo', 'list')
-
    let store: Store<{
       state: State
       computedValues: {}
@@ -22,20 +18,20 @@ describe('LenrixStore.cherryPick()', () => {
       store = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<{ toggleFlag: void }>()
          .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
          }))
       store.state$.subscribe(newState => (state = newState))
    })
 
    it('throws error when given a higher order function', () => {
       expect(() => store.cherryPick(() => () => null)).to.throw(
-         'does not accept',
+         'does not accept'
       )
    })
 
    it('extracts field by Lens', () => {
       const extracted$ = store.cherryPick(_ => ({
-         todoList: _.focusPath('todo', 'list'),
+         todoList: _.focusPath('todo', 'list')
       }))
       extracted$.subscribe(extracted => {
          expect(extracted).to.deep.equal({ todoList: state.todo.list })
@@ -45,7 +41,7 @@ describe('LenrixStore.cherryPick()', () => {
 
    it('does not emit when updating unrelated slice of parent state', () => {
       const todoList$ = store.cherryPick(_ => ({
-         todoList: _.focusPath('todo', 'list'),
+         todoList: _.focusPath('todo', 'list')
       }))
       let transitions = 0
       todoList$.subscribe(() => ++transitions)

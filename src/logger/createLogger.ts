@@ -8,7 +8,7 @@ const doNothing: any = (...params: any[]) => undefined
 
 const createMessageLogger = (
    reduxStore: Store<any>,
-   options: LoggerOptions,
+   options: LoggerOptions
 ): Logger['message'] => {
    const logToConsole = options.console!.message
       ? (action: FocusedAction) => {
@@ -16,7 +16,7 @@ const createMessageLogger = (
               console.groupCollapsed(
                  '%c 🔎 MESSAGE',
                  'background-color: rgb(128, 128, 0); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
-                 action.type,
+                 action.type
               )
            console.log('payload', action.payload)
            console.log('meta', action.meta)
@@ -28,7 +28,7 @@ const createMessageLogger = (
            reduxStore.dispatch({
               type: '[MESSAGE]' + action.type,
               payload: action.payload,
-              meta: action.meta,
+              meta: action.meta
            })
       : doNothing
    return (action: FocusedAction) => {
@@ -44,7 +44,7 @@ const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
               console.groupCollapsed(
                  '%c 🔎 UPDATE',
                  'background-color: rgb(32, 128, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
-                 action.type,
+                 action.type
               )
            console.log('payload', action.payload)
            console.log('meta', action.meta)
@@ -55,7 +55,7 @@ const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
 
 const createEpicLogger = (
    reduxStore: Store<any>,
-   options: LoggerOptions,
+   options: LoggerOptions
 ): Logger['epic'] => {
    const logToConsole = options.console!.epic
       ? (action: FocusedAction) => {
@@ -63,7 +63,7 @@ const createEpicLogger = (
               console.groupCollapsed(
                  '%c 🔎 EPIC',
                  'background-color: rgb(128, 32, 32); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
-                 action.type,
+                 action.type
               )
            console.log('payload', action.payload)
            console.log('meta', action.meta)
@@ -75,7 +75,7 @@ const createEpicLogger = (
            reduxStore.dispatch({
               type: '[EPIC]' + action.type,
               payload: action.payload,
-              meta: action.meta,
+              meta: action.meta
            })
       : doNothing
    return (action: FocusedAction) => {
@@ -86,7 +86,7 @@ const createEpicLogger = (
 
 const createComputeLogger = (
    reduxStore: Store<any>,
-   options: LoggerOptions,
+   options: LoggerOptions
 ): Logger['compute'] => {
    const loggableKeys = (previous: object, next: object): string[] =>
       Object.keys({ ...previous, ...next })
@@ -98,10 +98,10 @@ const createComputeLogger = (
               console.groupCollapsed(
                  '%c 🔎 COMPUTE',
                  'background-color: rgb(32, 32, 128); color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
-                 keys,
+                 keys
               )
            keys.forEach(key =>
-              console.log(key, ':', safePrevious[key], '→', next[key]),
+              console.log(key, ':', safePrevious[key], '→', next[key])
            )
            if (typeof console.groupEnd === 'function') console.groupEnd()
         }
@@ -109,7 +109,7 @@ const createComputeLogger = (
    const logToRedux = options.redux!.compute
       ? (previous: object, next: object) =>
            reduxStore.dispatch({
-              type: '[COMPUTE]' + loggableKeys(previous, next).join(', '),
+              type: '[COMPUTE]' + loggableKeys(previous, next).join(', ')
            })
       : doNothing
    return (previous: object, next: object) => {
@@ -120,7 +120,7 @@ const createComputeLogger = (
 
 export const createLogger = (
    reduxStore: Store<any, any>,
-   userOptions: LoggerOptions = defaultLoggerOptions,
+   userOptions: LoggerOptions = defaultLoggerOptions
 ): Logger => {
    const console = { ...defaultLoggerOptions.console, ...userOptions.console }
    const redux = { ...defaultLoggerOptions.redux, ...userOptions.redux }

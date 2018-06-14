@@ -26,10 +26,10 @@ describe('LenrixStore.updates()', () => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<Actions>()
          .updates(_ => ({
-            clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
+            clearTodoList: () => _.focusPath('todo', 'list').setValue([])
          }))
          .updates({
-            resetCounter: () => state => ({ ...state, counter: 0 }),
+            resetCounter: () => state => ({ ...state, counter: 0 })
          })
    })
 
@@ -73,7 +73,7 @@ describe('LenrixStore.updates()', () => {
          store
             .actionTypes<{ clearList: void }>()
             .updates(_ => ({
-               clearList: () => _.focusPath('list').setValue([]),
+               clearList: () => _.focusPath('list').setValue([])
             }))
             .dispatch({ clearList: undefined })
 
@@ -102,7 +102,7 @@ describe('LenrixStore.updates()', () => {
          store
             .actionTypes<{ clearList: void }>()
             .updates(_ => ({
-               clearList: () => _.focusPath('todo', 'list').setValue([]),
+               clearList: () => _.focusPath('todo', 'list').setValue([])
             }))
             .dispatch({ clearList: undefined })
 
@@ -119,7 +119,7 @@ describe('LenrixStore.updates()', () => {
       }>
       beforeEach(() => {
          store = rootStore.recompose(_ => ({
-            todoList: _.focusPath('todo', 'list'),
+            todoList: _.focusPath('todo', 'list')
          }))
       })
 
@@ -134,7 +134,7 @@ describe('LenrixStore.updates()', () => {
             .actionTypes<{ clearRecomposedTodoList: void }>()
             .updates(_ => ({
                clearRecomposedTodoList: () =>
-                  _.focusPath('todoList').setValue([]),
+                  _.focusPath('todoList').setValue([])
             }))
             .dispatch({ clearRecomposedTodoList: undefined })
 
