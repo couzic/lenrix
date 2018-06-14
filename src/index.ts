@@ -4,7 +4,6 @@ export * from './FocusedAction'
 export * from './FocusedHandlers'
 export * from './FocusedSelection'
 export * from './FocusedUpdater'
-export * from './MergedFields'
 export * from './Store'
 
 // logger
