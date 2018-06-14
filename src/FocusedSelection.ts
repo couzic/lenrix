@@ -9,5 +9,7 @@ export type FocusedSelection<
    },
    Selection
 > = (
-   lens: UnfocusedLens<ComputedState<Type>>
+   lens: UnfocusedLens<
+      { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+   >
 ) => FieldLenses<ComputedState<Type>, Selection>

@@ -20,8 +20,12 @@ export interface Store<
    readonly localLens: UnfocusedLens<Type['state']>
    readonly state$: Observable<Type['state']>
    readonly currentState: Type['state']
-   readonly computedState$: Observable<ComputedState<Type>>
-   readonly currentComputedState: ComputedState<Type>
+   readonly computedState$: Observable<
+      { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+   >
+   readonly currentComputedState: {
+      [K in keyof ComputedState<Type>]: ComputedState<Type>[K]
+   }
    readonly path: string
 
    //////////////
@@ -134,7 +138,7 @@ export interface Store<
    compute<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
       computer: (
-         state: ComputedState<Type>,
+         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
          store: LightStore<Type>
       ) => ComputedValues
    ): Store<{
@@ -143,7 +147,6 @@ export interface Store<
          [K in keyof (Type['computedValues'] &
             ComputedValues)]: (Type['computedValues'] & ComputedValues)[K]
       }
-      // computedValues: Type['computedValues'] & ComputedValues
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -175,14 +178,14 @@ export interface Store<
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
       computer: (
-         fields: Pick<ComputedState<Type>, K>, // TODO Merge types ?
+         fields: { [P in K]: ComputedState<Type>[P] },
          store: LightStore<Type>
       ) => ComputedValues
    ): Store<{
       state: Type['state']
       computedValues: {
-         [CVK in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[CVK]
+         [P in keyof (Type['computedValues'] &
+            ComputedValues)]: (Type['computedValues'] & ComputedValues)[P]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
@@ -190,7 +193,10 @@ export interface Store<
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: OperatorFunction<ComputedState<Type>, ComputedValues>,
+      computer$: OperatorFunction<
+         { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
+         ComputedValues
+      >,
       initialValues: ComputedValues
    ): Store<{
       state: Type['state']
@@ -204,7 +210,10 @@ export interface Store<
 
    compute$<ComputedValues extends object & NotAnArray>(
       this: Store<Type & { state: object & NotAnArray }>,
-      computer$: OperatorFunction<ComputedState<Type>, ComputedValues>
+      computer$: OperatorFunction<
+         { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
+         ComputedValues
+      >
    ): Store<{
       state: Type['state']
       computedValues: {
@@ -223,7 +232,10 @@ export interface Store<
       this: Store<Type & { state: object & NotAnArray }>,
       selection: FocusedSelection<Type, Selection>,
       computer$: OperatorFunction<
-         Selection & Type['computedValues'], // TODO Merge types ?
+         {
+            [K in keyof (Selection & Type['computedValues'])]: (Selection &
+               Type['computedValues'])[K]
+         },
          ComputedValues
       >,
       initialValues: ComputedValues
@@ -244,7 +256,10 @@ export interface Store<
       this: Store<Type & { state: object & NotAnArray }>, // TODO Merge types ?
       selection: FocusedSelection<Type, Selection>,
       computer$: OperatorFunction<
-         Selection & Type['computedValues'],
+         {
+            [K in keyof (Selection & Type['computedValues'])]: (Selection &
+               Type['computedValues'])[K]
+         },
          ComputedValues
       >
    ): Store<{
@@ -265,7 +280,7 @@ export interface Store<
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
       computer$: (
-         fields$: Observable<Pick<ComputedState<Type>, K>> // TODO Merge types ?
+         fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
       ) => Observable<ComputedValues>,
       initialValues: ComputedValues
    ): Store<{
@@ -285,7 +300,7 @@ export interface Store<
       this: Store<Type & { state: object & NotAnArray }>,
       fields: K[],
       computer$: (
-         fields$: Observable<Pick<ComputedState<Type>, K>> // TODO Merge types ?
+         fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
       ) => Observable<ComputedValues>
    ): Store<{
       state: Type['state']
