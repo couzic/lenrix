@@ -20,9 +20,6 @@ store.compute(s => ({
    todoListLength: s.todo.list.length
 }))
 
-// Computing values with array @shouldNotCompile
-store.compute(s => [s.todo.list.length])
-
 // Computing values on primitive-focused store @shouldNotCompile
 store.focusPath('counter').compute((s: any) => ({ nothing: 'nothing' }))
 
@@ -41,6 +38,9 @@ const computedWithoutInitialValues: number = store.compute$(state$ =>
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////
+
+// Computing values with array @shouldNotButDoesCompile
+store.compute(s => [s.todo.list.length])
 
 // Computing values with higher order function @shouldNotButDoesCompile
 store.compute(s => () => null)

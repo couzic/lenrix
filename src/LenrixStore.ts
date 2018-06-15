@@ -2,7 +2,7 @@ import {
    cherryPick,
    createLens,
    FieldLenses,
-   NotAnArray,
+   PlainObject,
    UnfocusedLens
 } from 'immutable-lens'
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs'
@@ -104,13 +104,13 @@ export class LenrixStore<
       return this.dataSubject.getValue().computedValues
    }
 
-   // getState$(this: LenrixStore<Type & { state: object & NotAnArray }, RootState>): Observable<ComputedState<Type>>
+   // getState$(this: LenrixStore<Type & { state: PlainObject<Type['state']>}, RootState>): Observable<ComputedState<Type>>
    // getState$(): Observable<Type['state']>
    // getState$(): Observable<ComputedState<Type> | Type['state']> {
    //    return this.computedState$
    // }
 
-   // getState(this: LenrixSdatatore<Type & { state: object & NotAnArray }, RootState>): ComputedState<Type>
+   // getState(this: LenrixSdatatore<Type & { state: PlainObject<Type['state']>}, RootState>): ComputedState<Type>
    // getState(): Type['state']
    // getState(): ComputedState<Type> | Type['state'] {
    //    return this.currentState
@@ -261,7 +261,7 @@ export class LenrixStore<
    }
 
    public cherryPick<Selection>(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection> {
       const selectedFields = selection(this.localLens)
@@ -345,8 +345,8 @@ export class LenrixStore<
    }
 
    public computeFrom<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
       selection: FocusedReadonlySelection<Type, Selection>,
       computer: (
@@ -368,7 +368,7 @@ export class LenrixStore<
 
    public computeFromFields<
       K extends keyof ComputedState<Type>,
-      ComputedValues extends object & NotAnArray
+      ComputedValues extends PlainObject
    >(
       fields: K[],
       computer: (
@@ -393,8 +393,8 @@ export class LenrixStore<
    }
 
    private computeFromSelector<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
       selector: (data: StoreData<Type>) => Selection,
       computer: (
@@ -528,8 +528,8 @@ export class LenrixStore<
    }
 
    public computeFrom$<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
       selection: FocusedReadonlySelection<Type, Selection>,
       computer$: (
@@ -554,7 +554,7 @@ export class LenrixStore<
 
    public computeFromFields$<
       K extends keyof ComputedState<Type>,
-      ComputedValues extends object & NotAnArray
+      ComputedValues extends PlainObject
    >(
       fields: K[],
       computer$: (
@@ -582,8 +582,8 @@ export class LenrixStore<
    }
 
    private computeFromSelector$<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
       config: StoreConfig,
       selector: (data: StoreData<Type>) => Selection,

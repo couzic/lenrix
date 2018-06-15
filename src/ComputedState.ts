@@ -1,8 +1,8 @@
-import { NotAnArray } from 'immutable-lens'
+import { PlainObject } from 'immutable-lens'
 
 export type ComputedState<
    Type extends {
-      state: object & NotAnArray
+      state: PlainObject
       computedValues: object
    }
 > = Type['state'] & Type['computedValues']

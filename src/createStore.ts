@@ -1,4 +1,4 @@
-import { NotAnArray, Updater } from 'immutable-lens'
+import { PlainObject, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject, merge, Observable, of, Subject } from 'rxjs'
 import {
@@ -27,7 +27,7 @@ declare const process:
         }
      }
 
-export function createFocusableStore<State extends object & NotAnArray>(
+export function createFocusableStore<State extends PlainObject>(
    reducer: Reducer<State>,
    preloadedState: State,
    enhancer?: StoreEnhancer<State>,

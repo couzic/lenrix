@@ -1,8 +1,8 @@
-import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { FieldLenses, PlainObject, UnfocusedLens } from 'immutable-lens'
 
 export type FocusedUpdatableSelection<
    Type extends {
-      state: object & NotAnArray
+      state: PlainObject
       computedValues: object
    },
    Selection

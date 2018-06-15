@@ -1,4 +1,4 @@
-import { NotAnArray, UnfocusedLens } from 'immutable-lens'
+import { PlainObject, UnfocusedLens } from 'immutable-lens'
 import { Observable, OperatorFunction } from 'rxjs'
 
 import { ActionObject } from './ActionObject'
@@ -33,7 +33,7 @@ export interface Store<
    // ACTIONS //
    ////////////
 
-   actionTypes<Actions extends object & NotAnArray>(): Store<{
+   actionTypes<Actions extends PlainObject>(): Store<{
       state: Type['state']
       computedValues: Type['computedValues']
       actions: {
@@ -86,12 +86,12 @@ export interface Store<
    /////////
 
    pick<K extends keyof ComputedState<Type>>(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
    ): Observable<{ [P in K]: ComputedState<Type>[P] }>
 
    cherryPick<Selection>(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection>
 
@@ -136,8 +136,8 @@ export interface Store<
    // COMPUTE //
    ////////////
 
-   compute<ComputedValues extends object & NotAnArray>(
-      this: Store<Type & { state: object & NotAnArray }>,
+   compute<ComputedValues extends PlainObject>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer: (
          state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
          store: LightStore<Type>
@@ -153,10 +153,10 @@ export interface Store<
    }>
 
    computeFrom<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>,
       computer: (
          selection: Selection,
@@ -174,9 +174,9 @@ export interface Store<
 
    computeFromFields<
       K extends keyof ComputedState<Type>,
-      ComputedValues extends object & NotAnArray
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer: (
          fields: { [P in K]: ComputedState<Type>[P] },
@@ -192,8 +192,8 @@ export interface Store<
       dependencies: Type['dependencies']
    }>
 
-   compute$<ComputedValues extends object & NotAnArray>(
-      this: Store<Type & { state: object & NotAnArray }>,
+   compute$<ComputedValues extends PlainObject>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer$: OperatorFunction<
          { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
          ComputedValues
@@ -209,8 +209,8 @@ export interface Store<
       dependencies: Type['dependencies']
    }>
 
-   compute$<ComputedValues extends object & NotAnArray>(
-      this: Store<Type & { state: object & NotAnArray }>,
+   compute$<ComputedValues extends PlainObject>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer$: OperatorFunction<
          { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
          ComputedValues
@@ -227,10 +227,10 @@ export interface Store<
    }>
 
    computeFrom$<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>,
       computer$: OperatorFunction<Selection, ComputedValues>,
       initialValues: ComputedValues
@@ -245,10 +245,10 @@ export interface Store<
    }>
 
    computeFrom$<
-      Selection extends object & NotAnArray,
-      ComputedValues extends object & NotAnArray
+      Selection extends PlainObject,
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>,
       computer$: OperatorFunction<Selection, ComputedValues>
    ): Store<{
@@ -264,9 +264,9 @@ export interface Store<
 
    computeFromFields$<
       K extends keyof ComputedState<Type>,
-      ComputedValues extends object & NotAnArray
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer$: (
          fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
@@ -284,9 +284,9 @@ export interface Store<
 
    computeFromFields$<
       K extends keyof ComputedState<Type>,
-      ComputedValues extends object & NotAnArray
+      ComputedValues extends PlainObject
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer$: (
          fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
@@ -307,7 +307,7 @@ export interface Store<
    //////////
 
    focusFields<K extends keyof Type['state']>(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
    ): Store<{
       state: { [P in K]: Type['state'][P] }
@@ -317,7 +317,7 @@ export interface Store<
    }>
 
    focusFields<K extends keyof Type['state']>(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       keys: K[]
    ): Store<{
       state: { [P in K]: Type['state'][P] }
@@ -330,7 +330,7 @@ export interface Store<
       SK extends keyof Type['state'],
       CK extends keyof Type['computedValues']
    >(
-      this: Store<Type & { state: object & NotAnArray }>,
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
       keys: SK[],
       computed: CK[]
    ): Store<{
