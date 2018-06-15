@@ -117,6 +117,25 @@ describe('LenrixStore.computeFrom$()', () => {
             { name: 'Steve', available: true }
          ])
       })
+
+      it('can select from computed values', () => {
+         const computingStore = rootStore
+            .compute(({ name }) => ({
+               nameLength: name.length
+            }))
+            .computeFrom$(
+               _ => ({
+                  selectedComputedValue: _.focusPath('nameLength')
+               }),
+               fields$ =>
+                  fields$.pipe(
+                     map(fields => ({ computed: fields.selectedComputedValue }))
+                  )
+            )
+         expect(computingStore.currentComputedState.nameLength).to.equal(
+            rootStore.currentState.name.length
+         )
+      })
    })
 
    describe('with initial values', () => {
@@ -201,6 +220,26 @@ describe('LenrixStore.computeFrom$()', () => {
          expect(computedStateTransitions).to.equal(1)
          store.dispatch({ setName: 'Steve' })
          expect(computedStateTransitions).to.equal(3)
+      })
+
+      it('can select from computed values', () => {
+         const computingStore = rootStore
+            .compute(({ name }) => ({
+               nameLength: name.length
+            }))
+            .computeFrom$(
+               _ => ({
+                  selectedComputedValue: _.focusPath('nameLength')
+               }),
+               fields$ =>
+                  fields$.pipe(
+                     map(fields => ({ computed: fields.selectedComputedValue }))
+                  ),
+               { computed: 0 }
+            )
+         expect(computingStore.currentComputedState.nameLength).to.equal(
+            rootStore.currentState.name.length
+         )
       })
    })
 })

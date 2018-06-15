@@ -2,7 +2,7 @@ import { FieldLenses, NotAnArray, UnfocusedLens } from 'immutable-lens'
 
 import { ComputedState } from './ComputedState'
 
-export type FocusedSelection<
+export type FocusedReadonlySelection<
    Type extends {
       state: object & NotAnArray
       computedValues: object

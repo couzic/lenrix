@@ -50,4 +50,17 @@ describe('LenrixStore.cherryPick()', () => {
 
       expect(transitions).to.equal(1)
    })
+
+   it('can cherry pick computed value', () => {
+      const computedStore = store.compute(({ counter }) => ({
+         computedField: counter
+      }))
+      let result
+      computedStore
+         .cherryPick(_ => ({
+            pickedField: _.focusPath('computedField')
+         }))
+         .subscribe(r => (result = r))
+      expect(result).to.deep.equal({ pickedField: store.currentState.counter })
+   })
 })

@@ -4,7 +4,8 @@ import { Observable, OperatorFunction } from 'rxjs'
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
-import { FocusedSelection } from './FocusedSelection'
+import { FocusedReadonlySelection } from './FocusedReadonlySelection'
+import { FocusedUpdatableSelection } from './FocusedUpdatableSelection'
 import { LightStore } from './LightStore'
 
 export interface Store<
@@ -91,7 +92,7 @@ export interface Store<
 
    cherryPick<Selection>(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>
+      selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection>
 
    pluck<CS extends ComputedState<Type>, K extends keyof CS>(
@@ -156,7 +157,7 @@ export interface Store<
       ComputedValues extends object & NotAnArray
    >(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>,
+      selection: FocusedReadonlySelection<Type, Selection>,
       computer: (
          selection: Selection,
          store: LightStore<Type>
@@ -230,14 +231,8 @@ export interface Store<
       ComputedValues extends object & NotAnArray
    >(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>,
-      computer$: OperatorFunction<
-         {
-            [K in keyof (Selection & Type['computedValues'])]: (Selection &
-               Type['computedValues'])[K]
-         },
-         ComputedValues
-      >,
+      selection: FocusedReadonlySelection<Type, Selection>,
+      computer$: OperatorFunction<Selection, ComputedValues>,
       initialValues: ComputedValues
    ): Store<{
       state: Type['state']
@@ -253,15 +248,9 @@ export interface Store<
       Selection extends object & NotAnArray,
       ComputedValues extends object & NotAnArray
    >(
-      this: Store<Type & { state: object & NotAnArray }>, // TODO Merge types ?
-      selection: FocusedSelection<Type, Selection>,
-      computer$: OperatorFunction<
-         {
-            [K in keyof (Selection & Type['computedValues'])]: (Selection &
-               Type['computedValues'])[K]
-         },
-         ComputedValues
-      >
+      this: Store<Type & { state: object & NotAnArray }>,
+      selection: FocusedReadonlySelection<Type, Selection>,
+      computer$: OperatorFunction<Selection, ComputedValues>
    ): Store<{
       state: Type['state']
       computedValues: {
@@ -352,7 +341,7 @@ export interface Store<
    }>
 
    recompose<RecomposedState>(
-      fields: FocusedSelection<Type, RecomposedState>
+      fields: FocusedUpdatableSelection<Type, RecomposedState>
    ): Store<{
       state: RecomposedState
       computedValues: {}
@@ -361,7 +350,7 @@ export interface Store<
    }>
 
    recompose<RecomposedState, CK extends keyof Type['computedValues']>(
-      fields: FocusedSelection<Type, RecomposedState>,
+      fields: FocusedUpdatableSelection<Type, RecomposedState>,
       computedValues: CK[]
    ): Store<{
       state: RecomposedState

@@ -14,16 +14,6 @@ type State = {
 const state: State = {} as any
 
 const store = createStore(state)
-const counterStore = store.focusPath('counter')
-const todoStore = store.focusPath('todo')
-const todoListStore = todoStore.focusPath('list')
-
-const lens = store.localLens
-const todoLens = lens.focusPath('todo')
-
-//////////////
-// COMPUTE //
-////////////
 
 // Calling compute() @compiles
 store.compute(s => ({

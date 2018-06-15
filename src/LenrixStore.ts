@@ -17,7 +17,7 @@ import {
 import { ActionObject } from './ActionObject'
 import { ComputedState } from './ComputedState'
 import { FocusedHandlers } from './FocusedHandlers'
-import { FocusedSelection } from './FocusedSelection'
+import { FocusedReadonlySelection } from './FocusedReadonlySelection'
 import { LenrixLightStore } from './LenrixLightStore'
 import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
@@ -262,14 +262,14 @@ export class LenrixStore<
 
    public cherryPick<Selection>(
       this: Store<Type & { state: object & NotAnArray }>,
-      selection: FocusedSelection<Type, Selection>
+      selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection> {
       const selectedFields = selection(this.localLens)
       if (typeof selectedFields === 'function')
          throw Error(
             'LenrixStore.cherryPick() does not accept higher order functions as arguments'
          )
-      return this.state$.pipe(
+      return this.computedState$.pipe(
          map(state => cherryPick(state, selectedFields)),
          distinctUntilChanged(shallowEquals)
       )
@@ -348,7 +348,7 @@ export class LenrixStore<
       Selection extends object & NotAnArray,
       ComputedValues extends object & NotAnArray
    >(
-      selection: FocusedSelection<Type, Selection>,
+      selection: FocusedReadonlySelection<Type, Selection>,
       computer: (
          selection: Selection,
          store: LightStore<Type>
@@ -531,7 +531,7 @@ export class LenrixStore<
       Selection extends object & NotAnArray,
       ComputedValues extends object & NotAnArray
    >(
-      selection: FocusedSelection<Type, Selection>,
+      selection: FocusedReadonlySelection<Type, Selection>,
       computer$: (
          selection$: Observable<Selection>
       ) => Observable<ComputedValues>,

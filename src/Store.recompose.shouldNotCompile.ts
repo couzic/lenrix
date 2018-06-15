@@ -45,6 +45,11 @@ store.recompose({})
 store.recompose(_ => ({ todoList: todoListStore.lens }))
 
 // Recomposing with wrong source type Lens @shouldNotCompile
-const recomposedStore = todoStore.recompose(_ => ({
+todoStore.recompose(_ => ({
    todoList: todoLens.focusPath('list')
+}))
+
+// Recomposing from computed value as if it was part of normalized state @shouldNotCompile
+computingStore.recompose(_ => ({
+   computedValue: _.focusPath('whatever')
 }))
