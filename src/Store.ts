@@ -134,6 +134,16 @@ export interface Store<
       key4: K4
    ): Observable<CS[K1][K2][K3][K4]>
 
+   ///////////////
+   // OPTIMIZE //
+   /////////////
+
+   filter(
+      predicate: (
+         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+      ) => boolean
+   ): Store<Type>
+
    //////////////
    // COMPUTE //
    ////////////

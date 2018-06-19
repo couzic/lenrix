@@ -1,4 +1,4 @@
-export interface State {
+export type State = {
    counter: number
    todo: TodoState
    user: User | undefined
@@ -8,7 +8,7 @@ export interface State {
    }
 }
 
-export interface TodoState {
+export type TodoState = {
    input: string
    list: TodoItem[]
    count: number

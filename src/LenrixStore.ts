@@ -8,6 +8,7 @@ import {
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs'
 import {
    distinctUntilChanged,
+   filter,
    map,
    scan,
    skip,
@@ -254,6 +255,30 @@ export class LenrixStore<
       return this.computedStateSubject.pipe(
          map(state => keys.reduce((acc: any, key: any) => acc[key], state)),
          distinctUntilChanged()
+      )
+   }
+
+   ///////////////
+   // OPTIMIZE //
+   /////////////
+
+   public filter(
+      predicate: (
+         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+      ) => boolean
+   ): Store<Type> {
+      return new LenrixStore(
+         this.dataSubject.pipe(
+            filter(data => {
+               const state = this.currentComputedState
+               return predicate(state)
+            })
+         ),
+         (data: any) => ({ ...data.state, ...data.computedValues }),
+         this.initialData,
+         this.registerHandlers,
+         this.context,
+         this.path
       )
    }
 
