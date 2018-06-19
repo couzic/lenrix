@@ -611,7 +611,11 @@ export class LenrixStore<
       return new LenrixStore(
          this.dataSubject.pipe(
             map(toFocusedData),
-            distinctUntilChanged(dataEquals)
+            distinctUntilChanged(
+               (previous, next) =>
+                  previous.state === next.state &&
+                  shallowEquals(previous.computedValues, next.computedValues)
+            )
          ),
          (data: any) =>
             Array.isArray(data.state) || typeof data.state !== 'object'
