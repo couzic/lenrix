@@ -23,7 +23,6 @@ import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
-import { StoreConfig } from './test-utils/StoreConfig'
 
 export interface ActionMeta {
    store: {
@@ -129,8 +128,7 @@ export class LenrixStore<
          handlers: FocusedHandlers<Type>
       ) => void,
       private readonly context: StoreContext,
-      public readonly path: string,
-      private readonly __config: StoreConfig
+      public readonly path: string
    ) {
       this.light = new LenrixLightStore(this)
       this.dataSubject = new BehaviorSubject(initialData)
@@ -156,13 +154,6 @@ export class LenrixStore<
          | ((lens: UnfocusedLens<Type['state']>) => FocusedHandlers<Type>)
          | FocusedHandlers<Type>
    ) {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'updates', params: [focusHandlers] }
-         ]
-      }
       const handlers =
          typeof focusHandlers === 'function'
             ? focusHandlers(this.localLens)
@@ -183,8 +174,7 @@ export class LenrixStore<
          this.initialData,
          this.registerHandlers,
          this.context,
-         this.path,
-         config
+         this.path
       )
    }
 
@@ -204,13 +194,6 @@ export class LenrixStore<
    }
 
    public epics(epics: any): Store<Type> {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'epics', params: [epics] }
-         ]
-      }
       this.context.registerEpics(epics, this as any)
       return new LenrixStore(
          this.dataSubject,
@@ -218,19 +201,11 @@ export class LenrixStore<
          this.initialData,
          this.registerHandlers,
          this.context,
-         this.path,
-         config
+         this.path
       )
    }
 
    public sideEffects(effects: any): Store<Type> {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'sideEffects', params: [effects] }
-         ]
-      }
       this.context.registerSideEffects(effects, this as any)
       return new LenrixStore(
          this.dataSubject,
@@ -238,8 +213,7 @@ export class LenrixStore<
          this.initialData,
          this.registerHandlers,
          this.context,
-         this.path,
-         config
+         this.path
       )
    }
 
@@ -293,13 +267,6 @@ export class LenrixStore<
          store: LightStore<Type>
       ) => ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'compute', params: [computer] }
-         ]
-      }
       const dataToComputedValues = (
          data: StoreData<Type>
       ): Type['computedValues'] & ComputedValues => {
@@ -339,8 +306,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.compute()',
-         config
+         this.path + '.compute()'
       )
    }
 
@@ -354,16 +320,9 @@ export class LenrixStore<
          store: LightStore<Type>
       ) => ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'computeFrom', params: [selection, computer] }
-         ]
-      }
       const select = (data: StoreData<Type>): Selection =>
          cherryPick(this.dataToComputedState(data), selection(this.localLens))
-      return this.computeFromSelector(select, computer, config)
+      return this.computeFromSelector(select, computer)
    }
 
    public computeFromFields<
@@ -376,20 +335,13 @@ export class LenrixStore<
          store: LightStore<Type>
       ) => ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'computeFromFields', params: [fields, computer] }
-         ]
-      }
       const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
          fields.forEach(field => (selected[field] = computedState[field]))
          return selected
       }
-      return this.computeFromSelector(select, computer, config)
+      return this.computeFromSelector(select, computer)
    }
 
    private computeFromSelector<
@@ -400,8 +352,7 @@ export class LenrixStore<
       computer: (
          selection: Selection,
          store: LightStore<Type>
-      ) => ComputedValues,
-      config: StoreConfig
+      ) => ComputedValues
    ): any {
       const initialSelection = selector(this.initialData)
       const doCompute = (
@@ -461,8 +412,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.computeFrom()',
-         config
+         this.path + '.computeFrom()'
       )
    }
 
@@ -476,13 +426,6 @@ export class LenrixStore<
       ) => Observable<ComputedValues>,
       initialValues?: ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'compute$', params: [computer$, initialValues] }
-         ]
-      }
       const computedValues$ = computer$(this.computedStateSubject).pipe(
          startWith(initialValues),
          scan((previous, next) => {
@@ -522,8 +465,7 @@ export class LenrixStore<
          this.path +
             '.compute$(' +
             Object.keys(initialValues || {}).join(', ') +
-            ')',
-         config
+            ')'
       )
    }
 
@@ -537,19 +479,9 @@ export class LenrixStore<
       ) => Observable<ComputedValues>,
       initialValues?: ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            {
-               name: 'computeFrom$',
-               params: [selection, computer$, initialValues]
-            }
-         ]
-      }
       const select = (data: StoreData<Type>): Selection =>
          cherryPick(this.dataToComputedState(data), selection(this.localLens))
-      return this.computeFromSelector$(config, select, computer$, initialValues)
+      return this.computeFromSelector$(select, computer$, initialValues)
    }
 
    public computeFromFields$<
@@ -562,30 +494,19 @@ export class LenrixStore<
       ) => Observable<ComputedValues>,
       initialValues?: ComputedValues
    ): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            {
-               name: 'computeFromFields$',
-               params: [fields, computer$, initialValues]
-            }
-         ]
-      }
       const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
          fields.forEach(field => (selected[field] = computedState[field]))
          return selected
       }
-      return this.computeFromSelector$(config, select, computer$, initialValues)
+      return this.computeFromSelector$(select, computer$, initialValues)
    }
 
    private computeFromSelector$<
       Selection extends PlainObject,
       ComputedValues extends PlainObject
    >(
-      config: StoreConfig,
       selector: (data: StoreData<Type>) => Selection,
       computer$: (
          selection$: Observable<Selection>
@@ -612,13 +533,6 @@ export class LenrixStore<
             return next
          })
       )
-      // const selection$ = this.dataSubject.pipe(map(selector))
-      // const newComputedValues$ = computer$(selection$).pipe(
-      //    scan((previous, next) => {
-      //       this.context.dispatchCompute(this as any, previous, next)
-      //       return next
-      //    }),
-      // )
       const data$ = combineLatest(
          this.dataSubject,
          newComputedValues$,
@@ -637,8 +551,7 @@ export class LenrixStore<
          initialData,
          this.registerHandlers,
          this.context,
-         this.path + '.computeFrom$()',
-         config
+         this.path + '.computeFrom$()'
       )
    }
 
@@ -647,13 +560,6 @@ export class LenrixStore<
    //////////
 
    public focusPath(...params: any[]): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'focusPath', params }
-         ]
-      }
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.localLens as any).focusPath(...keys)
       const computedValueKeys: Array<keyof Type['computedValues']> =
@@ -689,19 +595,11 @@ export class LenrixStore<
          toFocusedData(this.initialData),
          registerHandlers,
          this.context,
-         this.path + focusedLens.path,
-         config
+         this.path + focusedLens.path
       )
    }
 
    public focusFields(...params: any[]): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'focusFields', params }
-         ]
-      }
       const keys: Array<keyof Type['state']> = Array.isArray(params[0])
          ? params[0]
          : params // Handle spread keys
@@ -730,19 +628,11 @@ export class LenrixStore<
          toPickedData(this.initialData),
          this.registerHandlers as any,
          this.context,
-         path,
-         config
+         path
       )
    }
 
    public recompose(...params: any[]): any {
-      const config: StoreConfig = {
-         initialRootState: this.__config.initialRootState,
-         operations: [
-            ...this.__config.operations,
-            { name: 'recompose', params }
-         ]
-      }
       const focusedSelection = params[0]
       const computedValueKeys: Array<keyof Type['computedValues']> =
          params[1] || []
@@ -782,32 +672,7 @@ export class LenrixStore<
          toRecomposedData(this.initialData),
          registerHandlers,
          this.context,
-         path,
-         config
+         path
       )
    }
-
-   // computeJoin$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
-   //    const data$ = this.data$.mergeMap(data => {
-   //       const state = this.dataToState(data)
-   //       const newComputedValues$ = computer$(Observable.of(state))
-   //       return newComputedValues$.map(newComputedValues => ({
-   //          normalizedState: data.normalizedState,
-   //          computedValues: { ...data.computedValues as any, ...newComputedValues as any }
-   //       }))
-   //    })
-   //    const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = initialValues
-   //       ? {
-   //          normalizedState: this.initialData.normalizedState,
-   //          computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
-   //       }
-   //       : this.initialData
-   //    return new LenrixStore(
-   //       data$,
-   //       (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
-   //       initialData,
-   //       (updater: any) => this.update(updater),
-   //       this.path + '.computeJoin$()'
-   //    )
-   // }
 }

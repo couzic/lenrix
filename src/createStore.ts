@@ -210,8 +210,7 @@ export function createFocusableStore<State extends PlainObject>(
       { state: preloadedState, computedValues: {} },
       registerUpdates,
       context,
-      'root',
-      { initialRootState: preloadedState, operations: [] }
+      'root'
    )
 }
 
