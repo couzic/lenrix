@@ -141,4 +141,12 @@ describe('LenrixStore.updates()', () => {
          expect(store.currentState.todoList).to.be.empty
       })
    })
+
+   it('throws error when registering a second updater for the same action type', () => {
+      expect(() =>
+         rootStore.updates(_ => ({
+            clearTodoList: () => _.focusPath('todo', 'list').setValue([])
+         }))
+      ).to.throw('updater')
+   })
 })

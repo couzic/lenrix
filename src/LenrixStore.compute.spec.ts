@@ -36,12 +36,9 @@ describe('LenrixStore.compute()', () => {
          .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             toggleOrder: () =>
-               _
-                  .focusPath('sorting', 'order')
-                  .update(
-                     order =>
-                        order === 'descending' ? 'ascending' : 'descending'
-                  )
+               _.focusPath('sorting', 'order').update(
+                  order => (order === 'descending' ? 'ascending' : 'descending')
+               )
          }))
       store = rootStore.compute(s => ({
          todoListLength: s.todo.list.length,
@@ -167,18 +164,10 @@ describe('LenrixStore.compute()', () => {
       let focusedStateTransitions: number
 
       beforeEach(() => {
-         focusedStore = store
-            .focusFields(['sorting'], ['todoListLength', 'caret'])
-            .actionTypes<{ toggleOrder: void }>()
-            .updates(_ => ({
-               toggleOrder: () =>
-                  _
-                     .focusPath('sorting', 'order')
-                     .update(
-                        order =>
-                           order === 'descending' ? 'ascending' : 'descending'
-                     )
-            }))
+         focusedStore = store.focusFields(
+            ['sorting'],
+            ['todoListLength', 'caret']
+         )
          focusedStateTransitions = 0
          focusedStore.computedState$.subscribe(s => {
             focusedState = s
