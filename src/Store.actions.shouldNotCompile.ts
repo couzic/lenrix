@@ -42,6 +42,13 @@ store.dispatch({ doString: null })
 // Dispatching undefined payload @shouldNotCompile
 store.dispatch({ doString: undefined })
 
+// Dispatching action declared with different payload type @shouldNotCompile
+store
+   .actionTypes<{
+      doString: number
+   }>()
+   .dispatch({ doString: 42 })
+
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////

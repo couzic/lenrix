@@ -37,7 +37,9 @@ export interface Store<
       state: Type['state']
       computedValues: Type['computedValues']
       actions: {
-         [K in keyof (Type['actions'] & Actions)]: (Type['actions'] &
+         [K in
+            | Exclude<keyof Actions, keyof Type['actions']>
+            | Exclude<keyof Type['actions'], keyof Actions>]: (Type['actions'] &
             Actions)[K]
       }
       dependencies: Type['dependencies']
