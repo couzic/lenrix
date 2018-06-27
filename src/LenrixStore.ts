@@ -22,7 +22,7 @@ import { FocusedReadonlySelection } from './FocusedReadonlySelection'
 import { LenrixLightStore } from './LenrixLightStore'
 import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
-import { Store } from './Store'
+import { HmrHandlers, Store } from './Store'
 import { StoreContext } from './StoreContext'
 
 export interface ActionMeta {
@@ -142,8 +142,16 @@ export class LenrixStore<
          .subscribe(this.computedStateSubject)
    }
 
-   public updateHandlers(handlers: FocusedHandlers<Type>): void {
-      this.registerHandlers(handlers)
+   public hmrUpdate({
+      epics,
+      handlers,
+      effects
+   }: HmrHandlers<FocusedHandlers<Type>>): void {
+      !!handlers && this.registerHandlers(handlers)
+
+      !!epics && this.context.registerEpics(epics, this as any)
+
+      !!effects && this.context.registerSideEffects(effects, this as any)
    }
 
    //////////////
