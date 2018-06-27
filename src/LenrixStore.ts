@@ -142,6 +142,10 @@ export class LenrixStore<
          .subscribe(this.computedStateSubject)
    }
 
+   public updateHandlers(handlers: FocusedHandlers<Type>): void {
+      this.registerHandlers(handlers)
+   }
+
    //////////////
    // ACTIONS //
    ////////////

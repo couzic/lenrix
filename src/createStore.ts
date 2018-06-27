@@ -160,8 +160,8 @@ export function createFocusableStore<State extends PlainObject>(
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
-         if (updateHandlers[actionType] !== undefined)
-            throw Error('Cannot register two updaters for the same action type')
+         // if (updateHandlers[actionType] !== undefined)
+         //    throw Error('Cannot register two updaters for the same action type')
          updateHandlers[actionType] = (newHandlers as any)[actionType]
       })
    }
