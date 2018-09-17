@@ -45,4 +45,12 @@ describe('LenrixStore.sideEffects()', () => {
 
       expect(gotUrl).to.equal('url')
    })
+
+   it('has readonly access to store', () => {
+      rootStore.sideEffects({
+         navigateTo: (payload, store) =>
+            expect(store.currentState).to.deep.equal(rootStore.currentState)
+      })
+      rootStore.dispatch({ navigateTo: { url: 'url' } })
+   })
 })

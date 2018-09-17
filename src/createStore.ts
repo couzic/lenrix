@@ -92,7 +92,7 @@ export function createFocusableStore<State extends PlainObject>(
    const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
       const hasUpdateHandler = Boolean(updateHandlers[action.type])
       const hasEpicHandler = Boolean(epicHandlers[action.type])
-      const hasSideEffectHandler = Boolean(sideEffectHandlers[action.type])
+      const hasSideEffect = Boolean(sideEffects[action.type])
       if (!hasUpdateHandler && !hasEpicHandler) {
          // MESSAGE
          logger.message(action)
@@ -111,9 +111,10 @@ export function createFocusableStore<State extends PlainObject>(
          logger.epic(action)
          input$.next({ action, meta })
       }
-      if (hasSideEffectHandler) {
+      if (hasSideEffect) {
          // SIDE EFFECTS
-         sideEffectHandlers[action.type](action.payload)
+         const { handler, store } = sideEffects[action.type]
+         handler(action.payload, store)
       }
    }
 
@@ -127,7 +128,10 @@ export function createFocusableStore<State extends PlainObject>(
          store: Store<any>
       }>
    > = {}
-   const sideEffectHandlers: Record<string, (payload: any) => void> = {}
+   const sideEffects: Record<
+      string,
+      { handler: (payload: any, store: Store<any>) => void; store: Store<any> }
+   > = {}
 
    const augmentedReducer: Reducer<State> = (state, action) => {
       const updateHandler = updateHandlers[action.type]
@@ -181,7 +185,10 @@ export function createFocusableStore<State extends PlainObject>(
    const registerSideEffects = (effects: any, store: Store<any>) => {
       const actionTypes = Object.keys(effects)
       actionTypes.forEach(actionType => {
-         sideEffectHandlers[actionType] = (effects as any)[actionType]
+         sideEffects[actionType] = {
+            handler: (effects as any)[actionType],
+            store
+         }
       })
    }
 
