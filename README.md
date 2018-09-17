@@ -31,13 +31,19 @@
     - [`recompose()`](#recompose)
   - [Computed values (synchronous)](#computed-values-synchronous)
     - [`compute()`](#compute)
+    - [`computeFromField()`](#computefromfield)
     - [`computeFromFields()`](#computefromfields)
     - [`computeFrom()`](#computefrom)
   - [Computed values (asynchronous)](#computed-values-asynchronous)
     - [`compute$()`](#compute)
+    - [`computeFromField$()`](#computefromfield)
     - [`computeFromFields$()`](#computefromfields)
     - [`computeFrom$()`](#computefrom)
     - [`defaultValues()`](#defaultvalues)
+  - [Optimize](#optimize)
+    - [`filter()`](#filter)
+    - [`rejectNilFields()`](#rejectnilfields)
+    - [`distinctUntilFieldsChanged()`](#distinctuntilfieldschanged)
   - [`epics()`](#epics)
   - [`sideEffects()`](#sideeffects)
   - [`dependencies()`](#dependencies)
@@ -171,11 +177,16 @@ const store = createStore({name: 'Bob'})
    .updates(lens => ({
       setName: (name) => lens.focusPath('name').setValue(name)
    }))
-   // And if you like double curry...
+   // And if really like curry...
    .updates(lens => ({
       setName: lens.focusPath('name').setValue()
    }))
 ```
+**Only *ONE* updater can be registered for a single action type.** Failing to comply with that rule will result in an error:
+```
+Error: Cannot register two updaters for the same action type
+```
+When an action needs to update the state at a wider scope, move your updater to a store that has larger focus. 
 
 #### `dispatch()`
 Dispatching an action can trigger an [update](#updates), an [epic](#epics), or a [side effect](#sideEffects).
@@ -243,9 +254,16 @@ const cherryPick$ = rootStore.cherryPick(lens => ({ // immutable-lens
 
 ### Focus
 
-Most UI components only interact with a small part of the whole state tree. A focused store provides read and update access to a precise subset of the full state. Typically, you will create a focused store for a specific component or group of components.
+**A focused store is just a proxy for the root store; there always is a single source of truth.**
 
-All focus operations return a full-fledged store. But remember that a focused store is just a proxy for the root store, there always is a single source of truth.
+Most UI components only interact with a small part of the whole state tree. A focused store provides read and update access to a precise subset of the full state.
+
+Typically, you will create a focused store for a specific page (1st level routable component). Then, if the page is functionnally rich, more stores can be derived from the page-focused store. These deep-focused stores will probably be tailored for specific components or groups of components within the page.
+
+All these stores form a tree of stores, with the one returned by `createStore()` at its root. All dispatched actions are propagated to the root store, where updates are applied. The updated state then flows down the tree of stores, with [values computed](#computed-values-synchronous) at some of the nodes and made available to their children.
+
+However, that propagation stops at the stores for which the state slice in their scope has not changed.
+
 
 #### `focusPath()`
 ```ts
@@ -315,8 +333,20 @@ createStore({name: 'Bob'})
    .compute(state => ({message: 'Hello, ' + state.name}))
    .pick('message') // Observable<{message: string}>
 ```
+
+#### `computeFromField()`
+Specify the field used for the computation to avoid useless re-computations.
+```ts
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFromField(
+      'name',
+      name => ({message: 'Hello, ' + name})
+   )
+   .pick('message') // Observable<{message: string}>
+```
+
 #### `computeFromFields()`
-Specify the fields used for the computation in order to avoid useless re-computations.
+Specify the fields used for the computation to avoid useless re-computations.
 ```ts
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFromFields(
@@ -325,6 +355,7 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
    )
    .pick('message') // Observable<{message: string}>
 ```
+
 #### `computeFrom()`
 Define computed values from state slices focused by lenses. The signature is similar to `recompose()` and `cherryPick()`.
 ```ts
@@ -352,6 +383,17 @@ createStore({name: 'Bob'})
          map(state => state.name),
          map(name => ({message: 'Hello, ' + name}))
       )
+   )
+   .pick('message') // Observable<{message: string | undefined}>
+```
+#### `computeFromField$()`
+```ts
+import { map } from 'rxjs/operators'
+
+createStore({name: 'Bob', irrelevant: 'whatever'})
+   .computeFromField$(
+      'name',
+      map(name => ({message: 'Hello, ' + name}))
    )
    .pick('message') // Observable<{message: string | undefined}>
 ```
@@ -391,6 +433,24 @@ createStore({name: 'Bob'})
    })
    .pick('message') // Observable<{message: string}>
 ```
+
+### Optimize
+
+#### `filter()`
+
+#### `rejectNilFields()`
+```ts
+import { map } from 'rxjs/operators'
+
+createStore({name: 'Bob'})
+   .compute$(
+      map(({name}) => ({message: 'Hello, ' + name}))
+   )
+   .rejectNilFields('message')
+   .pick('message') // Observable<{message: string}>
+```
+
+#### `distinctUntilFieldsChanged()`
 
 ### `epics()`
 Let an action dispatch another action, asynchronously. Since this feature is heavily inspired from [`redux-observable`](https://github.com/redux-observable/redux-observable), we encourage you to go check their [documentation](https://redux-observable.js.org/docs/basics/Epics.html).
@@ -500,12 +560,11 @@ Testing in `lenrix` follows a different approach. Well, technically, in most cas
 A `lenrix` store is to be considered a cohesive **unit** of functionality. We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
 
 As a consequence, we believe store testing should essentially consist in :
-- Initializing state
-- Injecting [`dependencies`](#dependencies()) (`http`, `localStorage`...)
-- Dispatching actions
+- Injecting [`dependencies`](#dependencies()) (`backend`, `router`...) -->
+- [Dispatching actions](#dispatch)
 - [Asserting state](#asserting-state) (normalized state + computed values)
 
-In some cases, testing might also consist in :
+In some less frequent cases, testing might also consist in :
 - [Asserting dispatched actions](#asserting-dispatched-actions)
 - [Asserting calls on dependencies](#asserting-calls-on-dependencies)
 
@@ -525,7 +584,7 @@ export const initialRootState = {
 
 export type RootState = typeof initialRootState
 
-export const createRootStore = (initialState: RootState = initialRootState) => createStore(initialState)
+export const createRootStore = (initialState = initialRootState) => createStore(initialState)
 
 export type RootStore = ReturnType<typeof createRootStore>
 ```

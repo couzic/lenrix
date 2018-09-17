@@ -1,12 +1,33 @@
 import { PlainObject, UnfocusedLens } from 'immutable-lens'
 import { Observable, OperatorFunction } from 'rxjs'
 
-import { ActionObject } from './ActionObject'
-import { ComputedState } from './ComputedState'
-import { FocusedHandlers } from './FocusedHandlers'
-import { FocusedReadonlySelection } from './FocusedReadonlySelection'
-import { FocusedUpdatableSelection } from './FocusedUpdatableSelection'
 import { LightStore } from './LightStore'
+import { ActionObject } from './util/ActionObject'
+import { ComputedState } from './util/ComputedState'
+import { ExcludeKeys } from './util/ExcludeKeys'
+import { FocusedHandlers } from './util/FocusedHandlers'
+import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
+import { FocusedUpdatableSelection } from './util/FocusedUpdatableSelection'
+import { NullableKeys } from './util/NullableKeys'
+
+type NullableFields<T extends PlainObject> = {
+   [K in keyof T]: T[K] extends NonNullable<T[K]> ? { [P in K]: T[P] } : never
+}[keyof T]
+
+type Toto = {
+   name: string
+   name2: string
+   age: number | undefined
+   age2: number | undefined
+}
+
+type F = NullableFields<Toto>
+
+// type ExtractFields<T extends PlainObject, U> = {
+//    [K in NullableFields<T, K>]: T[K]
+// }
+
+// type ExtractNullableFields<T extends PlainObject> = { [K in Extract<ke>]:  }
 
 export interface Store<
    Type extends {
@@ -143,6 +164,24 @@ export interface Store<
          state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
       ) => boolean
    ): Store<Type>
+
+   rejectNilFields<K extends NullableKeys<ComputedState<Type>>>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      ...keys: K[]
+   ): Store<{
+      state: Type['state']
+      computedValues: {
+         [P in keyof ExcludeKeys<
+            Type['computedValues'],
+            K & keyof Type['computedValues']
+         >]: ExcludeKeys<
+            Type['computedValues'],
+            K & keyof Type['computedValues']
+         >[P]
+      }
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
 
    //////////////
    // COMPUTE //

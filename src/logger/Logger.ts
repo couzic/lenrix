@@ -1,4 +1,4 @@
-import { FocusedAction } from '../FocusedAction'
+import { FocusedAction } from '../util/FocusedAction'
 
 export interface Logger {
    message: (action: FocusedAction) => void

@@ -10,14 +10,14 @@ import {
    switchMap
 } from 'rxjs/operators'
 
-import { ActionObject } from './ActionObject'
-import { FocusedAction } from './FocusedAction'
-import { FocusedHandlers } from './FocusedHandlers'
 import { ActionMeta, LenrixStore } from './LenrixStore'
 import { createLogger } from './logger/createLogger'
 import { LoggerOptions } from './logger/LoggerOptions'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
+import { ActionObject } from './util/ActionObject'
+import { FocusedAction } from './util/FocusedAction'
+import { FocusedHandlers } from './util/FocusedHandlers'
 
 declare const process:
    | undefined

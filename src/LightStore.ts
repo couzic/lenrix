@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs'
 
-import { ComputedState } from './ComputedState'
+import { ComputedState } from './util/ComputedState'
 
 export interface LightStore<
    Type extends {

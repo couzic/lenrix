@@ -35,6 +35,11 @@ const computedWithoutInitialValues: number = store.compute$(state$ =>
    )
 ).currentComputedState.nonInitialized
 
+// Assigning computed value overring normalized state field to a variable of the original state's type @shouldNotCompile
+const computedCounter: number = store.compute(({ counter }) => ({
+   counter: String(counter)
+})).currentComputedState.counter
+
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //
 //////////////////////////////////////////////////////

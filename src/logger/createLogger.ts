@@ -1,6 +1,6 @@
 import { Store } from 'redux'
 
-import { FocusedAction } from '../FocusedAction'
+import { FocusedAction } from '../util/FocusedAction'
 import { Logger } from './Logger'
 import { defaultLoggerOptions, LoggerOptions } from './LoggerOptions'
 

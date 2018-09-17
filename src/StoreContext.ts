@@ -1,5 +1,5 @@
-import { ActionObject } from './ActionObject'
 import { Store } from './Store'
+import { ActionObject } from './util/ActionObject'
 
 export interface StoreContext {
    registerEpics: (epics: any, store: Store<any>) => void

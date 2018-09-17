@@ -5,7 +5,7 @@ import { ComputedState } from './ComputedState'
 export type FocusedReadonlySelection<
    Type extends {
       state: PlainObject
-      computedValues: object
+      computedValues: PlainObject
    },
    Selection
 > = (

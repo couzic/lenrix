@@ -1,4 +1,4 @@
-import { mapTo } from 'rxjs/operators'
+import { map, mapTo } from 'rxjs/operators'
 
 import { createStore } from './createStore'
 
@@ -23,6 +23,10 @@ interface Actions {
 }
 
 const store = createStore(state).actionTypes<Actions>()
+
+store.epics({
+   doNumber: map(n => ({ doString: String(n) }))
+})
 
 // Mapping to empty object @shouldNotCompile
 store.epics({

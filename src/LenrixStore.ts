@@ -15,15 +15,17 @@ import {
    startWith
 } from 'rxjs/operators'
 
-import { ActionObject } from './ActionObject'
-import { ComputedState } from './ComputedState'
-import { FocusedHandlers } from './FocusedHandlers'
-import { FocusedReadonlySelection } from './FocusedReadonlySelection'
 import { LenrixLightStore } from './LenrixLightStore'
 import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
+import { ActionObject } from './util/ActionObject'
+import { ComputedState } from './util/ComputedState'
+import { ExcludeKeys } from './util/ExcludeKeys'
+import { FocusedHandlers } from './util/FocusedHandlers'
+import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
+import { NullableKeys } from './util/NullableKeys'
 
 export interface ActionMeta {
    store: {
@@ -245,9 +247,9 @@ export class LenrixStore<
             'LenrixStore.cherryPick() does not accept higher order functions as arguments'
          )
       return this.computedState$.pipe(
-         map(state => cherryPick(state, selectedFields)),
+         map(state => cherryPick(state, selectedFields as any)),
          distinctUntilChanged(shallowEquals)
-      )
+      ) as any
    }
 
    public pluck(...params: any[]): Observable<any> {
@@ -280,6 +282,26 @@ export class LenrixStore<
          this.context,
          this.path
       )
+   }
+
+   public rejectNilFields<K extends NullableKeys<ComputedState<Type>>>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      ...keys: K[]
+   ): Store<{
+      state: Type['state']
+      computedValues: {
+         [P in keyof ExcludeKeys<
+            Type['computedValues'],
+            K & keyof Type['computedValues']
+         >]: ExcludeKeys<
+            Type['computedValues'],
+            K & keyof Type['computedValues']
+         >[P]
+      }
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }> {
+      return this as any
    }
 
    //////////////
@@ -704,4 +726,28 @@ export class LenrixStore<
          path
       )
    }
+
+   // computeJoin$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
+   //    const data$ = this.data$.mergeMap(data => {
+   //       const state = this.dataToState(data)
+   //       const newComputedValues$ = computer$(Observable.of(state))
+   //       return newComputedValues$.map(newComputedValues => ({
+   //          normalizedState: data.normalizedState,
+   //          computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+   //       }))
+   //    })
+   //    const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = initialValues
+   //       ? {
+   //          normalizedState: this.initialData.normalizedState,
+   //          computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
+   //       }
+   //       : this.initialData
+   //    return new LenrixStore(
+   //       data$,
+   //       (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+   //       initialData,
+   //       (updater: any) => this.update(updater),
+   //       this.path + '.computeJoin$()'
+   //    )
+   // }
 }

@@ -3,5 +3,6 @@
 npm-debug.log
 
 # IDE #
+.vscode
 .idea
 *.swp

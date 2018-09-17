@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs'
 
-import { ComputedState } from './ComputedState'
 import { LightStore } from './LightStore'
 import { Store } from './Store'
+import { ComputedState } from './util/ComputedState'
 
 export class LenrixLightStore<
    Type extends {
