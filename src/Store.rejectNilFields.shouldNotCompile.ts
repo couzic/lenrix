@@ -22,8 +22,9 @@ const todoListStore = todoStore.focusPath('list')
 type S = (typeof store)['currentComputedState']
 type Toto = NullableKeys<S>
 store.computedState$
+
 // Should make normalized state fields non-nullable
-const count: number = store.rejectNilFields('toto').currentComputedState
+// const count: number = store.rejectNilFields('toto').currentComputedState
 //    .counter
 // const count: number = store.rejectNilFields('counter').currentComputedState
 //    .counter

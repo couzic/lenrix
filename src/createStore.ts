@@ -77,7 +77,10 @@ export function createFocusableStore<State extends PlainObject>(
 
    output$.subscribe(action => dispatchActionObject(action))
 
+   let hasDispatched = false
+
    const dispatchActionObject = (action: ActionObject<any>) => {
+      hasDispatched = true
       const meta = {} as any
       const types = Object.keys(action)
       if (types.length > 1)
@@ -171,6 +174,17 @@ export function createFocusableStore<State extends PlainObject>(
    }
 
    const registerEpics = <Actions>(newEpics: any, store: Store<any>) => {
+      if (hasDispatched)
+         console.log(
+            '%c 🔎  ⚠️ WARNING ⚠️',
+            'background-color: red; color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
+            'You are trying to register epics after actions have been dispatched. This could lead to strange behavior, including epics being canceled before completion.',
+            'We advise you NOT to do this.',
+            'Concerned epics:',
+            Object.keys(newEpics),
+            'store:',
+            store.path
+         )
       const actionTypes = Object.keys(newEpics)
       actionTypes.forEach(actionType => {
          const currentEpics = epicHandlers[actionType] || []
