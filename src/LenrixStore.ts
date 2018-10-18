@@ -18,7 +18,7 @@ import {
 import { LenrixLightStore } from './LenrixLightStore'
 import { LightStore } from './LightStore'
 import { shallowEquals } from './shallowEquals'
-import { Store } from './Store'
+import { HmrHandlers, Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { ActionObject } from './util/ActionObject'
 import { ComputedState } from './util/ComputedState'
@@ -142,6 +142,18 @@ export class LenrixStore<
       this.dataSubject
          .pipe(map(dataToComputedState))
          .subscribe(this.computedStateSubject)
+   }
+
+   public hmrUpdate({
+      epics,
+      handlers,
+      effects
+   }: HmrHandlers<FocusedHandlers<Type>>): void {
+      !!handlers && this.registerHandlers(handlers)
+
+      !!epics && this.context.registerEpics(epics, this as any)
+
+      !!effects && this.context.registerSideEffects(effects, this as any)
    }
 
    //////////////

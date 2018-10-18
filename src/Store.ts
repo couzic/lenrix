@@ -29,6 +29,12 @@ type F = NullableFields<Toto>
 
 // type ExtractNullableFields<T extends PlainObject> = { [K in Extract<ke>]:  }
 
+export interface HmrHandlers<T> {
+   handlers?: T
+   epics?: any
+   effects?: any
+}
+
 export interface Store<
    Type extends {
       state: any
@@ -49,6 +55,16 @@ export interface Store<
       [K in keyof ComputedState<Type>]: ComputedState<Type>[K]
    }
    readonly path: string
+
+   //////////////
+   //   HMR   //
+   ////////////
+
+   hmrUpdate({
+      epics,
+      handlers,
+      effects
+   }: HmrHandlers<FocusedHandlers<Type>>): void
 
    //////////////
    // ACTIONS //
