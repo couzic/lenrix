@@ -23,12 +23,6 @@ type Toto = {
 
 type F = NullableFields<Toto>
 
-// type ExtractFields<T extends PlainObject, U> = {
-//    [K in NullableFields<T, K>]: T[K]
-// }
-
-// type ExtractNullableFields<T extends PlainObject> = { [K in Extract<ke>]:  }
-
 export interface Store<
    Type extends {
       state: any
@@ -37,6 +31,11 @@ export interface Store<
       dependencies: object
    }
 > {
+   actions: {
+      [K in keyof Type['actions']]: Type['actions'][K] extends void
+         ? () => void
+         : (payload: Type['actions'][K]) => void
+   }
    name?: string
 
    readonly localLens: UnfocusedLens<Type['state']>

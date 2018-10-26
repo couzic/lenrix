@@ -19,7 +19,7 @@ interface Actions {
    doNull: null
    doVoid: void
    doUndefined: undefined
-   doOptionalString: string | undefined
+   doOptionalString: string | null
 }
 
 const store = createStore(state).actionTypes<Actions>()
@@ -48,6 +48,12 @@ store
       doString: number
    }>()
    .dispatch({ doString: 42 })
+
+// Calling dispatcher without param @shouldNotCompile
+store.actions.doString()
+
+// Calling dispatcher with wrong optional param @shouldNotCompile
+store.actions.doOptionalString(undefined)
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //

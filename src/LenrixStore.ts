@@ -38,7 +38,7 @@ export interface ActionMeta {
 
 export interface StoreData<
    Type extends {
-      state: any
+      state: unknown
       computedValues: object
    }
 > {
@@ -73,6 +73,7 @@ export class LenrixStore<
    public readonly localReadonlyLens: UnfocusedLens<
       ComputedState<Type>
    > = createLens<ComputedState<Type>>()
+   public readonly actions: any = {}
 
    private readonly dataSubject: BehaviorSubject<StoreData<Type>>
    private readonly computedStateSubject: BehaviorSubject<ComputedState<Type>>
@@ -241,7 +242,7 @@ export class LenrixStore<
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection> {
-      const selectedFields = selection(this.localLens)
+      const selectedFields = selection(this.localLens as any)
       if (typeof selectedFields === 'function')
          throw Error(
             'LenrixStore.cherryPick() does not accept higher order functions as arguments'
@@ -504,7 +505,7 @@ export class LenrixStore<
            }
          : this.initialData
       return new LenrixStore(
-         data$.pipe(skip(1)),
+         data$.pipe(skip(1) as any),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          initialData,
          this.registerHandlers,
@@ -633,7 +634,7 @@ export class LenrixStore<
       return new LenrixStore(
          this.dataSubject.pipe(
             map(toFocusedData),
-            distinctUntilChanged(
+            distinctUntilChanged<any>(
                (previous, next) =>
                   previous.state === next.state &&
                   shallowEquals(previous.computedValues, next.computedValues)
@@ -673,7 +674,7 @@ export class LenrixStore<
       return new LenrixStore(
          this.dataSubject.pipe(
             map(toPickedData),
-            distinctUntilChanged(dataEquals)
+            distinctUntilChanged<any>(dataEquals)
          ),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toPickedData(this.initialData),
@@ -717,7 +718,7 @@ export class LenrixStore<
          this.dataSubject.pipe(
             map(toRecomposedData),
             distinctUntilChanged(dataEquals),
-            skip(1)
+            skip(1) as any
          ),
          (data: any) => ({ ...data.state, ...data.computedValues }),
          toRecomposedData(this.initialData),
