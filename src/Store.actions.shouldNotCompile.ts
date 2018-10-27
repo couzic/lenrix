@@ -50,10 +50,10 @@ store
    .dispatch({ doString: 42 })
 
 // Calling dispatcher without param @shouldNotCompile
-store.actions.doString()
+store.action('doString')()
 
 // Calling dispatcher with wrong optional param @shouldNotCompile
-store.actions.doOptionalString(undefined)
+store.action('doOptionalString')(undefined)
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //

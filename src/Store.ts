@@ -31,11 +31,6 @@ export interface Store<
       dependencies: object
    }
 > {
-   actions: {
-      [K in keyof Type['actions']]: Type['actions'][K] extends void
-         ? () => void
-         : (payload: Type['actions'][K]) => void
-   }
    name?: string
 
    readonly localLens: UnfocusedLens<Type['state']>
@@ -78,9 +73,15 @@ export interface Store<
    ): Store<Type>
 
    dispatch(action: ActionObject<Type['actions']>): void
+
+   action<Action extends keyof Type['actions']>(
+      action: Action
+   ): Type['actions'][Action] extends void | null
+      ? () => void
+      : (payload: Type['actions'][Action]) => void
+
    // TODO Implement ?
    // dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType]>(type: ActionType, payload: Payload): void
-
    // action$: Observable<Type['actions']>
 
    epics(

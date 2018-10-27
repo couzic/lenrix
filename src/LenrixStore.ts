@@ -197,6 +197,10 @@ export class LenrixStore<
       this.context.dispatchActionObject(action, this.makeActionMeta())
    }
 
+   public action(action: any): any {
+      return (payload: any) => this.dispatch({ [action]: payload })
+   }
+
    public epics(epics: any): Store<Type> {
       this.context.registerEpics(epics, this as any)
       return new LenrixStore(

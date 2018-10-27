@@ -1,9 +1,10 @@
 {
   "name": "lenrix",
-  "version": "0.4.11",
+  "version": "0.5.0",
   "description": "Type-safe, reactive, lens-focused, immutable state management",
   "keywords": [
     "typescript",
+    "redux",
     "rxjs",
     "lens",
     "immutable",

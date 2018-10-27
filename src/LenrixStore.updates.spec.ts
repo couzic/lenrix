@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
@@ -12,9 +11,6 @@ interface Actions {
 }
 
 describe('LenrixStore.updates()', () => {
-   const lens = createLens<State>()
-   const todoListLens = lens.focusPath('todo', 'list')
-
    let rootStore: Store<{
       state: State
       computedValues: {}
@@ -26,11 +22,9 @@ describe('LenrixStore.updates()', () => {
       rootStore = createStore(initialState, { logger: silentLoggerOptions })
          .actionTypes<Actions>()
          .updates(_ => ({
-            clearTodoList: () => _.focusPath('todo', 'list').setValue([])
-         }))
-         .updates({
+            clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
             resetCounter: () => state => ({ ...state, counter: 0 })
-         })
+         }))
    })
 
    it('applies updates declared using no-lens object', () => {
