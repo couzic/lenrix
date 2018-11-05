@@ -139,7 +139,12 @@ export function createFocusableStore<State extends PlainObject>(
    const augmentedReducer: Reducer<State> = (state, action) => {
       const updateHandler = updateHandlers[action.type]
       if (updateHandler) {
-         return updateHandler(action.payload)(state || preloadedState)
+         try {
+            return updateHandler(action.payload)(state || preloadedState)
+         } catch (e) {
+            console.error('LENRIX ERROR', action, state)
+            return state || preloadedState
+         }
       } else {
          return reducer(state, action)
       }

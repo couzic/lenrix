@@ -1,9 +1,14 @@
-import { expect } from 'chai'
+import * as chai from 'chai'
+import { SinonStub, stub } from 'sinon'
+import * as sinonChai from 'sinon-chai'
 
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
 import { Store } from './Store'
+
+chai.use(sinonChai)
+const { expect } = chai
 
 interface Actions {
    clearTodoList: void
@@ -142,5 +147,23 @@ describe('LenrixStore.updates()', () => {
             clearTodoList: () => _.focusPath('todo', 'list').setValue([])
          }))
       ).to.throw('updater')
+   })
+
+   it('it catches error thrown by updater', () => {
+      stub(console, 'error')
+
+      const store = rootStore
+         .actionTypes<{ setUserName: string }>()
+         .updates(_ => ({
+            setUserName: name =>
+               _.focusPath('user').update(user => ({
+                  name,
+                  address: user!.address
+               }))
+         }))
+
+      expect(() => store.dispatch({ setUserName: 'Bob' })).not.to.throw()
+      expect(console.error).to.have.been.calledOnce
+      ;(console.error as SinonStub).restore()
    })
 })
