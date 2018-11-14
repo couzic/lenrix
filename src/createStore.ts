@@ -2,6 +2,7 @@ import { PlainObject, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject, merge, Observable, of, Subject } from 'rxjs'
 import {
+   catchError,
    distinctUntilChanged,
    filter,
    map,
@@ -61,13 +62,26 @@ export function createFocusableStore<State extends PlainObject>(
          const actionTypes = Object.keys(epics)
          return of(...actionTypes).pipe(
             mergeMap(actionType => {
-               const action$ = input$.pipe(
+               const payload$ = input$.pipe(
                   map(input => input.action),
                   filter(action => action.type === actionType),
                   map(action => action.payload)
                )
-               const outputAction$ = epics[actionType].map(({ epic, store }) =>
-                  epic(action$, store)
+               const outputAction$ = epics[actionType].map(
+                  ({ epic, store }) => {
+                     const safeEpic = (): any =>
+                        // Here, payload$ has already emitted the value causing the error, which is then ignored
+                        epic(payload$, store).pipe(
+                           catchError(error => {
+                              logger.error({
+                                 source: { type: 'epic', store, actionType },
+                                 nativeError: error
+                              })
+                              return safeEpic()
+                           })
+                        )
+                     return safeEpic()
+                  }
                )
                return merge(...outputAction$)
             })

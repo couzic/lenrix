@@ -1,6 +1,7 @@
 import { Store } from 'redux'
 
 import { FocusedAction } from '../util/FocusedAction'
+import { LenrixError } from './LenrixError'
 import { Logger } from './Logger'
 import { defaultLoggerOptions, LoggerOptions } from './LoggerOptions'
 
@@ -37,8 +38,8 @@ const createMessageLogger = (
    }
 }
 
-const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
-   return options.console!.update
+const createUpdateLogger = (options: LoggerOptions): Logger['update'] =>
+   options.console!.update
       ? (action: FocusedAction) => {
            if (typeof console.groupCollapsed === 'function')
               console.groupCollapsed(
@@ -51,7 +52,6 @@ const createUpdateLogger = (options: LoggerOptions): Logger['update'] => {
            if (typeof console.groupEnd === 'function') console.groupEnd()
         }
       : doNothing
-}
 
 const createEpicLogger = (
    reduxStore: Store<any>,
@@ -118,6 +118,21 @@ const createComputeLogger = (
    }
 }
 
+const createErrorLogger = (options: LoggerOptions): Logger['error'] =>
+   options.console!.error
+      ? (error: LenrixError) => {
+           if (typeof console.groupCollapsed === 'function')
+              console.groupCollapsed(
+                 '%c 🔎  ⚠️ ERROR ⚠️',
+                 'background-color: red; color: #fff; padding: 2px 8px 2px 0; border-radius:6px;',
+                 error.source.type
+              )
+           console.log('source', error.source)
+           console.log('nativeError', error.nativeError)
+           if (typeof console.groupEnd === 'function') console.groupEnd()
+        }
+      : doNothing
+
 export const createLogger = (
    reduxStore: Store<any, any>,
    userOptions: LoggerOptions = defaultLoggerOptions
@@ -129,5 +144,6 @@ export const createLogger = (
    const update: Logger['update'] = createUpdateLogger(options)
    const epic: Logger['epic'] = createEpicLogger(reduxStore, options)
    const compute: Logger['compute'] = createComputeLogger(reduxStore, options)
-   return { message, update, epic, compute }
+   const error: Logger['error'] = createErrorLogger(options)
+   return { message, update, epic, compute, error }
 }

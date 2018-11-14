@@ -142,4 +142,24 @@ describe('LenrixStore.epics()', () => {
          ;(console.log as SinonStub).restore()
       })
    })
+
+   it('updates state even after previous epic threw an error', () => {
+      store = createStore(initialState, { logger: silentLoggerOptions })
+         .actionTypes<Actions>()
+         .updates(_ => ({
+            incrementCounter: () => _.updateFields({ counter: val => val + 1 })
+         }))
+         .epics({
+            setCounter: map(counter => {
+               if (counter !== 1)
+                  throw new Error('Should be caught by LenrixStore')
+               else return { incrementCounter: undefined }
+            })
+         })
+
+      store.dispatch({ setCounter: 99999999 }) // Error
+      store.dispatch({ setCounter: 1 }) // OK
+
+      expect(store.currentState.counter).to.equal(1)
+   })
 })

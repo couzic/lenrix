@@ -1,25 +1,24 @@
 export interface LoggerOptions {
-   console?: {
-      message?: boolean
-      update?: boolean
-      epic?: boolean
-      compute?: boolean
-   }
-   redux?: {
-      message?: boolean
-      epic?: boolean
-      compute?: boolean
-   }
+   console?: ConsoleLoggerOptions
+   redux?: ReduxLoggerOptions
 }
 
-const defaultConsoleLoggerOptions: LoggerOptions['console'] = {
+type ReduxLogSource = 'message' | 'epic' | 'compute'
+type ConsoleLogSource = ReduxLogSource | 'update' | 'error'
+
+type ConsoleLoggerOptions = { [K in ConsoleLogSource]?: boolean }
+
+const defaultConsoleLoggerOptions: { [K in ConsoleLogSource]: boolean } = {
    message: true,
    update: true,
    epic: true,
-   compute: true
+   compute: true,
+   error: true
 }
 
-const defaultReduxLoggerOptions: LoggerOptions['redux'] = {
+type ReduxLoggerOptions = { [K in ReduxLogSource]?: boolean }
+
+const defaultReduxLoggerOptions: { [K in ReduxLogSource]: boolean } = {
    message: false,
    epic: false,
    compute: false
