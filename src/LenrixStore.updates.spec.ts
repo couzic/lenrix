@@ -1,5 +1,4 @@
 import * as chai from 'chai'
-import { SinonStub, stub } from 'sinon'
 import * as sinonChai from 'sinon-chai'
 
 import { initialState, State } from '../test/State'
@@ -149,21 +148,38 @@ describe('LenrixStore.updates()', () => {
       ).to.throw('updater')
    })
 
-   it('it catches error thrown by updater', () => {
-      stub(console, 'error')
-
-      const store = rootStore
-         .actionTypes<{ setUserName: string }>()
+   it('applies update even after previous update threw an error', () => {
+      const store = createStore({ name: '' }, { logger: silentLoggerOptions })
+         .actionTypes<{ setName: string }>()
          .updates(_ => ({
-            setUserName: name =>
-               _.focusPath('user').update(user => ({
-                  name,
-                  address: user!.address
-               }))
+            setName: name => state => {
+               if (name === 'Bob')
+                  throw Error('Should be caught by lenrix store')
+               else return { name }
+            }
          }))
 
-      expect(() => store.dispatch({ setUserName: 'Bob' })).not.to.throw()
-      expect(console.error).to.have.been.calledOnce
-      ;(console.error as SinonStub).restore()
+      store.dispatch({ setName: 'Bob' })
+      store.dispatch({ setName: 'Steve' })
+
+      expect(store.currentState.name).to.equal('Steve')
    })
+
+   // it('catches error thrown by updater', () => {
+   //    stub(console, 'log')
+
+   //    const store = rootStore
+   //       .actionTypes<{ setUserName: string }>()
+   //       .updates(_ => ({
+   //          setUserName: name =>
+   //             _.focusPath('user').update(user => ({
+   //                name,
+   //                address: user!.address
+   //             }))
+   //       }))
+
+   //    expect(() => store.dispatch({ setUserName: 'Bob' })).not.to.throw()
+   //    expect(console.log).to.have.been.calledOnce
+   //    ;(console.log as SinonStub).restore()
+   // })
 })

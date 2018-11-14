@@ -7,7 +7,6 @@ type LenrixErrorSource = UpdateError | EpicError | ComputeError
 
 interface UpdateError {
    type: 'update'
-   store: any
    actionType: string
    payload: any
 }

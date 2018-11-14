@@ -156,7 +156,14 @@ export function createFocusableStore<State extends PlainObject>(
          try {
             return updateHandler(action.payload)(state || preloadedState)
          } catch (e) {
-            console.error('LENRIX ERROR', action, state)
+            logger.error({
+               source: {
+                  type: 'update',
+                  actionType: action.type,
+                  payload: action.payload
+               },
+               nativeError: e
+            })
             return state || preloadedState
          }
       } else {
