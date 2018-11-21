@@ -263,4 +263,12 @@ describe('LenrixStore.compute()', () => {
          'compute() does not accept higher order functions'
       )
    })
+
+   it('throws error when computer does not return', () => {
+      expect(() =>
+         store.compute((() => {
+            // Never return
+         }) as any)
+      ).to.throw()
+   })
 })

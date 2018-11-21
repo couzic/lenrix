@@ -131,6 +131,16 @@ describe('LenrixStore.computeFromFields()', () => {
       expect(cs.currentComputedState.computed).to.equal(store.currentState.todo)
    })
 
+   /////////////////////
+   // RUNTIME CHECKS //
+   ///////////////////
+
+   it('throws error when computing values with higher order function', () => {
+      expect(() => store.computeFromFields([], () => () => null)).to.throw(
+         'does not accept higher order functions'
+      )
+   })
+
    it('throws error when dispatching action on light store', () => {
       expect(() =>
          store.computeFromFields(['flag'], (s, lightStore) => {
@@ -139,6 +149,14 @@ describe('LenrixStore.computeFromFields()', () => {
                computed: lightStore.currentState.todo
             }
          })
+      ).to.throw()
+   })
+
+   it('throws error when computer does not return', () => {
+      expect(() =>
+         store.computeFromFields(['flag'], (() => {
+            // Never return
+         }) as any)
       ).to.throw()
    })
 })

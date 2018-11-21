@@ -327,6 +327,10 @@ export class LenrixStore<
             ...(data.computedValues as any)
          }
          const newComputedValues = computer(computedState, this.light)
+         if (newComputedValues === undefined)
+            throw Error(
+               'LenrixStore.compute() provided function MUST return an object (empty objects are allowed)'
+            )
          if (typeof newComputedValues === 'function')
             throw Error(
                'LenrixStore.compute() does not accept higher order functions as arguments'
@@ -412,6 +416,14 @@ export class LenrixStore<
          previouslyComputedValues?: ComputedValues
       ): ComputedValues => {
          const computedValues = computer(selection, this.light)
+         if (computedValues === undefined)
+            throw Error(
+               'LenrixStore.computeFrom() and .computeFromFields() provided function MUST return an object (empty objects are allowed)'
+            )
+         if (typeof computedValues === 'function')
+            throw Error(
+               'LenrixStore.computeFrom() and .computeFromFields() does not accept higher order functions as arguments'
+            )
          this.context.dispatchCompute(
             this as any,
             previouslyComputedValues,

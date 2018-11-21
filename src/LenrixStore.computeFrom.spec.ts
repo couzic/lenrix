@@ -140,4 +140,22 @@ describe('LenrixStore.computeFrom()', () => {
       )
       expect(cs.currentComputedState.computed).to.equal(store.currentState.todo)
    })
+
+   /////////////////////
+   // RUNTIME CHECKS //
+   ///////////////////
+
+   it('throws error when computing values with higher order function', () => {
+      expect(() => store.computeFrom(_ => ({}), () => () => null)).to.throw(
+         'does not accept higher order functions'
+      )
+   })
+
+   it('throws error when computer does not return', () => {
+      expect(() =>
+         store.computeFrom(() => ({}), (() => {
+            // Never return
+         }) as any)
+      ).to.throw()
+   })
 })
