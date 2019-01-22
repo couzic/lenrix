@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs'
 
+import { ActionObservable } from './util/ActionObservable'
 import { ComputedState } from './util/ComputedState'
 
 export interface LightStore<
@@ -14,4 +15,5 @@ export interface LightStore<
    readonly currentState: Type['state']
    readonly computedState$: Observable<ComputedState<Type>>
    readonly currentComputedState: ComputedState<Type>
+   readonly action$: ActionObservable<Type['actions']>
 }

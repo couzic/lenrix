@@ -21,6 +21,7 @@ import { shallowEquals } from './shallowEquals'
 import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { ActionObject } from './util/ActionObject'
+import { ActionObservable } from './util/ActionObservable'
 import { ComputedState } from './util/ComputedState'
 import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
@@ -105,6 +106,10 @@ export class LenrixStore<
 
    get currentComputedValues(): Type['computedValues'] {
       return this.dataSubject.getValue().computedValues
+   }
+
+   get action$(): ActionObservable<Type['actions']> {
+      return this.context.action$
    }
 
    // getState$(this: LenrixStore<Type & { state: PlainObject<Type['state']>}, RootState>): Observable<ComputedState<Type>>

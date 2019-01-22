@@ -16,10 +16,6 @@ const state: State = {} as any
 interface Actions {
    doString: string
    doNumber: number
-   doNull: null
-   doVoid: void
-   doUndefined: undefined
-   doOptionalString: string | null
 }
 
 const store = createStore(state).actionTypes<Actions>()

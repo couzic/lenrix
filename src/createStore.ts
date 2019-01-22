@@ -39,6 +39,13 @@ export function createFocusableStore<State extends PlainObject>(
    actions: {}
    dependencies: {}
 }> {
+   const action$ = new Subject<any>()
+   ;(action$ as any).ofType = (type: string) =>
+      action$.pipe(
+         filter(action => action.type === type),
+         map(action => action.payload)
+      )
+
    const input$ = new Subject<{
       action: FocusedAction
       meta: object
@@ -123,15 +130,16 @@ export function createFocusableStore<State extends PlainObject>(
             meta
          })
       }
-      if (hasEpicHandler) {
-         // EPIC
-         logger.epic(action)
-         input$.next({ action, meta })
-      }
       if (hasSideEffect) {
          // SIDE EFFECTS
          const { handler, store } = sideEffects[action.type]
          handler(action.payload, store)
+      }
+      action$.next(action)
+      if (hasEpicHandler) {
+         // EPIC
+         logger.epic(action)
+         input$.next({ action, meta })
       }
    }
 
@@ -245,6 +253,7 @@ export function createFocusableStore<State extends PlainObject>(
    }
 
    const context: StoreContext = {
+      action$,
       registerEpics,
       registerSideEffects,
       dispatchActionObject,

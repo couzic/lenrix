@@ -3,25 +3,13 @@ import { Observable, OperatorFunction } from 'rxjs'
 
 import { LightStore } from './LightStore'
 import { ActionObject } from './util/ActionObject'
+import { ActionObservable } from './util/ActionObservable'
 import { ComputedState } from './util/ComputedState'
 import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
 import { FocusedUpdatableSelection } from './util/FocusedUpdatableSelection'
 import { NullableKeys } from './util/NullableKeys'
-
-type NullableFields<T extends PlainObject> = {
-   [K in keyof T]: T[K] extends NonNullable<T[K]> ? { [P in K]: T[P] } : never
-}[keyof T]
-
-type Toto = {
-   name: string
-   name2: string
-   age: number | undefined
-   age2: number | undefined
-}
-
-type F = NullableFields<Toto>
 
 export interface Store<
    Type extends {
@@ -42,6 +30,7 @@ export interface Store<
    readonly currentComputedState: {
       [K in keyof ComputedState<Type>]: ComputedState<Type>[K]
    }
+   readonly action$: ActionObservable<Type['actions']>
    readonly path: string
 
    //////////////
