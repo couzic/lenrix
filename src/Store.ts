@@ -5,6 +5,7 @@ import { LightStore } from './LightStore'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
 import { ComputedState } from './util/ComputedState'
+import { Epics } from './util/Epics'
 import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
@@ -71,17 +72,12 @@ export interface Store<
 
    // TODO Implement ?
    // dispatch<ActionType extends keyof Type['actions'], Payload extends Type['actions'][ActionType]>(type: ActionType, payload: Payload): void
-   // action$: Observable<Type['actions']>
 
    epics(
-      epics: {
-         [ActionType in keyof Type['actions']]?: (
-            payload$: Observable<Type['actions'][ActionType]>,
-            store: LightStore<Type>,
-            dependencies: Type['dependencies']
-         ) => Observable<ActionObject<Type['actions']>>
-      }
+      epicsBuilder: (store: LightStore<Type>) => Epics<Type['actions']>
    ): Store<Type>
+
+   pureEpics(epics: Epics<Type['actions']>): Store<Type>
 
    sideEffects(
       effects: {

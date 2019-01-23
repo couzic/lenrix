@@ -36,7 +36,7 @@ interface Actions {
    setTodoCount: number
 }
 
-describe('LenrixStore.epics()', () => {
+describe('LenrixStore Epics', () => {
    let store: Store<{
       state: State
       computedValues: {}
@@ -53,7 +53,10 @@ describe('LenrixStore.epics()', () => {
             setTodoCount: todoCount =>
                _.focusPath('todo', 'count').setValue(todoCount)
          }))
-         .epics({
+         .updates({
+            buttonClicked: () => state => state
+         })
+         .pureEpics({
             buttonClicked: mapTo({ incrementCounter: undefined })
          })
    })
@@ -73,7 +76,7 @@ describe('LenrixStore.epics()', () => {
       expect(() => {
          createStore(initialState, { logger: silentLoggerOptions })
             .actionTypes<Actions>()
-            .epics({
+            .pureEpics({
                buttonClicked: mapTo({
                   setCounter: 0,
                   incrementCounter: undefined
@@ -87,15 +90,11 @@ describe('LenrixStore.epics()', () => {
       expect(store.currentState.todo.list.length).to.equal(0)
       expect(store.currentState.todo.count).to.equal(0)
 
-      store.epics({
-         setCounter: (payload$, lightStore) => {
-            return payload$.pipe(
-               map(payload => ({
-                  setTodoCount: lightStore.currentState.counter
-               }))
-            )
-         }
-      })
+      store.epics(s => ({
+         setCounter: map(() => ({
+            setTodoCount: s.currentState.counter
+         }))
+      }))
       store.dispatch({ setCounter: 42 })
 
       expect(store.currentState.todo.count).to.equal(42)
@@ -103,7 +102,7 @@ describe('LenrixStore.epics()', () => {
 
    it('supports distinctUntilChanged()', () => {
       expect(store.currentState.counter).to.equal(0)
-      store.epics({
+      store.pureEpics({
          setTodoCount: pipe(
             distinctUntilChanged(),
             mapTo({ incrementCounter: undefined })
@@ -117,10 +116,10 @@ describe('LenrixStore.epics()', () => {
 
    it('supports multiple epics for single action', () => {
       expect(store.currentState.counter).to.equal(0)
-      store.epics({
+      store.pureEpics({
          setTodoCount: mapTo({ incrementCounter: undefined })
       })
-      store.epics({
+      store.pureEpics({
          setTodoCount: mapTo({ incrementCounter: undefined })
       })
       store.dispatch({ setTodoCount: 42 })
@@ -131,7 +130,7 @@ describe('LenrixStore.epics()', () => {
       beforeEach(() => {
          stub(console, 'log')
          store.dispatch({ buttonClicked: undefined })
-         store.epics({
+         store.pureEpics({
             setTodoCount: mapTo({ incrementCounter: undefined })
          })
       })
@@ -149,7 +148,7 @@ describe('LenrixStore.epics()', () => {
          .updates(_ => ({
             incrementCounter: () => _.updateFields({ counter: val => val + 1 })
          }))
-         .epics({
+         .pureEpics({
             setCounter: map(counter => {
                if (counter !== 1)
                   throw new Error('Should be caught by LenrixStore')

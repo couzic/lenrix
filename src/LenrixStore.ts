@@ -207,6 +207,10 @@ export class LenrixStore<
    }
 
    public epics(epics: any): Store<Type> {
+      return this.pureEpics(epics(this.light))
+   }
+
+   public pureEpics(epics: any): Store<Type> {
       this.context.registerEpics(epics, this as any)
       return new LenrixStore(
          this.dataSubject,

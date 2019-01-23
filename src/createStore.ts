@@ -1,15 +1,7 @@
 import { PlainObject, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject, merge, Observable, of, Subject } from 'rxjs'
-import {
-   catchError,
-   distinctUntilChanged,
-   filter,
-   map,
-   mergeMap,
-   skip,
-   switchMap
-} from 'rxjs/operators'
+import { catchError, distinctUntilChanged, filter, map, mergeMap, skip, switchMap } from 'rxjs/operators'
 
 import { ActionMeta, LenrixStore } from './LenrixStore'
 import { createLogger } from './logger/createLogger'
@@ -55,10 +47,7 @@ export function createFocusableStore<State extends PlainObject>(
       Record<
          string,
          Array<{
-            epic: (
-               payload$: Observable<any>,
-               store: Store<any>
-            ) => Observable<any>
+            epic: (payload$: Observable<any>) => Observable<any>
             store: Store<any>
          }>
       >
@@ -78,7 +67,7 @@ export function createFocusableStore<State extends PlainObject>(
                   ({ epic, store }) => {
                      const safeEpic = (): any =>
                         // Here, payload$ has already emitted the value causing the error, which is then ignored
-                        epic(payload$, store).pipe(
+                        epic(payload$).pipe(
                            catchError(error => {
                               logger.error({
                                  source: { type: 'epic', store, actionType },
@@ -149,7 +138,7 @@ export function createFocusableStore<State extends PlainObject>(
    const epicHandlers: Record<
       string,
       Array<{
-         epic: (payload$: Observable<any>, store: Store<any>) => Observable<any>
+         epic: (payload$: Observable<any>) => Observable<any>
          store: Store<any>
       }>
    > = {}
@@ -201,8 +190,7 @@ export function createFocusableStore<State extends PlainObject>(
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
-         if (updateHandlers[actionType] !== undefined)
-            throw Error('Cannot register two updaters for the same action type')
+         if (updateHandlers[actionType] !== undefined) throw Error('Cannot register two updaters for the same action type')
          updateHandlers[actionType] = (newHandlers as any)[actionType]
       })
    }

@@ -46,8 +46,7 @@
     - [`distinctUntilFieldsChanged()`](#distinctuntilfieldschanged)
   - [`epics()`](#epics)
   - [`sideEffects()`](#sideeffects)
-  - [`dependencies()`](#dependencies)
-  - [Injected `store` and `dependencies`](#injected-store-and-dependencies)
+  - [Injected `store`](#injected-store)
 - [Testing](#testing)
   - [Test Setup](#test-setup)
     - [Root store](#root-store)
@@ -467,7 +466,7 @@ createStore({name: '', message: ''})
       setName: name => lens.setFields({name}),
       setMessage: message => lens.setFields({message})
    }))
-   .epics({
+   .epics(store => ({
       // WITH SINGLE OPERATOR...
       setName: map(name => ({setMessage: 'Hello, ' + name}))
       // ... OR WITH MULTIPLE OPERATORS
@@ -475,7 +474,7 @@ createStore({name: '', message: ''})
          map(name => 'Hello, ' + name),
          map(message => ({setMessage: message}))
       )
-   })
+   }))
 ```
 
 ### `sideEffects()`
@@ -493,36 +492,14 @@ createStore({ name: '' })
    })
 ```
 
-### `dependencies()`
-The simplest dependency injection mechanism we could think of. Dependencies will be accessible in [various operators](#Injected_store_and_dependencies). Those dependencies can then be overriden in [test setups](#testing).
-```ts
-createStore({ name: '' })
-   .dependencies({
-      greeter: (name: string) => 'Hello, ' + name
-   })
-```
+### Injected `store`
 
-### Injected `store` and `dependencies`
-
-A light version of the store and its registered dependencies are available when using the following operators :
- - [`compute()`](#compute)
+A light version of the store is made available when using the following operators :
  - [`compute$()`](#compute$)
- - [`computeFrom()`](#computeFrom)
  - [`computeFrom$()`](#computeFrom$)
- - [`computeFromFields()`](#computeFromFields)
  - [`computeFromFields$()`](#computeFromFields$)
  - [`epics()`](#epics)
  - [`sideEffects()`](#sideEffects)
-
-```ts
-createStore({ name: '' })
-   .dependencies({
-      greeter: (name: string) => 'Hello, ' + name
-   })
-   .compute((state, store, {greeter}) => ({
-      message: greeter(store.currentState.name)
-   }))
-```
 
 ```ts
 import { mapTo } from 'rxjs/operators'
@@ -536,14 +513,9 @@ createStore({name: '', greeting: ''})
       setName: name => lens.setFields({name}),
       setGreeting: greeting => lens.setFields({greeting})
    }))
-   .dependencies({
-      greeter: (name: string) => 'Hello, ' + name
-   })
-   .epics({
-      setName: (payload$, store, {greeter}) => payload$.pipe(
-         mapTo({setGreeting: greeter(store.currentState.name)})
-      )
-   })
+   .epics(store => ({
+      setName: map(() => ({setGreeting: store.currentState.name}))
+   }))
 ```
 
 ## Testing
@@ -560,13 +532,12 @@ Testing in `lenrix` follows a different approach. Well, technically, in most cas
 A `lenrix` store is to be considered a cohesive **unit** of functionality. We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
 
 As a consequence, we believe store testing should essentially consist in :
-- Injecting [`dependencies`](#dependencies()) (`backend`, `router`...) -->
 - [Dispatching actions](#dispatch)
 - [Asserting state](#asserting-state) (normalized state + computed values)
 
 In some less frequent cases, testing might also consist in :
-- [Asserting dispatched actions](#asserting-dispatched-actions)
 - [Asserting calls on dependencies](#asserting-calls-on-dependencies)
+- [Asserting dispatched actions](#asserting-dispatched-actions)
 
 ### Test Setup
 Each test should run in isolation, therefore we need to create a new store for each test. The most straightforward way is to wrap all store creation code in factory functions.
@@ -681,9 +652,11 @@ describe('RootStore', () => {
 })
 ```
 
+### Asserting calls on dependencies
+
 ### Asserting dispatched actions
 
-### Asserting calls on dependencies
+## Logger
 
 <!-- 
 Consider a `redux` store. It's an object holding the application's whole state, which can be a massive, complex and deep JavaScript plain object. Such complexity can be hard to maintain, so tricks like `combineReducers()` have been invented to allow some kind of concern separation. The store maintains not only the whole state, but also all the operations that can make changes to that state, in the form of reducers (well, technically there's only one reducer, but let's not bother with the technical details right now). So a store is really :
@@ -701,7 +674,3 @@ I hear you asking : "Isn't it the same thing as testing the reducer in isolation
 
 In simple cases, yes, the outcome would be identical. However, in real-life situations where middleware is involved, a single action can trigger a chain of actions. Dispatching an action would effectively trigger the middleware, testing the reducer in isolation would not.
 -->
-
-## Logger
-
-
