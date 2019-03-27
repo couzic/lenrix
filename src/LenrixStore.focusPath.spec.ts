@@ -121,4 +121,12 @@ describe('LenrixStore.focusPath()', () => {
          .dispatch({ clearTodos: undefined })
       expect(focused.currentState).to.be.empty
    })
+
+   it('can store fields as readonly-values', () => {
+      const focused = rootStore.focusPath(['todo'], ['counter'])
+
+      expect(focused.currentComputedState.counter).to.equal(
+         rootStore.currentState.counter
+      )
+   })
 })

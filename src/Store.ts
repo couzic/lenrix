@@ -364,14 +364,14 @@ export interface Store<
 
    focusFields<
       SK extends keyof Type['state'],
-      CK extends keyof Type['computedValues']
+      CK extends keyof ComputedState<Type>
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       keys: SK[],
       computed: CK[]
    ): Store<{
       state: { [P in SK]: Type['state'][P] }
-      computedValues: { [P in CK]: Type['computedValues'][P] }
+      computedValues: { [P in CK]: ComputedState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -385,12 +385,12 @@ export interface Store<
       dependencies: Type['dependencies']
    }>
 
-   recompose<RecomposedState, CK extends keyof Type['computedValues']>(
+   recompose<RecomposedState, CK extends keyof ComputedState<Type>>(
       fields: FocusedUpdatableSelection<Type, RecomposedState>,
       computedValues: CK[]
    ): Store<{
       state: RecomposedState
-      computedValues: { [P in CK]: Type['computedValues'][P] }
+      computedValues: { [P in CK]: ComputedState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -415,13 +415,13 @@ export interface Store<
 
    focusPath<
       SK extends keyof Type['state'],
-      CK extends keyof Type['computedValues']
+      CK extends keyof ComputedState<Type>
    >(
       path: [SK],
       computedValues: CK[]
    ): Store<{
       state: Type['state'][SK]
-      computedValues: { [P in CK]: Type['computedValues'][P] }
+      computedValues: { [P in CK]: ComputedState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -454,13 +454,13 @@ export interface Store<
    focusPath<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
-      CK extends keyof Type['computedValues']
+      CK extends keyof ComputedState<Type>
    >(
       path: [K1, K2],
       computedValues: CK[]
    ): Store<{
       state: Type['state'][K1][K2]
-      computedValues: { [P in CK]: Type['computedValues'][P] }
+      computedValues: { [P in CK]: ComputedState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -497,13 +497,13 @@ export interface Store<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
       K3 extends keyof Type['state'][K1][K2],
-      CK extends keyof Type['computedValues']
+      CK extends keyof ComputedState<Type>
    >(
       path: [K1, K2, K3],
       computedValues: CK[]
    ): Store<{
       state: Type['state'][K1][K2][K3]
-      computedValues: { [P in CK]: Type['computedValues'][P] }
+      computedValues: { [P in CK]: ComputedState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>

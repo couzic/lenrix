@@ -113,4 +113,15 @@ describe('LenrixStore.recompose()', () => {
          initialState.todo.list
       )
    })
+
+   it('can store fields as readonly-values', () => {
+      const focused = rootStore.recompose(
+         _ => ({ todoList: _.focusPath('todo', 'list') }),
+         ['counter']
+      )
+
+      expect(focused.currentComputedState.counter).to.equal(
+         rootStore.currentState.counter
+      )
+   })
 })

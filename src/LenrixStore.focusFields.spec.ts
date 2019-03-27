@@ -114,4 +114,12 @@ describe('LenrixStore.focusFields()', () => {
          todoListLength: 3
       })
    })
+
+   it('can store fields as readonly-values', () => {
+      const focused = rootStore.focusFields(['flag'], ['counter'])
+
+      expect(focused.currentComputedState.counter).to.equal(
+         rootStore.currentState.counter
+      )
+   })
 })

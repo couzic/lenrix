@@ -635,15 +635,17 @@ export class LenrixStore<
    public focusPath(...params: any[]): any {
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.localLens as any).focusPath(...keys)
-      const computedValueKeys: Array<keyof Type['computedValues']> =
+      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
          params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toFocusedData = (data: StoreData<Type>) => {
          const state = focusedLens.read(data.state)
-         const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(
-            key => (computedValues[key] = data.computedValues[key])
-         )
-         return { state, computedValues }
+         const readonlyValues: Partial<ComputedState<Type>> = {}
+         readonlyValueKeys.forEach(key => {
+            // TODO Prevent state field and readonly values from having same name (dangerous clash)
+            // TODO Merge state and readonly values first ?
+            readonlyValues[key] = data.state[key] || data.computedValues[key]
+         })
+         return { state, computedValues: readonlyValues }
       }
       const registerHandlers: (
          handlersToRegister: FocusedHandlers<any>
@@ -686,15 +688,17 @@ export class LenrixStore<
          keys.forEach(key => (fields[key] = state[key]))
          return fields
       }
-      const computedValueKeys: Array<keyof Type['computedValues']> =
+      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
          params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toPickedData = (data: StoreData<Type>) => {
          const state = pickFields(data.state)
-         const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(
-            key => (computedValues[key] = data.computedValues[key])
-         )
-         return { state, computedValues }
+         const readonlyValues: Partial<ComputedState<Type>> = {}
+         readonlyValueKeys.forEach(key => {
+            // TODO Prevent state field and readonly values from having same name (dangerous clash)
+            // TODO Merge state and readonly values first ?
+            readonlyValues[key] = data.state[key] || data.computedValues[key]
+         })
+         return { state, computedValues: readonlyValues }
       }
       return new LenrixStore(
          this.dataSubject.pipe(
@@ -711,7 +715,7 @@ export class LenrixStore<
 
    public recompose(...params: any[]): any {
       const focusedSelection = params[0]
-      const computedValueKeys: Array<keyof Type['computedValues']> =
+      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
          params[1] || []
       const fields = focusedSelection(this.localLens) as FieldLenses<
          Type['state'],
@@ -722,11 +726,13 @@ export class LenrixStore<
       const path = this.path + '.' + recomposedLens.path
       const toRecomposedData = (data: StoreData<Type>) => {
          const state = recomposedLens.read(data.state)
-         const computedValues: Partial<Type['computedValues']> = {}
-         computedValueKeys.forEach(
-            key => (computedValues[key] = data.computedValues[key])
-         )
-         return { state, computedValues }
+         const readonlyValues: Partial<Type['computedValues']> = {}
+         readonlyValueKeys.forEach(key => {
+            // TODO Prevent state field and readonly values from having same name (dangerous clash)
+            // TODO Merge state and readonly values first ?
+            readonlyValues[key] = data.state[key] || data.computedValues[key]
+         })
+         return { state, computedValues: readonlyValues }
       }
       const registerHandlers: (
          handlersToRegister: FocusedHandlers<any>
