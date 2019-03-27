@@ -79,13 +79,11 @@ describe('LenrixStore.computeFrom()', () => {
    })
 
    it('initially has state in current state', () => {
-      expect(computedStore.currentState).to.equal(initialState)
-      expect(computedStore.currentState).to.deep.equal(initialState)
+      expect(computedStore.currentState.name).to.equal(initialState.name)
    })
 
    it('initially has state in state stream', () => {
-      expect(state).to.equal(initialState)
-      expect(state).to.deep.equal(initialState)
+      expect(state.name).to.equal(initialState.name)
    })
 
    it('initially emits normalized state only once', () => {

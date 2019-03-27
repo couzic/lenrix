@@ -23,11 +23,13 @@ export interface Store<
    name?: string
 
    readonly localLens: UnfocusedLens<Type['state']>
-   readonly state$: Observable<Type['state']>
-   readonly currentState: Type['state']
+   readonly state$: Observable<OutputState<Type>>
+   readonly currentState: OutputState<Type>
+   // TODO Deprecate
    readonly computedState$: Observable<
       { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
    >
+   // TODO Deprecate
    readonly currentComputedState: {
       [K in keyof OutputState<Type>]: OutputState<Type>[K]
    }

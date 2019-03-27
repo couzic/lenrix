@@ -59,3 +59,31 @@ describe('LenrixStore when unfocused', () => {
       expect(stateTransitions).to.equal(1)
    })
 })
+
+describe('Lenrix store with computed value', () => {
+   const createStoreWithComputedValue = () =>
+      createStore(
+         { fieldState: 'fieldState' },
+         { logger: silentLoggerOptions }
+      ).compute(() => ({
+         computed: 'computed'
+      }))
+   let store: ReturnType<typeof createStoreWithComputedValue>
+   beforeEach(() => {
+      store = createStoreWithComputedValue()
+   })
+   it('has computed value in current state', () => {
+      expect(store.currentState).to.deep.equal({
+         fieldState: 'fieldState',
+         computed: 'computed'
+      })
+   })
+   it('has computed value in state steam', () => {
+      let lastState: any
+      store.state$.subscribe(state => (lastState = state))
+      expect(lastState).to.deep.equal({
+         fieldState: 'fieldState',
+         computed: 'computed'
+      })
+   })
+})
