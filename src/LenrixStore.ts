@@ -22,7 +22,7 @@ import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
-import { ComputedState } from './util/ComputedState'
+import { OutputState } from './util/ComputedState'
 import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
@@ -33,34 +33,34 @@ export interface ActionMeta {
       name?: string
       path: string
       currentState: any
-      computedValues?: any
+      readonlyValues?: any
    }
 }
 
 export interface StoreData<
    Type extends {
       state: unknown
-      computedValues: object
+      readonlyValues: object
    }
 > {
    state: Type['state']
-   computedValues: Type['computedValues']
+   readonlyValues: Type['readonlyValues']
 }
 
-function dataEquals<Type extends { state: any; computedValues: object }>(
+function dataEquals<Type extends { state: any; readonlyValues: object }>(
    previous: StoreData<Type>,
    next: StoreData<Type>
 ): boolean {
    return (
       shallowEquals(previous.state, next.state) &&
-      shallowEquals(previous.computedValues, next.computedValues)
+      shallowEquals(previous.readonlyValues, next.readonlyValues)
    )
 }
 
 export class LenrixStore<
    Type extends {
       state: any
-      computedValues: object
+      readonlyValues: object
       actions: object
       dependencies: object
    },
@@ -72,20 +72,20 @@ export class LenrixStore<
       Type['state']
    >()
    public readonly localReadonlyLens: UnfocusedLens<
-      ComputedState<Type>
-   > = createLens<ComputedState<Type>>()
+      OutputState<Type>
+   > = createLens<OutputState<Type>>()
    public readonly actions: any = {}
 
    private readonly dataSubject: BehaviorSubject<StoreData<Type>>
-   private readonly computedStateSubject: BehaviorSubject<ComputedState<Type>>
+   private readonly computedStateSubject: BehaviorSubject<OutputState<Type>>
 
    private readonly light: LightStore<Type>
 
-   get computedState$(): Observable<ComputedState<Type>> {
+   get computedState$(): Observable<OutputState<Type>> {
       return this.computedStateSubject
    }
 
-   get currentComputedState(): ComputedState<Type> {
+   get currentComputedState(): OutputState<Type> {
       return this.computedStateSubject.getValue()
    }
 
@@ -97,15 +97,15 @@ export class LenrixStore<
       return this.dataSubject.getValue().state
    }
 
-   get computedValues$(): Observable<Type['computedValues']> {
+   get readonlyValues$(): Observable<Type['readonlyValues']> {
       return this.dataSubject.pipe(
-         map(data => data.computedValues),
+         map(data => data.readonlyValues),
          distinctUntilChanged()
       )
    }
 
-   get currentComputedValues(): Type['computedValues'] {
-      return this.dataSubject.getValue().computedValues
+   get currentreadonlyValues(): Type['readonlyValues'] {
+      return this.dataSubject.getValue().readonlyValues
    }
 
    get action$(): ActionObservable<Type['actions']> {
@@ -128,10 +128,10 @@ export class LenrixStore<
       data$: Observable<StoreData<Type>>,
       private readonly dataToComputedState: (
          data: StoreData<Type>
-      ) => ComputedState<Type>,
+      ) => OutputState<Type>,
       private readonly initialData: {
          state: Type['state']
-         computedValues: Type['computedValues']
+         readonlyValues: Type['readonlyValues']
       },
       private readonly registerHandlers: (
          handlers: FocusedHandlers<Type>
@@ -174,12 +174,12 @@ export class LenrixStore<
             name: this.name || '',
             path: this.path,
             currentState: this.currentState,
-            computedValues: this.currentComputedValues
+            readonlyValues: this.currentreadonlyValues
          }
       }
       return new LenrixStore(
          this.dataSubject,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          this.initialData,
          this.registerHandlers,
          this.context,
@@ -193,7 +193,7 @@ export class LenrixStore<
             name: this.name,
             path: this.path,
             currentState: this.currentState,
-            computedValues: this.currentComputedValues
+            readonlyValues: this.currentreadonlyValues
          }
       }
    }
@@ -214,7 +214,7 @@ export class LenrixStore<
       this.context.registerEpics(epics, this as any)
       return new LenrixStore(
          this.dataSubject,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          this.initialData,
          this.registerHandlers,
          this.context,
@@ -226,7 +226,7 @@ export class LenrixStore<
       this.context.registerSideEffects(effects, this as any)
       return new LenrixStore(
          this.dataSubject,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          this.initialData,
          this.registerHandlers,
          this.context,
@@ -238,9 +238,9 @@ export class LenrixStore<
    // READ //
    /////////
 
-   public pick<K extends keyof ComputedState<Type>>(
+   public pick<K extends keyof OutputState<Type>>(
       ...keys: K[]
-   ): Observable<Pick<ComputedState<Type>, K>> {
+   ): Observable<Pick<OutputState<Type>, K>> {
       return this.computedStateSubject.pipe(
          map(state => {
             const subset = {} as any
@@ -280,7 +280,7 @@ export class LenrixStore<
 
    public filter(
       predicate: (
-         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+         state: { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
       ) => boolean
    ): Store<Type> {
       return new LenrixStore(
@@ -290,7 +290,7 @@ export class LenrixStore<
                return predicate(state)
             })
          ),
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          this.initialData,
          this.registerHandlers,
          this.context,
@@ -298,18 +298,18 @@ export class LenrixStore<
       )
    }
 
-   public rejectNilFields<K extends NullableKeys<ComputedState<Type>>>(
+   public rejectNilFields<K extends NullableKeys<OutputState<Type>>>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
    ): Store<{
       state: Type['state']
-      computedValues: {
+      readonlyValues: {
          [P in keyof ExcludeKeys<
-            Type['computedValues'],
-            K & keyof Type['computedValues']
+            Type['readonlyValues'],
+            K & keyof Type['readonlyValues']
          >]: ExcludeKeys<
-            Type['computedValues'],
-            K & keyof Type['computedValues']
+            Type['readonlyValues'],
+            K & keyof Type['readonlyValues']
          >[P]
       }
       actions: Type['actions']
@@ -322,52 +322,52 @@ export class LenrixStore<
    // COMPUTE //
    ////////////
 
-   public compute<ComputedValues>(
+   public compute<readonlyValues>(
       computer: (
-         state: ComputedState<Type>,
+         state: OutputState<Type>,
          store: LightStore<Type>
-      ) => ComputedValues
+      ) => readonlyValues
    ): any {
-      const dataToComputedValues = (
+      const dataToreadonlyValues = (
          data: StoreData<Type>
-      ): Type['computedValues'] & ComputedValues => {
+      ): Type['readonlyValues'] & readonlyValues => {
          const computedState = {
             ...(data.state as any),
-            ...(data.computedValues as any)
+            ...(data.readonlyValues as any)
          }
-         const newComputedValues = computer(computedState, this.light)
-         if (newComputedValues === undefined)
+         const newreadonlyValues = computer(computedState, this.light)
+         if (newreadonlyValues === undefined)
             throw Error(
                'LenrixStore.compute() provided function MUST return an object (empty objects are allowed)'
             )
-         if (typeof newComputedValues === 'function')
+         if (typeof newreadonlyValues === 'function')
             throw Error(
                'LenrixStore.compute() does not accept higher order functions as arguments'
             )
          this.context.dispatchCompute(
             this as any,
-            data.computedValues,
-            newComputedValues
+            data.readonlyValues,
+            newreadonlyValues
          )
          return {
-            ...(data.computedValues as any),
-            ...(newComputedValues as any)
+            ...(data.readonlyValues as any),
+            ...(newreadonlyValues as any)
          }
       }
       const initialData: StoreData<Type> = {
          state: this.initialData.state,
-         computedValues: dataToComputedValues(this.initialData)
+         readonlyValues: dataToreadonlyValues(this.initialData)
       }
       const data$ = this.dataSubject.pipe(
          skip(1),
          map(data => ({
             state: data.state,
-            computedValues: dataToComputedValues(data)
+            readonlyValues: dataToreadonlyValues(data)
          }))
       )
       return new LenrixStore(
          data$,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          initialData,
          this.registerHandlers,
          this.context,
@@ -377,13 +377,13 @@ export class LenrixStore<
 
    public computeFrom<
       Selection extends PlainObject,
-      ComputedValues extends PlainObject
+      readonlyValues extends PlainObject
    >(
       selection: FocusedReadonlySelection<Type, Selection>,
       computer: (
          selection: Selection,
          store: LightStore<Type>
-      ) => ComputedValues
+      ) => readonlyValues
    ): any {
       const select = (data: StoreData<Type>): Selection =>
          cherryPick(this.dataToComputedState(data), selection(this.localLens))
@@ -391,16 +391,16 @@ export class LenrixStore<
    }
 
    public computeFromFields<
-      K extends keyof ComputedState<Type>,
-      ComputedValues extends PlainObject
+      K extends keyof OutputState<Type>,
+      readonlyValues extends PlainObject
    >(
       fields: K[],
       computer: (
-         fields: Pick<ComputedState<Type>, K>,
+         fields: Pick<OutputState<Type>, K>,
          store: LightStore<Type>
-      ) => ComputedValues
+      ) => readonlyValues
    ): any {
-      const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
+      const select = (data: StoreData<Type>): Pick<OutputState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
          fields.forEach(field => (selected[field] = computedState[field]))
@@ -411,41 +411,41 @@ export class LenrixStore<
 
    private computeFromSelector<
       Selection extends PlainObject,
-      ComputedValues extends PlainObject
+      readonlyValues extends PlainObject
    >(
       selector: (data: StoreData<Type>) => Selection,
       computer: (
          selection: Selection,
          store: LightStore<Type>
-      ) => ComputedValues
+      ) => readonlyValues
    ): any {
       const initialSelection = selector(this.initialData)
       const doCompute = (
          selection: Selection,
-         previouslyComputedValues?: ComputedValues
-      ): ComputedValues => {
-         const computedValues = computer(selection, this.light)
-         if (computedValues === undefined)
+         previouslyreadonlyValues?: readonlyValues
+      ): readonlyValues => {
+         const readonlyValues = computer(selection, this.light)
+         if (readonlyValues === undefined)
             throw Error(
                'LenrixStore.computeFrom() and .computeFromFields() provided function MUST return an object (empty objects are allowed)'
             )
-         if (typeof computedValues === 'function')
+         if (typeof readonlyValues === 'function')
             throw Error(
                'LenrixStore.computeFrom() and .computeFromFields() does not accept higher order functions as arguments'
             )
          this.context.dispatchCompute(
             this as any,
-            previouslyComputedValues,
-            computedValues
+            previouslyreadonlyValues,
+            readonlyValues
          )
-         return computedValues
+         return readonlyValues
       }
-      const initialComputedValues = doCompute(initialSelection)
+      const initialreadonlyValues = doCompute(initialSelection)
       const initialData = {
          state: this.initialData.state,
-         computedValues: {
-            ...(this.initialData.computedValues as any),
-            ...(initialComputedValues as any)
+         readonlyValues: {
+            ...(this.initialData.readonlyValues as any),
+            ...(initialreadonlyValues as any)
          }
       }
       const data$ = this.dataSubject.pipe(
@@ -453,35 +453,35 @@ export class LenrixStore<
          scan(
             (previous, next) => {
                const { data, selection } = next
-               const locallyComputedValues = shallowEquals(
+               const locallyreadonlyValues = shallowEquals(
                   selection,
                   previous.selection
                )
-                  ? (previous as any).locallyComputedValues
+                  ? (previous as any).locallyreadonlyValues
                   : doCompute(
                        next.selection,
-                       (previous as any).locallyComputedValues
+                       (previous as any).locallyreadonlyValues
                     )
-               return { data, selection, locallyComputedValues } as any // TODO Remove as any
+               return { data, selection, locallyreadonlyValues } as any // TODO Remove as any
             },
             {
                data: this.initialData,
                selection: initialSelection,
-               locallyComputedValues: initialComputedValues
+               locallyreadonlyValues: initialreadonlyValues
             }
          ),
-         map(({ data, locallyComputedValues }) => ({
+         map(({ data, locallyreadonlyValues }) => ({
             state: data.state,
-            computedValues: {
-               ...(data.computedValues as any),
-               ...(locallyComputedValues as any)
+            readonlyValues: {
+               ...(data.readonlyValues as any),
+               ...(locallyreadonlyValues as any)
             }
          })),
          skip(1)
       )
       return new LenrixStore(
          data$,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          initialData,
          this.registerHandlers,
          this.context,
@@ -493,13 +493,13 @@ export class LenrixStore<
    // COMPUTE ASYNC //
    //////////////////
 
-   public compute$<ComputedValues>(
+   public compute$<readonlyValues>(
       computer$: (
-         state$: Observable<ComputedState<Type>>
-      ) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+         state$: Observable<OutputState<Type>>
+      ) => Observable<readonlyValues>,
+      initialValues?: readonlyValues
    ): any {
-      const computedValues$ = computer$(this.computedStateSubject).pipe(
+      const readonlyValues$ = computer$(this.computedStateSubject).pipe(
          startWith(initialValues),
          scan((previous, next) => {
             this.context.dispatchCompute(this as any, previous, next)
@@ -508,30 +508,30 @@ export class LenrixStore<
       )
       const data$ = combineLatest(
          this.dataSubject,
-         computedValues$,
-         (data, computedValues) => ({
+         readonlyValues$,
+         (data, readonlyValues) => ({
             state: data.state,
-            computedValues: {
-               ...(data.computedValues as any),
-               ...(computedValues as any)
+            readonlyValues: {
+               ...(data.readonlyValues as any),
+               ...(readonlyValues as any)
             }
          })
       )
       const initialData: StoreData<{
          state: Type['state']
-         computedValues: Type['computedValues'] & ComputedValues
+         readonlyValues: Type['readonlyValues'] & readonlyValues
       }> = initialValues
          ? {
               state: this.initialData.state,
-              computedValues: {
-                 ...(this.initialData.computedValues as any),
+              readonlyValues: {
+                 ...(this.initialData.readonlyValues as any),
                  ...(initialValues as any)
               }
            }
          : this.initialData
       return new LenrixStore(
          data$.pipe(skip(1) as any),
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          initialData,
          this.registerHandlers,
          this.context,
@@ -544,13 +544,13 @@ export class LenrixStore<
 
    public computeFrom$<
       Selection extends PlainObject,
-      ComputedValues extends PlainObject
+      readonlyValues extends PlainObject
    >(
       selection: FocusedReadonlySelection<Type, Selection>,
       computer$: (
          selection$: Observable<Selection>
-      ) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+      ) => Observable<readonlyValues>,
+      initialValues?: readonlyValues
    ): any {
       const select = (data: StoreData<Type>): Selection =>
          cherryPick(this.dataToComputedState(data), selection(this.localLens))
@@ -558,16 +558,16 @@ export class LenrixStore<
    }
 
    public computeFromFields$<
-      K extends keyof ComputedState<Type>,
-      ComputedValues extends PlainObject
+      K extends keyof OutputState<Type>,
+      readonlyValues extends PlainObject
    >(
       fields: K[],
       computer$: (
-         fields$: Observable<Pick<ComputedState<Type>, K>>
-      ) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+         fields$: Observable<Pick<OutputState<Type>, K>>
+      ) => Observable<readonlyValues>,
+      initialValues?: readonlyValues
    ): any {
-      const select = (data: StoreData<Type>): Pick<ComputedState<Type>, K> => {
+      const select = (data: StoreData<Type>): Pick<OutputState<Type>, K> => {
          const selected = {} as any
          const computedState = this.dataToComputedState(data)
          fields.forEach(field => (selected[field] = computedState[field]))
@@ -578,27 +578,27 @@ export class LenrixStore<
 
    private computeFromSelector$<
       Selection extends PlainObject,
-      ComputedValues extends PlainObject
+      readonlyValues extends PlainObject
    >(
       selector: (data: StoreData<Type>) => Selection,
       computer$: (
          selection$: Observable<Selection>
-      ) => Observable<ComputedValues>,
-      initialValues?: ComputedValues
+      ) => Observable<readonlyValues>,
+      initialValues?: readonlyValues
    ): any {
       const initialData: StoreData<{
          state: Type['state']
-         computedValues: Type['computedValues'] & ComputedValues
+         readonlyValues: Type['readonlyValues'] & readonlyValues
       }> = initialValues
          ? {
               state: this.initialData.state,
-              computedValues: {
-                 ...(this.initialData.computedValues as any),
+              readonlyValues: {
+                 ...(this.initialData.readonlyValues as any),
                  ...(initialValues as any)
               }
            }
          : this.initialData
-      const newComputedValues$ = this.dataSubject.pipe(
+      const newreadonlyValues$ = this.dataSubject.pipe(
          map(selector),
          computer$,
          scan((previous, next) => {
@@ -608,19 +608,19 @@ export class LenrixStore<
       )
       const data$ = combineLatest(
          this.dataSubject,
-         newComputedValues$,
-         (data, newComputedValues) => ({
+         newreadonlyValues$,
+         (data, newreadonlyValues) => ({
             state: data.state,
-            computedValues: {
-               ...(data.computedValues as any),
-               ...(newComputedValues as any)
+            readonlyValues: {
+               ...(data.readonlyValues as any),
+               ...(newreadonlyValues as any)
             }
          })
       )
 
       return new LenrixStore(
          data$,
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          initialData,
          this.registerHandlers,
          this.context,
@@ -635,17 +635,17 @@ export class LenrixStore<
    public focusPath(...params: any[]): any {
       const keys = Array.isArray(params[0]) ? params[0] : params // Handle spread keys
       const focusedLens = (this.localLens as any).focusPath(...keys)
-      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
+      const readonlyValueKeys: Array<keyof OutputState<Type>> =
          params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toFocusedData = (data: StoreData<Type>) => {
          const state = focusedLens.read(data.state)
-         const readonlyValues: Partial<ComputedState<Type>> = {}
+         const readonlyValues: Partial<OutputState<Type>> = {}
          readonlyValueKeys.forEach(key => {
             // TODO Prevent state field and readonly values from having same name (dangerous clash)
             // TODO Merge state and readonly values first ?
-            readonlyValues[key] = data.state[key] || data.computedValues[key]
+            readonlyValues[key] = data.state[key] || data.readonlyValues[key]
          })
-         return { state, computedValues: readonlyValues }
+         return { state, readonlyValues: readonlyValues }
       }
       const registerHandlers: (
          handlersToRegister: FocusedHandlers<any>
@@ -664,13 +664,13 @@ export class LenrixStore<
             distinctUntilChanged<any>(
                (previous, next) =>
                   previous.state === next.state &&
-                  shallowEquals(previous.computedValues, next.computedValues)
+                  shallowEquals(previous.readonlyValues, next.readonlyValues)
             )
          ),
          (data: any) =>
             Array.isArray(data.state) || typeof data.state !== 'object'
                ? data.state
-               : { ...data.state, ...data.computedValues },
+               : { ...data.state, ...data.readonlyValues },
          toFocusedData(this.initialData),
          registerHandlers,
          this.context,
@@ -688,24 +688,24 @@ export class LenrixStore<
          keys.forEach(key => (fields[key] = state[key]))
          return fields
       }
-      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
+      const readonlyValueKeys: Array<keyof OutputState<Type>> =
          params.length === 2 && Array.isArray(params[1]) ? params[1] : []
       const toPickedData = (data: StoreData<Type>) => {
          const state = pickFields(data.state)
-         const readonlyValues: Partial<ComputedState<Type>> = {}
+         const readonlyValues: Partial<OutputState<Type>> = {}
          readonlyValueKeys.forEach(key => {
             // TODO Prevent state field and readonly values from having same name (dangerous clash)
             // TODO Merge state and readonly values first ?
-            readonlyValues[key] = data.state[key] || data.computedValues[key]
+            readonlyValues[key] = data.state[key] || data.readonlyValues[key]
          })
-         return { state, computedValues: readonlyValues }
+         return { state, readonlyValues: readonlyValues }
       }
       return new LenrixStore(
          this.dataSubject.pipe(
             map(toPickedData),
             distinctUntilChanged<any>(dataEquals)
          ),
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          toPickedData(this.initialData),
          this.registerHandlers as any,
          this.context,
@@ -715,8 +715,7 @@ export class LenrixStore<
 
    public recompose(...params: any[]): any {
       const focusedSelection = params[0]
-      const readonlyValueKeys: Array<keyof ComputedState<Type>> =
-         params[1] || []
+      const readonlyValueKeys: Array<keyof OutputState<Type>> = params[1] || []
       const fields = focusedSelection(this.localLens) as FieldLenses<
          Type['state'],
          any
@@ -726,13 +725,13 @@ export class LenrixStore<
       const path = this.path + '.' + recomposedLens.path
       const toRecomposedData = (data: StoreData<Type>) => {
          const state = recomposedLens.read(data.state)
-         const readonlyValues: Partial<Type['computedValues']> = {}
+         const readonlyValues: Partial<Type['readonlyValues']> = {}
          readonlyValueKeys.forEach(key => {
             // TODO Prevent state field and readonly values from having same name (dangerous clash)
             // TODO Merge state and readonly values first ?
-            readonlyValues[key] = data.state[key] || data.computedValues[key]
+            readonlyValues[key] = data.state[key] || data.readonlyValues[key]
          })
-         return { state, computedValues: readonlyValues }
+         return { state, readonlyValues: readonlyValues }
       }
       const registerHandlers: (
          handlersToRegister: FocusedHandlers<any>
@@ -751,7 +750,7 @@ export class LenrixStore<
             distinctUntilChanged(dataEquals),
             skip(1) as any
          ),
-         (data: any) => ({ ...data.state, ...data.computedValues }),
+         (data: any) => ({ ...data.state, ...data.readonlyValues }),
          toRecomposedData(this.initialData),
          registerHandlers,
          this.context,
@@ -759,24 +758,24 @@ export class LenrixStore<
       )
    }
 
-   // computeJoin$<NewComputedValues>(computer$: (state$: Observable<State>) => Observable<NewComputedValues>, initialValues?: NewComputedValues): any {
+   // computeJoin$<NewreadonlyValues>(computer$: (state$: Observable<State>) => Observable<NewreadonlyValues>, initialValues?: NewreadonlyValues): any {
    //    const data$ = this.data$.mergeMap(data => {
    //       const state = this.dataToState(data)
-   //       const newComputedValues$ = computer$(Observable.of(state))
-   //       return newComputedValues$.map(newComputedValues => ({
+   //       const newreadonlyValues$ = computer$(Observable.of(state))
+   //       return newreadonlyValues$.map(newreadonlyValues => ({
    //          normalizedState: data.normalizedState,
-   //          computedValues: { ...data.computedValues as any, ...newComputedValues as any }
+   //          readonlyValues: { ...data.readonlyValues as any, ...newreadonlyValues as any }
    //       }))
    //    })
-   //    const initialData: StoreData<NormalizedState, ComputedValues & NewComputedValues> = initialValues
+   //    const initialData: StoreData<NormalizedState, readonlyValues & NewreadonlyValues> = initialValues
    //       ? {
    //          normalizedState: this.initialData.normalizedState,
-   //          computedValues: { ...this.initialData.computedValues as any, ...initialValues as any }
+   //          readonlyValues: { ...this.initialData.readonlyValues as any, ...initialValues as any }
    //       }
    //       : this.initialData
    //    return new LenrixStore(
    //       data$,
-   //       (data: any) => ({ ...data.normalizedState, ...data.computedValues }),
+   //       (data: any) => ({ ...data.normalizedState, ...data.readonlyValues }),
    //       initialData,
    //       (updater: any) => this.update(updater),
    //       this.path + '.computeJoin$()'

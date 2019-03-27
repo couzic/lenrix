@@ -35,7 +35,7 @@ describe('LenrixStore.compute$()', () => {
    const lens = createLens<State>()
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void; setName: string }
       dependencies: {}
    }>
@@ -68,7 +68,7 @@ describe('LenrixStore.compute$()', () => {
    describe('with initial values', () => {
       let store: Store<{
          state: State
-         computedValues: ComputedValues
+         readonlyValues: ComputedValues
          actions: { toggleFlag: void; setName: string }
          dependencies: {}
       }>
@@ -183,7 +183,7 @@ describe('LenrixStore.compute$()', () => {
       describe('.focusPath() with computed values', () => {
          let focusedStore: Store<{
             state: State['todo']
-            computedValues: ComputedValues
+            readonlyValues: ComputedValues
             actions: { toggleFlag: void; setName: string }
             dependencies: {}
          }>
@@ -215,7 +215,7 @@ describe('LenrixStore.compute$()', () => {
       describe('.focusFields() with computed values', () => {
          let focusedStore: Store<{
             state: Pick<State, 'todo'>
-            computedValues: ComputedValues
+            readonlyValues: ComputedValues
             actions: { toggleFlag: void; setName: string }
             dependencies: {}
          }>
@@ -247,7 +247,7 @@ describe('LenrixStore.compute$()', () => {
       describe('.recompose() with computed values', () => {
          let focusedStore: Store<{
             state: { todoList: string[] }
-            computedValues: ComputedValues
+            readonlyValues: ComputedValues
             actions: { toggleFlag: void; setName: string }
             dependencies: {}
          }>

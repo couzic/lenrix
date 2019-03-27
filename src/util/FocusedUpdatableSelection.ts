@@ -3,7 +3,7 @@ import { FieldLenses, PlainObject, UnfocusedLens } from 'immutable-lens'
 export type FocusedUpdatableSelection<
    Type extends {
       state: PlainObject
-      computedValues: object
+      readonlyValues: object
    },
    Selection
 > = (

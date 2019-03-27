@@ -12,7 +12,7 @@ interface Actions {
 describe('LenrixStore.sideEffects()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: Actions
       dependencies: {}
    }>

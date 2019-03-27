@@ -9,7 +9,7 @@ import { Store } from './Store'
 describe('LenrixStore when unfocused', () => {
    let store: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: {}
       dependencies: {}
    }>

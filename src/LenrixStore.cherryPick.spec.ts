@@ -8,7 +8,7 @@ import { Store } from './Store'
 describe('LenrixStore.cherryPick()', () => {
    let store: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void }
       dependencies: {}
    }>

@@ -13,14 +13,14 @@ interface ComputedValues {
 describe('LenrixStore.compute()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void; toggleOrder: void }
       dependencies: {}
    }>
 
    let store: Store<{
       state: State
-      computedValues: ComputedValues
+      readonlyValues: ComputedValues
       actions: { toggleFlag: void; toggleOrder: void }
       dependencies: {}
    }>
@@ -105,7 +105,7 @@ describe('LenrixStore.compute()', () => {
    describe('.focusPath() with computed values', () => {
       let focusedStore: Store<{
          state: State['sorting']
-         computedValues: ComputedValues
+         readonlyValues: ComputedValues
          actions: { toggleFlag: void; toggleOrder: void }
          dependencies: {}
       }>
@@ -156,7 +156,7 @@ describe('LenrixStore.compute()', () => {
    describe('.focusFields() with computed values', () => {
       let focusedStore: Store<{
          state: Pick<State, 'sorting'>
-         computedValues: ComputedValues
+         readonlyValues: ComputedValues
          actions: { toggleFlag: void; toggleOrder: void }
          dependencies: {}
       }>
@@ -201,7 +201,7 @@ describe('LenrixStore.compute()', () => {
    describe('.recompose() with computed values', () => {
       let focusedStore: Store<{
          state: { todoList: TodoItem[] }
-         computedValues: ComputedValues
+         readonlyValues: ComputedValues
          actions: { toggleFlag: void; toggleOrder: void }
          dependencies: {}
       }>

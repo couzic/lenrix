@@ -17,7 +17,7 @@ interface Actions {
 describe('LenrixStore.updates()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: Actions
       dependencies: {}
    }>
@@ -53,7 +53,7 @@ describe('LenrixStore.updates()', () => {
    describe('on path-focused store', () => {
       let store: Store<{
          state: State['todo']
-         computedValues: {}
+         readonlyValues: {}
          actions: Actions
          dependencies: {}
       }>
@@ -82,7 +82,7 @@ describe('LenrixStore.updates()', () => {
    describe('on fields-focused store', () => {
       let store: Store<{
          state: Pick<State, 'todo'>
-         computedValues: {}
+         readonlyValues: {}
          actions: Actions
          dependencies: {}
       }>
@@ -111,7 +111,7 @@ describe('LenrixStore.updates()', () => {
    describe('on recomposed store', () => {
       let store: Store<{
          state: { todoList: State['todo']['list'] }
-         computedValues: {}
+         readonlyValues: {}
          actions: Actions
          dependencies: {}
       }>

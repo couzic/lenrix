@@ -39,7 +39,7 @@ interface Actions {
 describe('LenrixStore Epics', () => {
    let store: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: Actions
       dependencies: {}
    }>

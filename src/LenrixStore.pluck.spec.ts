@@ -12,7 +12,7 @@ describe('LenrixStore.pluck()', () => {
 
    let store: Store<{
       state: State
-      computedValues: { todoListLength: number }
+      readonlyValues: { todoListLength: number }
       actions: { toggleFlag: void }
       dependencies: {}
    }>

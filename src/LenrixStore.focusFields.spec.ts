@@ -11,13 +11,13 @@ type PickedState = Pick<State, 'counter' | 'todo'>
 describe('LenrixStore.focusFields()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: {}
       dependencies: {}
    }>
    let store: Store<{
       state: PickedState
-      computedValues: {}
+      readonlyValues: {}
       actions: {}
       dependencies: {}
    }>

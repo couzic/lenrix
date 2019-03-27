@@ -5,7 +5,7 @@ import { FocusedUpdater } from './FocusedUpdater'
 export type FocusedHandlers<
    Type extends {
       state: any
-      computedValues: object
+      readonlyValues: object
       actions: object
    }
 > = {

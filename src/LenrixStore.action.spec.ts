@@ -17,7 +17,7 @@ describe('LenrixStore.action()', () => {
 
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: Actions
       dependencies: {}
    }>

@@ -27,13 +27,13 @@ describe('LenrixStore.computeFrom()', () => {
    const lens = createLens<State>()
    let store: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void; addToList: string }
       dependencies: {}
    }>
    let computedStore: Store<{
       state: State
-      computedValues: { todoListLength: number }
+      readonlyValues: { todoListLength: number }
       actions: { toggleFlag: void; addToList: string }
       dependencies: {}
    }>

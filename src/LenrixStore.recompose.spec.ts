@@ -8,7 +8,7 @@ import { Store } from './Store'
 describe('LenrixStore.recompose()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void }
       dependencies: {}
    }>
@@ -22,7 +22,7 @@ describe('LenrixStore.recompose()', () => {
 
    let store: Store<{
       state: RecomposedState
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void }
       dependencies: {}
    }>

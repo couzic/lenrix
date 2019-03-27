@@ -1,8 +1,8 @@
-import { ComputedState } from './ComputedState'
+import { OutputState } from './ComputedState'
 
 export type FocusedUpdater<
    Type extends {
       state: any
-      computedValues: object
+      readonlyValues: object
    }
-> = (computedState: ComputedState<Type>) => Type['state']
+> = (state: OutputState<Type>) => Type['state']

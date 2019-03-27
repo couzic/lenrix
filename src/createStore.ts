@@ -27,7 +27,7 @@ export function createFocusableStore<State extends PlainObject>(
    options?: { logger?: LoggerOptions }
 ): Store<{
    state: State
-   computedValues: {}
+   readonlyValues: {}
    actions: {}
    dependencies: {}
 }> {
@@ -249,9 +249,9 @@ export function createFocusableStore<State extends PlainObject>(
    }
 
    return new LenrixStore(
-      state$.pipe(map(state => ({ state, computedValues: {} }))),
+      state$.pipe(map(state => ({ state, readonlyValues: {} }))),
       data => data.state as any,
-      { state: preloadedState, computedValues: {} },
+      { state: preloadedState, readonlyValues: {} },
       registerUpdates,
       context,
       'root'
@@ -263,7 +263,7 @@ export function createStore<State extends object>(
    options?: { logger?: LoggerOptions }
 ): Store<{
    state: State
-   computedValues: {}
+   readonlyValues: {}
    actions: {}
    dependencies: {}
 }> {

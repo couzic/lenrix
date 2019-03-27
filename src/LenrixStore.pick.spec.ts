@@ -12,7 +12,7 @@ describe('LenrixStore.pick()', () => {
 
    let store: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void }
       dependencies: {}
    }>

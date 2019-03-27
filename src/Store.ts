@@ -4,7 +4,7 @@ import { Observable, OperatorFunction } from 'rxjs'
 import { LightStore } from './LightStore'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
-import { ComputedState } from './util/ComputedState'
+import { OutputState } from './util/ComputedState'
 import { Epics } from './util/Epics'
 import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
@@ -15,7 +15,7 @@ import { NullableKeys } from './util/NullableKeys'
 export interface Store<
    Type extends {
       state: any
-      computedValues: object
+      readonlyValues: object
       actions: object
       dependencies: object
    }
@@ -26,10 +26,10 @@ export interface Store<
    readonly state$: Observable<Type['state']>
    readonly currentState: Type['state']
    readonly computedState$: Observable<
-      { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+      { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
    >
    readonly currentComputedState: {
-      [K in keyof ComputedState<Type>]: ComputedState<Type>[K]
+      [K in keyof OutputState<Type>]: OutputState<Type>[K]
    }
    readonly action$: ActionObservable<Type['actions']>
    readonly path: string
@@ -40,7 +40,7 @@ export interface Store<
 
    actionTypes<Actions extends PlainObject>(): Store<{
       state: Type['state']
-      computedValues: Type['computedValues']
+      readonlyValues: Type['readonlyValues']
       actions: {
          [K in
             | Exclude<keyof Actions, keyof Type['actions']>
@@ -93,22 +93,22 @@ export interface Store<
    // READ //
    /////////
 
-   pick<K extends keyof ComputedState<Type>>(
+   pick<K extends keyof OutputState<Type>>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
-   ): Observable<{ [P in K]: ComputedState<Type>[P] }>
+   ): Observable<{ [P in K]: OutputState<Type>[P] }>
 
    cherryPick<Selection>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       selection: FocusedReadonlySelection<Type, Selection>
    ): Observable<Selection>
 
-   pluck<CS extends ComputedState<Type>, K extends keyof CS>(
+   pluck<CS extends OutputState<Type>, K extends keyof CS>(
       key: K
    ): Observable<CS[K]>
 
    pluck<
-      CS extends ComputedState<Type>,
+      CS extends OutputState<Type>,
       K1 extends keyof CS,
       K2 extends keyof CS[K1]
    >(
@@ -117,7 +117,7 @@ export interface Store<
    ): Observable<CS[K1][K2]>
 
    pluck<
-      CS extends ComputedState<Type>,
+      CS extends OutputState<Type>,
       K1 extends keyof CS,
       K2 extends keyof CS[K1],
       K3 extends keyof CS[K1][K2]
@@ -128,7 +128,7 @@ export interface Store<
    ): Observable<CS[K1][K2][K3]>
 
    pluck<
-      CS extends ComputedState<Type>,
+      CS extends OutputState<Type>,
       K1 extends keyof CS,
       K2 extends keyof CS[K1],
       K3 extends keyof CS[K1][K2],
@@ -146,22 +146,22 @@ export interface Store<
 
    filter(
       predicate: (
-         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] }
+         state: { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
       ) => boolean
    ): Store<Type>
 
-   rejectNilFields<K extends NullableKeys<ComputedState<Type>>>(
+   rejectNilFields<K extends NullableKeys<OutputState<Type>>>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
    ): Store<{
       state: Type['state']
-      computedValues: {
+      readonlyValues: {
          [P in keyof ExcludeKeys<
-            Type['computedValues'],
-            K & keyof Type['computedValues']
+            Type['readonlyValues'],
+            K & keyof Type['readonlyValues']
          >]: ExcludeKeys<
-            Type['computedValues'],
-            K & keyof Type['computedValues']
+            Type['readonlyValues'],
+            K & keyof Type['readonlyValues']
          >[P]
       }
       actions: Type['actions']
@@ -175,14 +175,14 @@ export interface Store<
    compute<ComputedValues extends PlainObject>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer: (
-         state: { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
+         state: { [K in keyof OutputState<Type>]: OutputState<Type>[K] },
          store: LightStore<Type>
       ) => ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[K]
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
@@ -200,29 +200,29 @@ export interface Store<
       ) => ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[K]
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
    computeFromFields<
-      K extends keyof ComputedState<Type>,
+      K extends keyof OutputState<Type>,
       ComputedValues extends PlainObject
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer: (
-         fields: { [P in K]: ComputedState<Type>[P] },
+         fields: { [P in K]: OutputState<Type>[P] },
          store: LightStore<Type>
       ) => ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [P in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[P]
+      readonlyValues: {
+         [P in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
@@ -231,15 +231,15 @@ export interface Store<
    compute$<ComputedValues extends PlainObject>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer$: OperatorFunction<
-         { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
+         { [K in keyof OutputState<Type>]: OutputState<Type>[K] },
          ComputedValues
       >,
       initialValues: ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[K]
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
@@ -248,14 +248,14 @@ export interface Store<
    compute$<ComputedValues extends PlainObject>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer$: OperatorFunction<
-         { [K in keyof ComputedState<Type>]: ComputedState<Type>[K] },
+         { [K in keyof OutputState<Type>]: OutputState<Type>[K] },
          ComputedValues
       >
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            Partial<ComputedValues>)]: (Type['computedValues'] &
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[K]
       }
       actions: Type['actions']
@@ -272,9 +272,9 @@ export interface Store<
       initialValues: ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[K]
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
@@ -289,9 +289,9 @@ export interface Store<
       computer$: OperatorFunction<Selection, ComputedValues>
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [K in keyof (Type['computedValues'] &
-            Partial<ComputedValues>)]: (Type['computedValues'] &
+      readonlyValues: {
+         [K in keyof (Type['readonlyValues'] &
+            Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[K]
       }
       actions: Type['actions']
@@ -299,39 +299,39 @@ export interface Store<
    }>
 
    computeFromFields$<
-      K extends keyof ComputedState<Type>,
+      K extends keyof OutputState<Type>,
       ComputedValues extends PlainObject
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer$: (
-         fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
+         fields$: Observable<{ [P in K]: OutputState<Type>[P] }>
       ) => Observable<ComputedValues>,
       initialValues: ComputedValues
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [CVK in keyof (Type['computedValues'] &
-            ComputedValues)]: (Type['computedValues'] & ComputedValues)[CVK]
+      readonlyValues: {
+         [CVK in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[CVK]
       }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
    computeFromFields$<
-      K extends keyof ComputedState<Type>,
+      K extends keyof OutputState<Type>,
       ComputedValues extends PlainObject
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer$: (
-         fields$: Observable<{ [P in K]: ComputedState<Type>[P] }>
+         fields$: Observable<{ [P in K]: OutputState<Type>[P] }>
       ) => Observable<ComputedValues>
    ): Store<{
       state: Type['state']
-      computedValues: {
-         [CVK in keyof (Type['computedValues'] &
-            Partial<ComputedValues>)]: (Type['computedValues'] &
+      readonlyValues: {
+         [CVK in keyof (Type['readonlyValues'] &
+            Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[CVK]
       }
       actions: Type['actions']
@@ -347,7 +347,7 @@ export interface Store<
       ...keys: K[]
    ): Store<{
       state: { [P in K]: Type['state'][P] }
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -357,21 +357,21 @@ export interface Store<
       keys: K[]
    ): Store<{
       state: { [P in K]: Type['state'][P] }
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
    focusFields<
       SK extends keyof Type['state'],
-      CK extends keyof ComputedState<Type>
+      CK extends keyof OutputState<Type>
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       keys: SK[],
       computed: CK[]
    ): Store<{
       state: { [P in SK]: Type['state'][P] }
-      computedValues: { [P in CK]: ComputedState<Type>[P] }
+      readonlyValues: { [P in CK]: OutputState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -380,17 +380,17 @@ export interface Store<
       fields: FocusedUpdatableSelection<Type, RecomposedState>
    ): Store<{
       state: RecomposedState
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
-   recompose<RecomposedState, CK extends keyof ComputedState<Type>>(
+   recompose<RecomposedState, CK extends keyof OutputState<Type>>(
       fields: FocusedUpdatableSelection<Type, RecomposedState>,
-      computedValues: CK[]
+      readonlyValues: CK[]
    ): Store<{
       state: RecomposedState
-      computedValues: { [P in CK]: ComputedState<Type>[P] }
+      readonlyValues: { [P in CK]: OutputState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -399,7 +399,7 @@ export interface Store<
       key: K
    ): Store<{
       state: Type['state'][K]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -408,20 +408,20 @@ export interface Store<
       path: [K]
    ): Store<{
       state: Type['state'][K]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
 
    focusPath<
       SK extends keyof Type['state'],
-      CK extends keyof ComputedState<Type>
+      CK extends keyof OutputState<Type>
    >(
       path: [SK],
-      computedValues: CK[]
+      readonlyValues: CK[]
    ): Store<{
       state: Type['state'][SK]
-      computedValues: { [P in CK]: ComputedState<Type>[P] }
+      readonlyValues: { [P in CK]: OutputState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -434,7 +434,7 @@ export interface Store<
       key2: K2
    ): Store<{
       state: Type['state'][K1][K2]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -446,7 +446,7 @@ export interface Store<
       path: [K1, K2]
    ): Store<{
       state: Type['state'][K1][K2]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -454,13 +454,13 @@ export interface Store<
    focusPath<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
-      CK extends keyof ComputedState<Type>
+      CK extends keyof OutputState<Type>
    >(
       path: [K1, K2],
-      computedValues: CK[]
+      readonlyValues: CK[]
    ): Store<{
       state: Type['state'][K1][K2]
-      computedValues: { [P in CK]: ComputedState<Type>[P] }
+      readonlyValues: { [P in CK]: OutputState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -475,7 +475,7 @@ export interface Store<
       key3: K3
    ): Store<{
       state: Type['state'][K1][K2][K3]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -488,7 +488,7 @@ export interface Store<
       path: [K1, K2, K3]
    ): Store<{
       state: Type['state'][K1][K2][K3]
-      computedValues: {}
+      readonlyValues: {}
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -497,13 +497,13 @@ export interface Store<
       K1 extends keyof Type['state'],
       K2 extends keyof Type['state'][K1],
       K3 extends keyof Type['state'][K1][K2],
-      CK extends keyof ComputedState<Type>
+      CK extends keyof OutputState<Type>
    >(
       path: [K1, K2, K3],
-      computedValues: CK[]
+      readonlyValues: CK[]
    ): Store<{
       state: Type['state'][K1][K2][K3]
-      computedValues: { [P in CK]: ComputedState<Type>[P] }
+      readonlyValues: { [P in CK]: OutputState<Type>[P] }
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>

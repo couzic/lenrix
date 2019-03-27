@@ -9,13 +9,13 @@ import { Store } from './Store'
 describe('LenrixStore.focusPath()', () => {
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: {}
       dependencies: {}
    }>
    let store: Store<{
       state: TodoState
-      computedValues: {}
+      readonlyValues: {}
       actions: {}
       dependencies: {}
    }>

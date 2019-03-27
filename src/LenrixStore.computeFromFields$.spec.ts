@@ -35,7 +35,7 @@ describe('LenrixStore.computeFromFields$()', () => {
    const lens = createLens<State>()
    let rootStore: Store<{
       state: State
-      computedValues: {}
+      readonlyValues: {}
       actions: { toggleFlag: void; setName: string }
       dependencies: {}
    }>
@@ -112,7 +112,7 @@ describe('LenrixStore.computeFromFields$()', () => {
    describe('with initial values', () => {
       let store: Store<{
          state: State
-         computedValues: ComputedValues
+         readonlyValues: ComputedValues
          actions: { toggleFlag: void; setName: string }
          dependencies: {}
       }>
