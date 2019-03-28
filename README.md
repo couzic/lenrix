@@ -19,9 +19,10 @@
     - [`actionTypes()`](#actiontypes)
     - [`updates()`](#updates)
     - [`dispatch()`](#dispatch)
+    - [`action()`](#action)
   - [Consuming the state](#consuming-the-state)
     - [`state$`](#state)
-    - [`computedState$`](#computedstate)
+    - [`currentState`](#currentstate)
     - [`pluck()`](#pluck)
     - [`pick()`](#pick)
     - [`cherryPick()`](#cherrypick)
@@ -29,6 +30,7 @@
     - [`focusPath()`](#focuspath)
     - [`focusFields()`](#focusfields)
     - [`recompose()`](#recompose)
+    - [Passing fields as readonly values](#passing-fields-as-readonly-values)
   - [Computed values (synchronous)](#computed-values-synchronous)
     - [`compute()`](#compute)
     - [`computeFromField()`](#computefromfield)
@@ -41,19 +43,17 @@
     - [`computeFrom$()`](#computefrom)
     - [`defaultValues()`](#defaultvalues)
   - [Optimize](#optimize)
-    - [`filter()`](#filter)
     - [`rejectNilFields()`](#rejectnilfields)
-    - [`distinctUntilFieldsChanged()`](#distinctuntilfieldschanged)
   - [`epics()`](#epics)
+  - [`pureEpics()`](#pureepics)
   - [`sideEffects()`](#sideeffects)
   - [Injected `store`](#injected-store)
 - [Testing](#testing)
   - [Test Setup](#test-setup)
     - [Root store](#root-store)
-    - [Focused stores](#focused-stores)
   - [Asserting state](#asserting-state)
-  - [Asserting dispatched actions](#asserting-dispatched-actions)
   - [Asserting calls on dependencies](#asserting-calls-on-dependencies)
+  - [Asserting dispatched actions](#asserting-dispatched-actions)
 - [Logger](#logger)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -193,23 +193,36 @@ Dispatching an action can trigger an [update](#updates), an [epic](#epics), or a
 store.dispatch({setName: 'John'}) // Next state will be : {name: 'John'}
 ```
 
+#### `action()`
+Create an action dispatcher, which can be handily used in a `React` component for example.
+```ts
+const setName = store.action('setName')
+setName('John') // Same as store.dispatch({setName: 'John'})
+```
+
 ### Consuming the state
 `lenrix` performs reference equality checks to prevent any unnecessary re-rendering.
 
-The store provides the observable properties `state$` and `computedState$`. However, we recommend you to use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
+The store provides the properties `state$` and `currentState`. However, we recommend you to use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
 
 #### `state$`
+The store's normalized state augmented with its readonly values.
 ```ts
 const store = createStore({name: 'Bob'})
 
-const state$ = store.state$ // Observable<{name: string}> 
+store.state$ // Observable<{name: string}> 
 ```
 
-#### `computedState$`
-Like `state$`, but the store's state is augmented with its [computed values](#computed-values-synchronous).
+#### `currentState`
+Handy for testing.
+```ts
+const store = createStore({name: 'Bob'})
+
+store.currentState.name // 'Bob' 
+```
 
 #### `pluck()`
-Conceptually equivalent to `focusPath().state$`
+Conceptually equivalent to `focusPath(...).state$`
 ```ts
 const rootStore = createStore({
    user: {
@@ -321,6 +334,23 @@ rootStore
    .state$ // Observable<{ d: string, h: string }>
 ```
 
+#### Passing fields as readonly values
+All three focus operators `focusPath()`, `focusFields()` and `recompose()` support passing fields as readonly values.
+```ts
+const rootStore = createStore({
+   a: {
+      b: {
+         c: 'c'
+      }
+   },
+   user: 'Bob'
+})
+
+const focusedStore = rootStore.focusPath(['a', 'b', 'c'], ['user'])
+focusedStore.state$ // Observable<{ c: string, user: string }>
+```
+Note that in this example, updates registered on the focused store can't modify the `user` value
+
 ### Computed values (synchronous)
 State should be normalized, derived data should be declared as computed values. In traditional redux, you would probably use selectors for that.
 
@@ -419,7 +449,7 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
 ```
 
 #### `defaultValues()`
-Define default values for asynchronously computed values.
+Define default values for optional fields.
 ```ts
 import { map } from 'rxjs/operators'
 
@@ -435,21 +465,20 @@ createStore({name: 'Bob'})
 
 ### Optimize
 
-#### `filter()`
-
 #### `rejectNilFields()`
+Filter states that have actual values for optional fields.
 ```ts
 import { map } from 'rxjs/operators'
 
-createStore({name: 'Bob'})
+const initialState: {name?: string} = {}
+
+createStore(initialState)
+   .rejectNilFields('message')
    .compute$(
       map(({name}) => ({message: 'Hello, ' + name}))
    )
-   .rejectNilFields('message')
    .pick('message') // Observable<{message: string}>
 ```
-
-#### `distinctUntilFieldsChanged()`
 
 ### `epics()`
 Let an action dispatch another action, asynchronously. Since this feature is heavily inspired from [`redux-observable`](https://github.com/redux-observable/redux-observable), we encourage you to go check their [documentation](https://redux-observable.js.org/docs/basics/Epics.html).
@@ -475,6 +504,15 @@ createStore({name: '', message: ''})
          map(message => ({setMessage: message}))
       )
    }))
+```
+
+### `pureEpics()`
+Same as [`epics()`](#epics()), without the [injected `store`](#injected-store) instance.
+```ts
+...
+   .pureEpics({
+      setName: map(name => ({setMessage: 'Hello, ' + name}))
+   })
 ```
 
 ### `sideEffects()`
@@ -574,39 +612,10 @@ describe('RootStore', () => {
 })
 ```
 
-#### Focused stores
-[Focused stores](#focus) provide a way to separate your state management code into vertical, functional slices. Therefore, focused stores should be tested in isolation of their sibling stores. However, since a focused store explicitely depends on their parent store, the whole store's ascending hierarchy will be active, up to the root store.
-
-**`UserStore.ts`**
-```ts
-import { createStore } from 'lenrix'
-import { RootStore } from './RootStore'
-
-export const createUserStore = (rootStore: RootStore) => rootStore.focusPath('user')
-
-export type UserStore = ReturnType<typeof createUserStore>
-```
-
-**`UserStore.spec.ts`**
-```ts
-import 'jest'
-import { createRootStore, initialRootState, RootStore } from './RootStore'
-import { createUserStore, UserStore } from './UserStore'
-
-describe('UserStore', () => {
-   let store: UserStore
-
-   beforeEach(() => {
-      const rootStore = createRootStore()
-      store = createUserStore(rootStore)
-   })
-})
-```
-
 ### Asserting state
 Most tests should limit themselves to dispatching actions and verifying that the state has correctly updated.
 
-The distinction between normalized state and computed values should be kept hidden as an implementation detail. Tests should not make assumptions about a value being either computed or part of the normalized state, as it is subject to change without breaking public API nor general behavior.
+The distinction between normalized state and readonly values should be kept hidden as an implementation detail. Tests should not make assumptions about a value being either readonly or part of the normalized state, as it is subject to change without breaking public API nor general behavior.
 
 **`RootStore.ts`**
 ```ts
