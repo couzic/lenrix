@@ -387,9 +387,26 @@ export class LenrixStore<
    ): any {
       const select = (data: StoreData<Type>): Pick<OutputState<Type>, K> => {
          const selected = {} as any
-         const computedState = this.dataToOutputState(data)
-         fields.forEach(field => (selected[field] = computedState[field]))
+         const outputState = this.dataToOutputState(data)
+         fields.forEach(field => (selected[field] = outputState[field]))
          return selected
+      }
+      return this.computeFromSelector(select, computer)
+   }
+
+   public computeFromField<
+      K extends keyof OutputState<Type>,
+      readonlyValues extends PlainObject
+   >(
+      field: K,
+      computer: (
+         field: OutputState<Type>[K],
+         store: LightStore<Type>
+      ) => readonlyValues
+   ): any {
+      const select = (data: StoreData<Type>): OutputState<Type>[K] => {
+         const outputState = this.dataToOutputState(data)
+         return outputState[field]
       }
       return this.computeFromSelector(select, computer)
    }
@@ -554,8 +571,8 @@ export class LenrixStore<
    ): any {
       const select = (data: StoreData<Type>): Pick<OutputState<Type>, K> => {
          const selected = {} as any
-         const computedState = this.dataToOutputState(data)
-         fields.forEach(field => (selected[field] = computedState[field]))
+         const outputState = this.dataToOutputState(data)
+         fields.forEach(field => (selected[field] = outputState[field]))
          return selected
       }
       return this.computeFromSelector$(select, computer$, initialValues)

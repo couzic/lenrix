@@ -230,6 +230,26 @@ export interface Store<
       dependencies: Type['dependencies']
    }>
 
+   computeFromField<
+      K extends keyof OutputState<Type>,
+      ComputedValues extends PlainObject
+   >(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      field: K,
+      computer: (
+         field: OutputState<Type>[K],
+         store: LightStore<Type>
+      ) => ComputedValues
+   ): Store<{
+      state: Type['state']
+      readonlyValues: {
+         [P in keyof (Type['readonlyValues'] &
+            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
+      }
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
+
    compute$<ComputedValues extends PlainObject>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       computer$: OperatorFunction<
