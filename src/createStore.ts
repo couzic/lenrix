@@ -1,7 +1,15 @@
 import { PlainObject, Updater } from 'immutable-lens'
 import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
 import { BehaviorSubject, merge, Observable, of, Subject } from 'rxjs'
-import { catchError, distinctUntilChanged, filter, map, mergeMap, skip, switchMap } from 'rxjs/operators'
+import {
+   catchError,
+   distinctUntilChanged,
+   filter,
+   map,
+   mergeMap,
+   skip,
+   switchMap
+} from 'rxjs/operators'
 
 import { ActionMeta, LenrixStore } from './LenrixStore'
 import { createLogger } from './logger/createLogger'
@@ -190,7 +198,8 @@ export function createFocusableStore<State extends PlainObject>(
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
-         if (updateHandlers[actionType] !== undefined) throw Error('Cannot register two updaters for the same action type')
+         if (updateHandlers[actionType] !== undefined)
+            throw Error('Cannot register two updaters for the same action type')
          updateHandlers[actionType] = (newHandlers as any)[actionType]
       })
    }
@@ -240,10 +249,23 @@ export function createFocusableStore<State extends PlainObject>(
       logger.compute(previous, next)
    }
 
+   const activationCallbacks = [] as Array<() => void>
+   const registerActivationCallback = (
+      store: Store<any>,
+      callback: (store: Store<any>) => void
+   ) => {
+      activationCallbacks.push(() => callback(store))
+   }
+   const activate = () => {
+      activationCallbacks.forEach(callback => callback())
+   }
+
    const context: StoreContext = {
       action$,
       registerEpics,
       registerSideEffects,
+      registerActivationCallback,
+      activate,
       dispatchActionObject,
       dispatchCompute
    }

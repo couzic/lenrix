@@ -144,6 +144,17 @@ export class LenrixStore<
          .subscribe(this.outputStateSubject)
    }
 
+   ///////////////
+   // ACTIVATE //
+   /////////////
+
+   public onActivate(callback: (store: Store<Type>) => void) {
+      this.context.registerActivationCallback(this, callback)
+   }
+   public activate() {
+      this.context.activate()
+   }
+
    //////////////
    // ACTIONS //
    ////////////

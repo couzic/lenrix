@@ -36,6 +36,13 @@ export interface Store<
    readonly action$: ActionObservable<Type['actions']>
    readonly path: string
 
+   ///////////////
+   // ACTIVATE //
+   /////////////
+
+   onActivate(callback: (store: Store<Type>) => void): void
+   activate(): void
+
    //////////////
    // ACTIONS //
    ////////////
