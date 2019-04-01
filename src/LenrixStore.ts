@@ -8,7 +8,6 @@ import {
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs'
 import {
    distinctUntilChanged,
-   filter,
    map,
    scan,
    skip,
@@ -23,10 +22,8 @@ import { StoreContext } from './StoreContext'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
 import { OutputState } from './util/ComputedState'
-import { ExcludeKeys } from './util/ExcludeKeys'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
-import { NullableKeys } from './util/NullableKeys'
 
 export interface ActionMeta {
    store: {
@@ -268,50 +265,6 @@ export class LenrixStore<
          map(state => keys.reduce((acc: any, key: any) => acc[key], state)),
          distinctUntilChanged()
       )
-   }
-
-   ///////////////
-   // OPTIMIZE //
-   /////////////
-
-   public filter(
-      predicate: (
-         state: { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
-      ) => boolean
-   ): Store<Type> {
-      return new LenrixStore(
-         this.dataSubject.pipe(
-            filter(data => {
-               const state = this.currentComputedState
-               return predicate(state)
-            })
-         ),
-         (data: any) => ({ ...data.state, ...data.readonlyValues }),
-         this.initialData,
-         this.registerHandlers,
-         this.context,
-         this.path
-      )
-   }
-
-   public rejectNilFields<K extends NullableKeys<OutputState<Type>>>(
-      this: Store<Type & { state: PlainObject<Type['state']> }>,
-      ...keys: K[]
-   ): Store<{
-      state: Type['state']
-      readonlyValues: {
-         [P in keyof ExcludeKeys<
-            Type['readonlyValues'],
-            K & keyof Type['readonlyValues']
-         >]: ExcludeKeys<
-            Type['readonlyValues'],
-            K & keyof Type['readonlyValues']
-         >[P]
-      }
-      actions: Type['actions']
-      dependencies: Type['dependencies']
-   }> {
-      return this as any
    }
 
    //////////////

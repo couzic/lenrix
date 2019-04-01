@@ -42,8 +42,6 @@
     - [`computeFromFields$()`](#computefromfields)
     - [`computeFrom$()`](#computefrom)
     - [`defaultValues()`](#defaultvalues)
-  - [Optimize](#optimize)
-    - [`rejectNilFields()`](#rejectnilfields)
   - [`epics()`](#epics)
   - [`pureEpics()`](#pureepics)
   - [`sideEffects()`](#sideeffects)
@@ -449,7 +447,7 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
 ```
 
 #### `defaultValues()`
-Define default values for optional fields.
+Define defaults for read-only values.
 ```ts
 import { map } from 'rxjs/operators'
 
@@ -460,23 +458,6 @@ createStore({name: 'Bob'})
    .defaultValues({
       message: ''
    })
-   .pick('message') // Observable<{message: string}>
-```
-
-### Optimize
-
-#### `rejectNilFields()`
-Filter states that have actual values for optional fields.
-```ts
-import { map } from 'rxjs/operators'
-
-const initialState: {name?: string} = {}
-
-createStore(initialState)
-   .rejectNilFields('message')
-   .compute$(
-      map(({name}) => ({message: 'Hello, ' + name}))
-   )
    .pick('message') // Observable<{message: string}>
 ```
 

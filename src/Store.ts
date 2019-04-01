@@ -149,34 +149,6 @@ export interface Store<
       key4: K4
    ): Observable<CS[K1][K2][K3][K4]>
 
-   ///////////////
-   // OPTIMIZE //
-   /////////////
-
-   filter(
-      predicate: (
-         state: { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
-      ) => boolean
-   ): Store<Type>
-
-   rejectNilFields<K extends NullableKeys<OutputState<Type>>>(
-      this: Store<Type & { state: PlainObject<Type['state']> }>,
-      ...keys: K[]
-   ): Store<{
-      state: Type['state']
-      readonlyValues: {
-         [P in keyof ExcludeKeys<
-            Type['readonlyValues'],
-            K & keyof Type['readonlyValues']
-         >]: ExcludeKeys<
-            Type['readonlyValues'],
-            K & keyof Type['readonlyValues']
-         >[P]
-      }
-      actions: Type['actions']
-      dependencies: Type['dependencies']
-   }>
-
    //////////////
    // COMPUTE //
    ////////////
