@@ -147,6 +147,7 @@ export class LenrixStore<
 
    public onActivate(callback: (store: Store<Type>) => void) {
       this.context.registerActivationCallback(this, callback)
+      return this
    }
    public activate() {
       this.context.activate()

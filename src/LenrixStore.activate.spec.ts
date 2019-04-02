@@ -21,8 +21,7 @@ describe('LenrixStore.activate()', () => {
       beforeEach(() => {
          callback1 = stub()
          callback2 = stub()
-         store.onActivate(callback1)
-         store.onActivate(callback2)
+         store.onActivate(callback1).onActivate(callback2)
       })
       it('does not call registered callbacks yet', () => {
          expect(callback1).not.to.have.been.called

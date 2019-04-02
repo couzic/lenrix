@@ -40,7 +40,7 @@ export interface Store<
    // ACTIVATE //
    /////////////
 
-   onActivate(callback: (store: Store<Type>) => void): void
+   onActivate(callback: (store: Store<Type>) => void): Store<Type>
    activate(): void
 
    //////////////
