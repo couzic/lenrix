@@ -3,7 +3,7 @@ import { Observable } from 'rxjs'
 import { LightStore } from './LightStore'
 import { Store } from './Store'
 import { ActionObservable } from './util/ActionObservable'
-import { OutputState } from './util/ComputedState'
+import { OutputState } from './util/OutputState'
 
 export class LenrixLightStore<
    Type extends {

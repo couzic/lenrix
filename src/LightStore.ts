@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs'
 
 import { ActionObservable } from './util/ActionObservable'
-import { OutputState } from './util/ComputedState'
+import { OutputState } from './util/OutputState'
 
 export interface LightStore<
    Type extends {

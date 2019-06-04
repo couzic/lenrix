@@ -21,9 +21,9 @@ import { Store } from './Store'
 import { StoreContext } from './StoreContext'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
-import { OutputState } from './util/ComputedState'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
+import { OutputState } from './util/OutputState'
 
 export interface ActionMeta {
    store: {
@@ -416,7 +416,7 @@ export class LenrixStore<
          }
       }
       const data$ = this.dataSubject.pipe(
-         map(data => ({ data, selection: selector(data) })),
+         map(data => ({ data, selection: selector(data as any) })) as any, // TODO Remove any
          scan(
             (previous, next) => {
                const { data, selection } = next

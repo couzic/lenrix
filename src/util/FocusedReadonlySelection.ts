@@ -1,6 +1,6 @@
 import { FieldLenses, PlainObject, UnfocusedLens } from 'immutable-lens'
 
-import { OutputState } from './ComputedState'
+import { OutputState } from './OutputState'
 
 export type FocusedReadonlySelection<
    Type extends {

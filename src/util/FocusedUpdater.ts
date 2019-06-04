@@ -1,4 +1,4 @@
-import { OutputState } from './ComputedState'
+import { OutputState } from './OutputState'
 
 export type FocusedUpdater<
    Type extends {
