@@ -61,7 +61,7 @@ export function createFocusableStore<State extends PlainObject>(
       >
    >()
 
-   const output$ = epics$.pipe(
+   const output$: Observable<any> = epics$.pipe(
       switchMap(epics => {
          const actionTypes = Object.keys(epics)
          return of(...actionTypes).pipe(
@@ -167,7 +167,7 @@ export function createFocusableStore<State extends PlainObject>(
                   actionType: action.type,
                   payload: action.payload
                },
-               nativeError: e
+               nativeError: e as any
             })
             return state || preloadedState
          }
@@ -177,7 +177,7 @@ export function createFocusableStore<State extends PlainObject>(
    }
 
    const reduxStore = createReduxStore(
-      augmentedReducer,
+      augmentedReducer as any,
       preloadedState as any,
       enhancer
    )
@@ -187,13 +187,10 @@ export function createFocusableStore<State extends PlainObject>(
    const stateSubject = new BehaviorSubject(preloadedState)
 
    const subscription = reduxStore.subscribe(() => {
-      stateSubject.next(reduxStore.getState())
+      stateSubject.next(reduxStore.getState() as any)
    })
 
-   const state$ = stateSubject.pipe(
-      distinctUntilChanged(),
-      skip(1)
-   )
+   const state$ = stateSubject.pipe(distinctUntilChanged(), skip(1))
 
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)

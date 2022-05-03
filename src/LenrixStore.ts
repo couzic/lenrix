@@ -61,15 +61,14 @@ export class LenrixStore<
       actions: object
       dependencies: object
    }
-> implements Store<Type> {
+> implements Store<Type>
+{
    public name?: string
 
-   public readonly localLens: UnfocusedLens<Type['state']> = createLens<
-      Type['state']
-   >()
-   public readonly localReadonlyLens: UnfocusedLens<
-      OutputState<Type>
-   > = createLens<OutputState<Type>>()
+   public readonly localLens: UnfocusedLens<Type['state']> =
+      createLens<Type['state']>()
+   public readonly localReadonlyLens: UnfocusedLens<OutputState<Type>> =
+      createLens<OutputState<Type>>()
    public readonly actions: any = {}
 
    private readonly dataSubject: BehaviorSubject<StoreData<Type>>
@@ -419,14 +418,14 @@ export class LenrixStore<
          map(data => ({ data, selection: selector(data as any) })) as any, // TODO Remove any
          scan(
             (previous, next) => {
-               const { data, selection } = next
+               const { data, selection } = next as any
                const locallyComputedValues = shallowEquals(
                   selection,
                   previous.selection
                )
                   ? (previous as any).locallyComputedValues // TODO Test breaking this line
                   : doCompute(
-                       next.selection,
+                       (next as any).selection,
                        (previous as any).locallyComputedValues // TODO Test breaking this line
                     )
                return { data, selection, locallyComputedValues } as any // TODO Remove as any

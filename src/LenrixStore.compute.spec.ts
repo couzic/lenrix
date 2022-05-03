@@ -36,8 +36,8 @@ describe('LenrixStore.compute()', () => {
          .updates(_ => ({
             toggleFlag: () => _.focusPath('flag').update(flag => !flag),
             toggleOrder: () =>
-               _.focusPath('sorting', 'order').update(
-                  order => (order === 'descending' ? 'ascending' : 'descending')
+               _.focusPath('sorting', 'order').update(order =>
+                  order === 'descending' ? 'ascending' : 'descending'
                )
          }))
       store = rootStore.compute(s => ({

@@ -16,6 +16,7 @@ const state: State = {} as any
 interface Actions {
    doString: string
    doNumber: number
+   doOptionalString?: string
 }
 
 const store = createStore(state).actionTypes<Actions>()
@@ -49,7 +50,7 @@ store
 store.action('doString')()
 
 // Calling dispatcher with wrong optional param @shouldNotCompile
-store.action('doOptionalString')(undefined)
+store.action('doOptionalString')(42)
 
 ////////////////////////////////////////////////////////
 // @shouldNotButDoesCompile - Require runtime checks //

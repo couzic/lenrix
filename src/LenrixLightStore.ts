@@ -12,7 +12,8 @@ export class LenrixLightStore<
       actions: object
       dependencies: object
    }
-> implements LightStore<Type> {
+> implements LightStore<Type>
+{
    constructor(private readonly store: Store<Type>) {}
 
    get state$(): Observable<Type['state']> {

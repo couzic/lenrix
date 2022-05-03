@@ -144,9 +144,12 @@ describe('LenrixStore.computeFrom()', () => {
    ///////////////////
 
    it('throws error when computing values with higher order function', () => {
-      expect(() => store.computeFrom(_ => ({}), () => () => null)).to.throw(
-         'does not accept higher order functions'
-      )
+      expect(() =>
+         store.computeFrom(
+            _ => ({}),
+            () => () => null
+         )
+      ).to.throw('does not accept higher order functions')
    })
 
    it('throws error when computer does not return', () => {

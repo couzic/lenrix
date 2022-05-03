@@ -24,9 +24,9 @@ export interface Store<
    readonly state$: Observable<OutputState<Type>>
    readonly currentState: OutputState<Type>
    // TODO Deprecate
-   readonly computedState$: Observable<
-      { [K in keyof OutputState<Type>]: OutputState<Type>[K] }
-   >
+   readonly computedState$: Observable<{
+      [K in keyof OutputState<Type>]: OutputState<Type>[K]
+   }>
    // TODO Deprecate
    readonly currentComputedState: {
       [K in keyof OutputState<Type>]: OutputState<Type>[K]
@@ -86,15 +86,13 @@ export interface Store<
 
    pureEpics(epics: Epics<Type['actions']>): Store<Type>
 
-   sideEffects(
-      effects: {
-         [ActionType in keyof Type['actions']]?: (
-            payload: Type['actions'][ActionType],
-            store: LightStore<Type>,
-            dependencies: Type['dependencies']
-         ) => void
-      }
-   ): Store<Type>
+   sideEffects(effects: {
+      [ActionType in keyof Type['actions']]?: (
+         payload: Type['actions'][ActionType],
+         store: LightStore<Type>,
+         dependencies: Type['dependencies']
+      ) => void
+   }): Store<Type>
 
    ///////////
    // READ //

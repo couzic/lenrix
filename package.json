@@ -29,10 +29,9 @@
     "build": "tsc",
     "prepare": "npm run build",
     "doctoc": "doctoc . --notitle --maxlevel 4",
-    "test": "mocha --opts mocha.opts && npm run test-compilation-errors",
+    "test": "mocha && npm run test-compilation-errors",
     "test-compilation-errors": "node ./testCompilationErrors.js",
-    "tdd": "mocha --opts mocha.opts --watch",
-    "lint": "tslint --project ./ --fix"
+    "tdd": "mocha --watch"
   },
   "files": [
     "lib",
@@ -40,34 +39,40 @@
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "mocha": {
+    "require": "ts-node/register",
+    "extension": [
+      "ts"
+    ],
+    "spec": [
+      "src/**/*.spec.ts"
+    ],
+    "reporter": "dot"
+  },
   "peerDependencies": {
     "immutable-lens": "^0.4.1",
     "redux": "^4.0.0",
-    "rxjs": "^6.0.0"
+    "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.5",
-    "@types/sinon": "^7.0.4",
-    "@types/sinon-chai": "^3.2.2",
-    "chai": "^4.2.0",
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "@types/sinon": "^10.0.11",
+    "@types/sinon-chai": "^3.2.8",
+    "chai": "^4.3.6",
     "chalk": "^2.4.2",
-    "doctoc": "^1.4.0",
-    "glob-promise": "^3.4.0",
+    "doctoc": "^2.1.0",
+    "glob-promise": "^4.2.2",
     "immutable-lens": "^0.4.2",
-    "mocha": "^5.2.0",
-    "prettier": "^1.16.1",
-    "ramda": "^0.26.1",
-    "redux": "^4.0.1",
-    "rxjs": "^6.3.3",
-    "rxjs-tslint": "^0.1.6",
-    "shx": "^0.3.2",
-    "sinon": "^7.2.3",
-    "sinon-chai": "^3.3.0",
-    "ts-node": "^8.0.1",
-    "tslint": "^5.12.1",
-    "tslint-config-prettier": "^1.17.0",
-    "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.1.3"
+    "mocha": "^10.0.0",
+    "prettier": "^2.6.2",
+    "ramda": "^0.28.0",
+    "redux": "^4.2.0",
+    "rxjs": "^7.5.5",
+    "shx": "^0.3.4",
+    "sinon": "^13.0.2",
+    "sinon-chai": "^3.7.0",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
   }
 }
