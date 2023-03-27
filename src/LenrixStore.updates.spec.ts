@@ -1,10 +1,9 @@
 import * as chai from 'chai'
 import * as sinonChai from 'sinon-chai'
 
-import { initialState, State } from '../test/State'
+import { initialState } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 chai.use(sinonChai)
 const { expect } = chai
@@ -14,21 +13,20 @@ interface Actions {
    resetCounter: void
 }
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<Actions>()
+      .updates(_ => ({
+         clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
+         resetCounter: () => state => ({ ...state, counter: 0 })
+      }))
+type RootStore = ReturnType<typeof createRootStore>
+
 describe('LenrixStore.updates()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: Actions
-      dependencies: {}
-   }>
+   let rootStore: RootStore
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<Actions>()
-         .updates(_ => ({
-            clearTodoList: () => _.focusPath('todo', 'list').setValue([]),
-            resetCounter: () => state => ({ ...state, counter: 0 })
-         }))
+      rootStore = createRootStore()
    })
 
    it('applies updates declared using no-lens object', () => {
@@ -51,14 +49,11 @@ describe('LenrixStore.updates()', () => {
    })
 
    describe('on path-focused store', () => {
-      let store: Store<{
-         state: State['todo']
-         readonlyValues: {}
-         actions: Actions
-         dependencies: {}
-      }>
+      const createPathFocusedStore = (rootStore: RootStore) =>
+         rootStore.focusPath('todo')
+      let store: ReturnType<typeof createPathFocusedStore>
       beforeEach(() => {
-         store = rootStore.focusPath('todo')
+         store = createPathFocusedStore(rootStore)
       })
 
       it('applies update registered on root store', () => {
@@ -80,14 +75,11 @@ describe('LenrixStore.updates()', () => {
    })
 
    describe('on fields-focused store', () => {
-      let store: Store<{
-         state: Pick<State, 'todo'>
-         readonlyValues: {}
-         actions: Actions
-         dependencies: {}
-      }>
+      const createFieldsFocusedStore = (rootStore: RootStore) =>
+         rootStore.focusFields('todo')
+      let store: ReturnType<typeof createFieldsFocusedStore>
       beforeEach(() => {
-         store = rootStore.focusFields('todo')
+         store = createFieldsFocusedStore(rootStore)
       })
 
       it('applies update registered on root store', () => {
@@ -109,16 +101,13 @@ describe('LenrixStore.updates()', () => {
    })
 
    describe('on recomposed store', () => {
-      let store: Store<{
-         state: { todoList: State['todo']['list'] }
-         readonlyValues: {}
-         actions: Actions
-         dependencies: {}
-      }>
-      beforeEach(() => {
-         store = rootStore.recompose(_ => ({
+      const createRecomposedStore = (rootStore: RootStore) =>
+         rootStore.recompose(_ => ({
             todoList: _.focusPath('todo', 'list')
          }))
+      let store: ReturnType<typeof createRecomposedStore>
+      beforeEach(() => {
+         store = createRecomposedStore(rootStore)
       })
 
       it('applies update registered on root store', () => {

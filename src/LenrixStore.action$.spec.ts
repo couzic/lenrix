@@ -1,31 +1,26 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
 
-import { initialState, State, TodoItem } from '../test/State'
+import { initialState, TodoItem } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 interface Actions {
    clearTodoList: void
    addTodo: TodoItem
 }
 
-describe('LenrixStore.action$()', () => {
-   const lens = createLens<State>()
-   const todoListLens = lens.focusPath('todo', 'list')
+const createRootStore = () =>
+   createStore(initialState, {
+      logger: silentLoggerOptions
+   }).actionTypes<Actions>()
 
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: Actions
-      dependencies: {}
-   }>
+type RootStore = ReturnType<typeof createRootStore>
+
+describe('LenrixStore.action$()', () => {
+   let rootStore: RootStore
 
    beforeEach(() => {
-      rootStore = createStore(initialState, {
-         logger: silentLoggerOptions
-      }).actionTypes<Actions>()
+      rootStore = createRootStore()
    })
 
    it('emits disptached action', () => {

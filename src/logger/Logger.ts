@@ -6,5 +6,7 @@ export interface Logger {
    update: (action: FocusedAction) => void
    epic: (action: FocusedAction) => void
    compute: (previous: object, next: object) => void
+   loading: (selection: any) => void
+   loaded: (values: object) => void
    error: (error: LenrixError) => void
 }

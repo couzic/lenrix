@@ -4,27 +4,26 @@ import { createLens } from 'immutable-lens'
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
+
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .compute(s => ({ todoListLength: s.todo.list.length }))
+      .actionTypes<{ toggleFlag: void }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag)
+      }))
+
+type RootStore = ReturnType<typeof createRootStore>
 
 describe('LenrixStore.pluck()', () => {
    const lens = createLens<State>()
    const todoListLens = lens.focusPath('todo', 'list')
 
-   let store: Store<{
-      state: State
-      readonlyValues: { todoListLength: number }
-      actions: { toggleFlag: void }
-      dependencies: {}
-   }>
+   let store: RootStore
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState, { logger: silentLoggerOptions })
-         .compute(s => ({ todoListLength: s.todo.list.length }))
-         .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
-         }))
+      store = createRootStore()
       store.state$.subscribe(newState => (state = newState))
    })
 

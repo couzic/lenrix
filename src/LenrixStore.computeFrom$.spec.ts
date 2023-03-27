@@ -1,11 +1,9 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
-import { never, of } from 'rxjs'
+import { NEVER, of } from 'rxjs'
 import { map, switchMap } from 'rxjs/operators'
 
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 interface State {
    name: string
@@ -31,24 +29,23 @@ interface ComputedValues {
 
 const isAvailable = (name: string) => of(name.length > 3)
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<{ toggleFlag: void }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag)
+      }))
+      .actionTypes<{ setName: string }>()
+      .updates(_ => ({
+         setName: name => _.focusPath('name').setValue(name)
+      }))
+
+type RootStore = ReturnType<typeof createRootStore>
+
 describe('LenrixStore.computeFrom$()', () => {
-   const lens = createLens<State>()
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: { toggleFlag: void; setName: string }
-      dependencies: {}
-   }>
+   let rootStore: RootStore
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
-         }))
-         .actionTypes<{ setName: string }>()
-         .updates(_ => ({
-            setName: name => _.focusPath('name').setValue(name)
-         }))
+      rootStore = createRootStore()
    })
 
    describe('without initial values', () => {
@@ -57,10 +54,10 @@ describe('LenrixStore.computeFrom$()', () => {
             _ => ({
                flag: _.focusPath('flag')
             }),
-            state$ => never()
+            state$ => NEVER
          )
-         expect(computed.currentComputedState).to.deep.equal(initialState)
-         expect((computed.currentComputedState as any).whatever).to.be.undefined
+         expect(computed.currentState).to.deep.equal(initialState)
+         expect((computed.currentState as any).whatever).to.be.undefined
       })
 
       it('computed values are defined if computer has emitted', () => {
@@ -70,7 +67,7 @@ describe('LenrixStore.computeFrom$()', () => {
             }),
             state$ => of({ whatever: 'computed' })
          )
-         expect(computed.currentComputedState).to.deep.equal({
+         expect(computed.currentState).to.deep.equal({
             ...initialState,
             whatever: 'computed'
          })
@@ -86,9 +83,7 @@ describe('LenrixStore.computeFrom$()', () => {
                )
          )
          let computedStateTransitions = 0
-         computingStore.computedState$.subscribe(
-            () => ++computedStateTransitions
-         )
+         computingStore.state$.subscribe(() => ++computedStateTransitions)
          expect(computedStateTransitions).to.equal(1)
          computingStore.dispatch({ setName: 'Steve' })
          expect(computedStateTransitions).to.equal(3)
@@ -104,7 +99,7 @@ describe('LenrixStore.computeFrom$()', () => {
                )
          )
          const computedStates: any[] = []
-         computingStore.computedState$.subscribe(newState =>
+         computingStore.state$.subscribe(newState =>
             computedStates.push(newState)
          )
          computingStore.dispatch({ setName: 'Steve' })
@@ -132,24 +127,15 @@ describe('LenrixStore.computeFrom$()', () => {
                      map(fields => ({ computed: fields.selectedComputedValue }))
                   )
             )
-         expect(computingStore.currentComputedState.nameLength).to.equal(
+         expect(computingStore.currentState.nameLength).to.equal(
             rootStore.currentState.name.length
          )
       })
    })
 
    describe('with initial values', () => {
-      let store: Store<{
-         state: State
-         readonlyValues: ComputedValues
-         actions: { toggleFlag: void; setName: string }
-         dependencies: {}
-      }>
-      let computedState: State & ComputedValues
-      let computedStateTransitions: number
-
-      beforeEach(() => {
-         store = rootStore.computeFrom$(
+      const createComputingStore = (store: RootStore) =>
+         rootStore.computeFrom$(
             _ => ({
                theName: _.focusPath('name')
             }),
@@ -160,8 +146,14 @@ describe('LenrixStore.computeFrom$()', () => {
                ),
             { available: true }
          )
+      let store: ReturnType<typeof createComputingStore>
+      let computedState: State & ComputedValues
+      let computedStateTransitions: number
+
+      beforeEach(() => {
+         store = createComputingStore(rootStore)
          computedStateTransitions = 0
-         store.computedState$.subscribe(newState => {
+         store.state$.subscribe(newState => {
             computedState = newState
             ++computedStateTransitions
          })
@@ -182,17 +174,17 @@ describe('LenrixStore.computeFrom$()', () => {
                ),
             { whatever: 'initial' }
          )
-         expect(what.currentComputedState.whatever).to.equal('computed')
+         expect(what.currentState.whatever).to.equal('computed')
          expect(executions).to.equal(1)
       })
 
       it('holds initial values in state if Observable has not emitted yet', () => {
          const neverComputedStore = rootStore.computeFrom$(
             _ => ({ theName: _.focusPath('name') }),
-            state$ => never(),
+            state$ => NEVER,
             { whatever: 'initial' }
          )
-         expect(neverComputedStore.currentComputedState).to.deep.equal({
+         expect(neverComputedStore.currentState).to.deep.equal({
             ...initialState,
             whatever: 'initial'
          })
@@ -202,7 +194,7 @@ describe('LenrixStore.computeFrom$()', () => {
          let stateTransions = 0
          const neverComputedStore = rootStore.computeFrom$(
             _ => ({ theName: _.focusPath('name') }),
-            state$ => never(),
+            state$ => NEVER,
             { whatever: 'initial' }
          )
          neverComputedStore.state$.subscribe(state => ++stateTransions)
@@ -237,7 +229,7 @@ describe('LenrixStore.computeFrom$()', () => {
                   ),
                { computed: 0 }
             )
-         expect(computingStore.currentComputedState.nameLength).to.equal(
+         expect(computingStore.currentState.nameLength).to.equal(
             rootStore.currentState.name.length
          )
       })

@@ -4,23 +4,22 @@ import { UnfocusedLens } from 'immutable-lens'
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 type PickedState = Pick<State, 'counter' | 'todo'>
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+
+type RootStore = ReturnType<typeof createRootStore>
+
+const createFocusedStore = (rootStore: RootStore) =>
+   rootStore.focusFields('counter', 'todo')
+
+type FocusedStore = ReturnType<typeof createFocusedStore>
+
 describe('LenrixStore.focusFields()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: {}
-      dependencies: {}
-   }>
-   let store: Store<{
-      state: PickedState
-      readonlyValues: {}
-      actions: {}
-      dependencies: {}
-   }>
+   let rootStore: RootStore
+   let store: FocusedStore
    let rootState: State
    let state: PickedState
    let rootLens: UnfocusedLens<State>
@@ -34,8 +33,8 @@ describe('LenrixStore.focusFields()', () => {
    }
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-      store = rootStore.focusFields('counter', 'todo')
+      rootStore = createRootStore()
+      store = createFocusedStore(rootStore)
       rootLens = rootStore.localLens
       lens = store.localLens
       rootStateTransitions = 0
@@ -108,7 +107,7 @@ describe('LenrixStore.focusFields()', () => {
       const focused = rootStore
          .compute(s => ({ todoListLength: s.todo.list.length }))
          .focusFields(['counter', 'flag'], ['todoListLength'])
-      expect(focused.currentComputedState).to.deep.equal({
+      expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag,
          todoListLength: 3
@@ -118,7 +117,7 @@ describe('LenrixStore.focusFields()', () => {
    it('can store fields as readonly-values', () => {
       const focused = rootStore.focusFields(['flag'], ['counter'])
 
-      expect(focused.currentComputedState.counter).to.equal(
+      expect(focused.currentState.counter).to.equal(
          rootStore.currentState.counter
       )
    })

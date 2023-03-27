@@ -4,21 +4,20 @@ import { UnfocusedLens } from 'immutable-lens'
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
+
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+
+type RootStore = ReturnType<typeof createRootStore>
 
 describe('LenrixStore when unfocused', () => {
-   let store: Store<{
-      state: State
-      readonlyValues: {}
-      actions: {}
-      dependencies: {}
-   }>
+   let store: RootStore
    let lens: UnfocusedLens<State>
    let state: State
    let stateTransitions: number
 
    beforeEach(() => {
-      store = createStore(initialState, { logger: silentLoggerOptions })
+      store = createRootStore()
       lens = store.localLens
       stateTransitions = 0
       store.state$.subscribe(newState => {

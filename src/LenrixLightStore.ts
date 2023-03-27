@@ -2,13 +2,15 @@ import { Observable } from 'rxjs'
 
 import { LightStore } from './LightStore'
 import { Store } from './Store'
+import { StoreStatus } from './StoreStatus'
 import { ActionObservable } from './util/ActionObservable'
-import { OutputState } from './util/OutputState'
 
 export class LenrixLightStore<
    Type extends {
       state: any
       readonlyValues: object
+      status: StoreStatus
+      loadingValues: object
       actions: object
       dependencies: object
    }
@@ -22,14 +24,6 @@ export class LenrixLightStore<
 
    get currentState(): Type['state'] {
       return this.store.currentState
-   }
-
-   get computedState$(): Observable<OutputState<Type>> {
-      return this.store.computedState$
-   }
-
-   get currentComputedState(): OutputState<Type> {
-      return this.store.currentComputedState
    }
 
    get action$(): ActionObservable<Type['actions']> {

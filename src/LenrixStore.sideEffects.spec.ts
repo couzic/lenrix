@@ -1,26 +1,25 @@
 import { expect } from 'chai'
 
-import { initialState, State } from '../test/State'
+import { initialState } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 interface Actions {
    navigateTo: { url: string }
 }
 
+const createRootStore = () =>
+   createStore(initialState, {
+      logger: silentLoggerOptions
+   }).actionTypes<Actions>()
+
+type RootStore = ReturnType<typeof createRootStore>
+
 describe('LenrixStore.sideEffects()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: Actions
-      dependencies: {}
-   }>
+   let rootStore: RootStore
 
    beforeEach(() => {
-      rootStore = createStore(initialState, {
-         logger: silentLoggerOptions
-      }).actionTypes<Actions>()
+      rootStore = createRootStore()
    })
 
    it('triggers side effect', () => {

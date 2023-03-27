@@ -2,18 +2,22 @@ import { PlainObject, UnfocusedLens } from 'immutable-lens'
 import { Observable, OperatorFunction } from 'rxjs'
 
 import { LightStore } from './LightStore'
+import { StoreStatus } from './StoreStatus'
 import { ActionObject } from './util/ActionObject'
 import { ActionObservable } from './util/ActionObservable'
 import { Epics } from './util/Epics'
 import { FocusedHandlers } from './util/FocusedHandlers'
 import { FocusedReadonlySelection } from './util/FocusedReadonlySelection'
 import { FocusedUpdatableSelection } from './util/FocusedUpdatableSelection'
+import { LoadableData } from './util/LoadableData'
 import { OutputState } from './util/OutputState'
 
 export interface Store<
    Type extends {
       state: any
       readonlyValues: object
+      status: StoreStatus
+      loadingValues: object
       actions: object
       dependencies: object
    }
@@ -23,14 +27,6 @@ export interface Store<
    readonly localLens: UnfocusedLens<Type['state']>
    readonly state$: Observable<OutputState<Type>>
    readonly currentState: OutputState<Type>
-   // TODO Deprecate
-   readonly computedState$: Observable<{
-      [K in keyof OutputState<Type>]: OutputState<Type>[K]
-   }>
-   // TODO Deprecate
-   readonly currentComputedState: {
-      [K in keyof OutputState<Type>]: OutputState<Type>[K]
-   }
    readonly action$: ActionObservable<Type['actions']>
    readonly path: string
 
@@ -48,6 +44,8 @@ export interface Store<
    actionTypes<Actions extends PlainObject>(): Store<{
       state: Type['state']
       readonlyValues: Type['readonlyValues']
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: {
          [K in
             | Exclude<keyof Actions, keyof Type['actions']>
@@ -145,6 +143,35 @@ export interface Store<
       key4: K4
    ): Observable<CS[K1][K2][K3][K4]>
 
+   ///////////
+   // LOAD //
+   /////////
+
+   loadFromFields<
+      K extends keyof OutputState<Type>,
+      LoadingValues extends PlainObject
+   >(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      fields: K[],
+      load: (fields: {
+         [P in K]: OutputState<Type>[P]
+      }) => Observable<LoadingValues>
+   ): Store<{
+      state: Type['state']
+      readonlyValues: Type['readonlyValues']
+      status: StoreStatus
+      loadingValues: Type['loadingValues'] & LoadingValues
+      actions: Type['actions']
+      dependencies: Type['dependencies']
+   }>
+
+   get loadableData$(): Observable<LoadableData<Type>>
+
+   get currentLoadableData(): LoadableData<Type>
+
+   // TODO
+   // waitUntilLoaded()
+
    //////////////
    // COMPUTE //
    ////////////
@@ -161,6 +188,8 @@ export interface Store<
          [K in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -181,6 +210,8 @@ export interface Store<
          [K in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -201,6 +232,8 @@ export interface Store<
          [P in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -221,6 +254,8 @@ export interface Store<
          [P in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -238,6 +273,8 @@ export interface Store<
          [K in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -255,6 +292,8 @@ export interface Store<
             Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -273,6 +312,8 @@ export interface Store<
          [K in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -291,6 +332,8 @@ export interface Store<
             Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[K]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -311,6 +354,8 @@ export interface Store<
          [CVK in keyof (Type['readonlyValues'] &
             ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[CVK]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -331,6 +376,8 @@ export interface Store<
             Partial<ComputedValues>)]: (Type['readonlyValues'] &
             Partial<ComputedValues>)[CVK]
       }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -345,6 +392,8 @@ export interface Store<
    ): Store<{
       state: { [P in K]: Type['state'][P] }
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -355,6 +404,8 @@ export interface Store<
    ): Store<{
       state: { [P in K]: Type['state'][P] }
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -369,6 +420,8 @@ export interface Store<
    ): Store<{
       state: { [P in SK]: Type['state'][P] }
       readonlyValues: { [P in CK]: OutputState<Type>[P] }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -378,6 +431,8 @@ export interface Store<
    ): Store<{
       state: RecomposedState
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -388,6 +443,8 @@ export interface Store<
    ): Store<{
       state: RecomposedState
       readonlyValues: { [P in CK]: OutputState<Type>[P] }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -397,6 +454,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -406,6 +465,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -419,6 +480,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][SK]
       readonlyValues: { [P in CK]: OutputState<Type>[P] }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -432,6 +495,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -444,6 +509,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -458,6 +525,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2]
       readonlyValues: { [P in CK]: OutputState<Type>[P] }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -473,6 +542,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2][K3]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -486,6 +557,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2][K3]
       readonlyValues: {}
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>
@@ -501,6 +574,8 @@ export interface Store<
    ): Store<{
       state: Type['state'][K1][K2][K3]
       readonlyValues: { [P in CK]: OutputState<Type>[P] }
+      status: Type['status']
+      loadingValues: Type['loadingValues']
       actions: Type['actions']
       dependencies: Type['dependencies']
    }>

@@ -4,21 +4,19 @@ import { UnfocusedLens } from 'immutable-lens'
 import { initialState, State, TodoState } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
+
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+
+type RootStore = ReturnType<typeof createRootStore>
+
+const createFocusedStore = (rootStore: RootStore) => rootStore.focusPath('todo')
+
+type FocusedStore = ReturnType<typeof createFocusedStore>
 
 describe('LenrixStore.focusPath()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: {}
-      dependencies: {}
-   }>
-   let store: Store<{
-      state: TodoState
-      readonlyValues: {}
-      actions: {}
-      dependencies: {}
-   }>
+   let rootStore: RootStore
+   let store: FocusedStore
    let rootState: State
    let state: TodoState
    let rootLens: UnfocusedLens<State>
@@ -27,8 +25,8 @@ describe('LenrixStore.focusPath()', () => {
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-      store = rootStore.focusPath('todo')
+      rootStore = createRootStore()
+      store = createFocusedStore(rootStore)
       rootLens = rootStore.localLens
       lens = store.localLens
       rootStateTransitions = 0
@@ -98,7 +96,7 @@ describe('LenrixStore.focusPath()', () => {
       const focused = rootStore
          .compute(s => ({ todoListLength: s.todo.list.length }))
          .focusPath(['todo'], ['todoListLength'])
-      expect(focused.currentComputedState).to.deep.equal({
+      expect(focused.currentState).to.deep.equal({
          ...initialState.todo,
          todoListLength: 3
       })
@@ -125,7 +123,7 @@ describe('LenrixStore.focusPath()', () => {
    it('can store fields as readonly-values', () => {
       const focused = rootStore.focusPath(['todo'], ['counter'])
 
-      expect(focused.currentComputedState.counter).to.equal(
+      expect(focused.currentState.counter).to.equal(
          rootStore.currentState.counter
       )
    })

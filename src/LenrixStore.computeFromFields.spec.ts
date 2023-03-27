@@ -2,7 +2,6 @@ import { expect } from 'chai'
 
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 interface State {
    name: string
@@ -22,50 +21,46 @@ const initialState: State = {
    flag: false
 }
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<{
+         toggleFlag: void
+         addToList: string
+      }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         addToList: name =>
+            _.focusPath('todo', 'list').update(list => [...list, name])
+      }))
+
+type RootStore = ReturnType<typeof createRootStore>
+
 describe('LenrixStore.computeFromFields()', () => {
-   let store: Store<{
-      state: State
-      readonlyValues: {}
-      actions: { toggleFlag: void; addToList: string }
-      dependencies: {}
-   }>
-   let computedStore: Store<{
-      state: State
-      readonlyValues: { todoListLength: number }
-      actions: { toggleFlag: void; addToList: string }
-      dependencies: {}
-   }>
+   let store: RootStore
    let state: State
    let computedState: State & { todoListLength: number }
    let computations: number
    let stateTransitions: number
    let computedStateTransitions: number
-
-   beforeEach(() => {
-      computations = 0
-      stateTransitions = 0
-      computedStateTransitions = 0
-      store = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{
-            toggleFlag: void
-            addToList: string
-         }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
-            addToList: name =>
-               _.focusPath('todo', 'list').update(list => [...list, name])
-         }))
-      computedStore = store.computeFromFields(['name', 'todo'], ({ todo }) => {
+   const createComputedStore = (store: RootStore) =>
+      store.computeFromFields(['name', 'todo'], ({ todo }) => {
          ++computations
          return {
             todoListLength: todo.list.length
          }
       })
+   let computedStore: ReturnType<typeof createComputedStore>
+   beforeEach(() => {
+      computations = 0
+      stateTransitions = 0
+      computedStateTransitions = 0
+      store = createRootStore()
+      computedStore = createComputedStore(store)
       computedStore.state$.subscribe(s => {
          state = s
          ++stateTransitions
       })
-      computedStore.computedState$.subscribe(s => {
+      computedStore.state$.subscribe(s => {
          computedState = s
          ++computedStateTransitions
       })
@@ -84,7 +79,7 @@ describe('LenrixStore.computeFromFields()', () => {
    })
 
    it('initially has computed values in current computed state', () => {
-      expect(computedStore.currentComputedState.todoListLength).to.equal(
+      expect(computedStore.currentState.todoListLength).to.equal(
          initialState.todo.list.length
       )
    })
@@ -126,7 +121,7 @@ describe('LenrixStore.computeFromFields()', () => {
       const cs = store.computeFromFields(['flag'], (s, lightStore) => ({
          computed: lightStore.currentState.todo
       }))
-      expect(cs.currentComputedState.computed).to.equal(store.currentState.todo)
+      expect(cs.currentState.computed).to.equal(store.currentState.todo)
    })
 
    /////////////////////

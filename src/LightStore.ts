@@ -13,7 +13,5 @@ export interface LightStore<
 > {
    readonly state$: Observable<OutputState<Type>>
    readonly currentState: OutputState<Type>
-   readonly computedState$: Observable<OutputState<Type>>
-   readonly currentComputedState: OutputState<Type>
    readonly action$: ActionObservable<Type['actions']>
 }

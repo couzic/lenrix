@@ -6,7 +6,6 @@ import * as sinonChai from 'sinon-chai'
 
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 chai.use(sinonChai)
 const { expect } = chai
@@ -36,29 +35,29 @@ interface Actions {
    setTodoCount: number
 }
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<Actions>()
+      .updates(_ => ({
+         incrementCounter: () => _.updateFields({ counter: val => val + 1 }),
+         setCounter: counter => _.setFields({ counter }),
+         setTodoCount: todoCount =>
+            _.focusPath('todo', 'count').setValue(todoCount)
+      }))
+      .updates({
+         buttonClicked: () => state => state
+      })
+      .pureEpics({
+         buttonClicked: mapTo({ incrementCounter: undefined })
+      })
+
+type RootStore = ReturnType<typeof createRootStore>
+
 describe('LenrixStore Epics', () => {
-   let store: Store<{
-      state: State
-      readonlyValues: {}
-      actions: Actions
-      dependencies: {}
-   }>
+   let store: RootStore
 
    beforeEach(() => {
-      store = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<Actions>()
-         .updates(_ => ({
-            incrementCounter: () => _.updateFields({ counter: val => val + 1 }),
-            setCounter: counter => _.setFields({ counter }),
-            setTodoCount: todoCount =>
-               _.focusPath('todo', 'count').setValue(todoCount)
-         }))
-         .updates({
-            buttonClicked: () => state => state
-         })
-         .pureEpics({
-            buttonClicked: mapTo({ incrementCounter: undefined })
-         })
+      store = createRootStore()
    })
 
    it('dispatches actions', () => {

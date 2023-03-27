@@ -3,51 +3,45 @@ import { expect } from 'chai'
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
 
 interface ComputedValues {
    todoListLength: number
    caret: 'up' | 'down'
 }
 
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<{
+         toggleFlag: void
+         toggleOrder: void
+      }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag),
+         toggleOrder: () =>
+            _.focusPath('sorting', 'order').update(order =>
+               order === 'descending' ? 'ascending' : 'descending'
+            )
+      }))
+
+type RootStore = ReturnType<typeof createRootStore>
+
+const createComputingStore = (rootStore: RootStore) =>
+   rootStore.compute(s => ({
+      todoListLength: s.todo.list.length,
+      caret: (s.sorting.order === 'ascending' ? 'up' : 'down') as 'up' | 'down'
+   }))
+
+type ComputingStore = ReturnType<typeof createComputingStore>
+
 describe('LenrixStore.compute()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: { toggleFlag: void; toggleOrder: void }
-      dependencies: {}
-   }>
-
-   let store: Store<{
-      state: State
-      readonlyValues: ComputedValues
-      actions: { toggleFlag: void; toggleOrder: void }
-      dependencies: {}
-   }>
-
+   let rootStore: RootStore
+   let computingStore: ComputingStore
    let state: State & ComputedValues
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{
-            toggleFlag: void
-            toggleOrder: void
-         }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag),
-            toggleOrder: () =>
-               _.focusPath('sorting', 'order').update(order =>
-                  order === 'descending' ? 'ascending' : 'descending'
-               )
-         }))
-      store = rootStore.compute(s => ({
-         todoListLength: s.todo.list.length,
-         caret: (s.sorting.order === 'ascending' ? 'up' : 'down') as
-            | 'up'
-            | 'down'
-      }))
-      const st = store.compute(() => ({ toto: 'tata' }))
-      store.computedState$.subscribe(newState => {
+      rootStore = createRootStore()
+      computingStore = createComputingStore(rootStore)
+      computingStore.state$.subscribe(newState => {
          state = newState
       })
    })
@@ -72,7 +66,7 @@ describe('LenrixStore.compute()', () => {
    //////////
 
    it('holds initial state as current state', () => {
-      expect(store.currentComputedState).to.deep.equal({
+      expect(computingStore.currentState).to.deep.equal({
          ...rootStore.currentState,
          todoListLength: rootStore.currentState.todo.list.length,
          caret: 'up'
@@ -89,36 +83,28 @@ describe('LenrixStore.compute()', () => {
 
    it('computes value when state changes', () => {
       expect(state.caret).to.equal('up')
-      store.dispatch({ toggleOrder: undefined })
+      computingStore.dispatch({ toggleOrder: undefined })
       expect(state.caret).to.equal('down')
    })
 
    it('passes computed values to child compute() store', () => {
-      const childStore = store.compute(s => ({
+      const childStore = computingStore.compute(s => ({
          computedOnChild: s.caret
       }))
-      expect(childStore.currentComputedState.computedOnChild).to.equal(
-         state.caret
-      )
+      expect(childStore.currentState.computedOnChild).to.equal(state.caret)
    })
 
    describe('.focusPath() with computed values', () => {
-      let focusedStore: Store<{
-         state: State['sorting']
-         readonlyValues: ComputedValues
-         actions: { toggleFlag: void; toggleOrder: void }
-         dependencies: {}
-      }>
+      const createPathFocusedStore = (store: ComputingStore) =>
+         store.focusPath(['sorting'], ['todoListLength', 'caret'])
+      let focusedStore: ReturnType<typeof createPathFocusedStore>
       let focusedState: State['sorting'] & ComputedValues
       let focusedStateTransitions: number
 
       beforeEach(() => {
-         focusedStore = store.focusPath(
-            ['sorting'],
-            ['todoListLength', 'caret']
-         )
+         focusedStore = createPathFocusedStore(computingStore)
          focusedStateTransitions = 0
-         focusedStore.computedState$.subscribe(s => {
+         focusedStore.state$.subscribe(s => {
             focusedState = s
             ++focusedStateTransitions
          })
@@ -154,22 +140,16 @@ describe('LenrixStore.compute()', () => {
    })
 
    describe('.focusFields() with computed values', () => {
-      let focusedStore: Store<{
-         state: Pick<State, 'sorting'>
-         readonlyValues: ComputedValues
-         actions: { toggleFlag: void; toggleOrder: void }
-         dependencies: {}
-      }>
+      const createFieldsFocusedStore = (store: ComputingStore) =>
+         store.focusFields(['sorting'], ['todoListLength', 'caret'])
+      let focusedStore: ReturnType<typeof createFieldsFocusedStore>
       let focusedState: Pick<State, 'sorting'> & ComputedValues
       let focusedStateTransitions: number
 
       beforeEach(() => {
-         focusedStore = store.focusFields(
-            ['sorting'],
-            ['todoListLength', 'caret']
-         )
+         focusedStore = createFieldsFocusedStore(computingStore)
          focusedStateTransitions = 0
-         focusedStore.computedState$.subscribe(s => {
+         focusedStore.state$.subscribe(s => {
             focusedState = s
             ++focusedStateTransitions
          })
@@ -199,24 +179,26 @@ describe('LenrixStore.compute()', () => {
    })
 
    describe('.recompose() with computed values', () => {
-      let focusedStore: Store<{
-         state: { todoList: TodoItem[] }
-         readonlyValues: ComputedValues
-         actions: { toggleFlag: void; toggleOrder: void }
-         dependencies: {}
-      }>
+      const createRecomposedStore = (store: ComputingStore) =>
+         computingStore.recompose(
+            _ => ({
+               todoList: _.focusPath('todo', 'list')
+            }),
+            ['todoListLength', 'caret']
+         )
+      let recomposedStore: ReturnType<typeof createRecomposedStore>
       let focusedState: { todoList: TodoItem[] } & ComputedValues
       let focusedStateTransitions: number
 
       beforeEach(() => {
-         focusedStore = store.recompose(
+         recomposedStore = computingStore.recompose(
             _ => ({
                todoList: _.focusPath('todo', 'list')
             }),
             ['todoListLength', 'caret']
          )
          focusedStateTransitions = 0
-         focusedStore.computedState$.subscribe(s => {
+         recomposedStore.state$.subscribe(s => {
             focusedState = s
             ++focusedStateTransitions
          })
@@ -228,7 +210,7 @@ describe('LenrixStore.compute()', () => {
       })
 
       it('emits new state when computed value needs to be recomputed from normalized state', () => {
-         focusedStore
+         recomposedStore
             .actionTypes<{ clearTodoList: void }>()
             .updates(_ => ({
                clearTodoList: () => _.focusPath('todoList').setValue([])
@@ -240,17 +222,17 @@ describe('LenrixStore.compute()', () => {
       it('emits new state when value computed from parent normalized state is recomputed', () => {
          expect(state.sorting.order).to.equal('ascending')
          expect(state.caret).to.equal('up')
-         focusedStore.dispatch({ toggleOrder: undefined })
+         recomposedStore.dispatch({ toggleOrder: undefined })
          expect(focusedState.caret).to.equal('down')
       })
    })
 
    it('has access to light store with currentState', () => {
-      const computedStore = store.compute((s, lightStore) => ({
+      const computedStore = computingStore.compute((s, lightStore) => ({
          computed: lightStore!.currentState.todo // TODO Remove "!"
       }))
-      expect(computedStore.currentComputedState.computed).to.equal(
-         store.currentState.todo
+      expect(computedStore.currentState.computed).to.equal(
+         computingStore.currentState.todo
       )
    })
 
@@ -259,14 +241,14 @@ describe('LenrixStore.compute()', () => {
    ///////////////////
 
    it('throws error when computing values with higher order function', () => {
-      expect(() => store.compute(() => () => null)).to.throw(
+      expect(() => computingStore.compute(() => () => null)).to.throw(
          'compute() does not accept higher order functions'
       )
    })
 
    it('throws error when computer does not return', () => {
       expect(() =>
-         store.compute((() => {
+         computingStore.compute((() => {
             // Never return
          }) as any)
       ).to.throw()

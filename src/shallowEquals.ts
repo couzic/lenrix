@@ -1,8 +1,8 @@
 export function shallowEquals<T>(a: T, b: T) {
    if (a === b) return true
-   if (typeof a !== typeof b) return false
    if (
       typeof a !== 'object' ||
+      typeof b !== 'object' ||
       a === null ||
       b === null ||
       Array.isArray(a) ||

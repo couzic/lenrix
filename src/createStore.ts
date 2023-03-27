@@ -36,6 +36,8 @@ export function createFocusableStore<State extends PlainObject>(
 ): Store<{
    state: State
    readonlyValues: {}
+   status: 'loaded'
+   loadingValues: {}
    actions: {}
    dependencies: {}
 }> {
@@ -246,6 +248,14 @@ export function createFocusableStore<State extends PlainObject>(
       logger.compute(previous, next)
    }
 
+   const dispatchLoading = (store: Store<any>, selection: any) => {
+      logger.loading(selection)
+   }
+
+   const dispatchLoaded = (store: Store<any>, loadedValues: object) => {
+      logger.loaded(loadedValues)
+   }
+
    const activationCallbacks = [] as Array<() => void>
    const registerActivationCallback = (
       store: Store<any>,
@@ -264,13 +274,27 @@ export function createFocusableStore<State extends PlainObject>(
       registerActivationCallback,
       activate,
       dispatchActionObject,
-      dispatchCompute
+      dispatchCompute,
+      dispatchLoading,
+      dispatchLoaded
    }
 
    return new LenrixStore(
-      state$.pipe(map(state => ({ state, readonlyValues: {} }))),
+      state$.pipe(
+         map(state => ({
+            state,
+            readonlyValues: {},
+            status: 'loaded',
+            error: undefined
+         }))
+      ),
       data => data.state as any,
-      { state: preloadedState, readonlyValues: {} },
+      {
+         state: preloadedState,
+         readonlyValues: {},
+         status: 'loaded',
+         error: undefined
+      },
       registerUpdates,
       context,
       'root'
@@ -283,6 +307,8 @@ export function createStore<State extends object>(
 ): Store<{
    state: State
    readonlyValues: {}
+   status: 'loaded'
+   loadingValues: {}
    actions: {}
    dependencies: {}
 }> {

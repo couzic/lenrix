@@ -3,23 +3,22 @@ import { expect } from 'chai'
 import { initialState, State } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
+
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<{ toggleFlag: void }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag)
+      }))
+
+type RootStore = ReturnType<typeof createRootStore>
 
 describe('LenrixStore.cherryPick()', () => {
-   let store: Store<{
-      state: State
-      readonlyValues: {}
-      actions: { toggleFlag: void }
-      dependencies: {}
-   }>
+   let store: RootStore
    let state: State
 
    beforeEach(() => {
-      store = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
-         }))
+      store = createRootStore()
       store.state$.subscribe(newState => (state = newState))
    })
 

@@ -3,15 +3,24 @@ import { expect } from 'chai'
 import { initialState, State, TodoItem } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
-import { Store } from './Store'
+
+const createRootStore = () =>
+   createStore(initialState, { logger: silentLoggerOptions })
+      .actionTypes<{ toggleFlag: void }>()
+      .updates(_ => ({
+         toggleFlag: () => _.focusPath('flag').update(flag => !flag)
+      }))
+type RootStore = ReturnType<typeof createRootStore>
+
+const createRecomposedStore = (rootStore: RootStore) =>
+   rootStore.recompose(_ => ({
+      counter: rootStore.localLens.focusPath('counter'),
+      todoList: rootStore.localLens.focusPath('todo', 'list')
+   }))
+type RecomposedStore = ReturnType<typeof createRecomposedStore>
 
 describe('LenrixStore.recompose()', () => {
-   let rootStore: Store<{
-      state: State
-      readonlyValues: {}
-      actions: { toggleFlag: void }
-      dependencies: {}
-   }>
+   let rootStore: RootStore
    let rootState: State
    let rootStateTransitions: number
 
@@ -20,25 +29,13 @@ describe('LenrixStore.recompose()', () => {
       todoList: TodoItem[]
    }
 
-   let store: Store<{
-      state: RecomposedState
-      readonlyValues: {}
-      actions: { toggleFlag: void }
-      dependencies: {}
-   }>
+   let store: RecomposedStore
    let state: RecomposedState
    let stateTransitions: number
 
    beforeEach(() => {
-      rootStore = createStore(initialState, { logger: silentLoggerOptions })
-         .actionTypes<{ toggleFlag: void }>()
-         .updates(_ => ({
-            toggleFlag: () => _.focusPath('flag').update(flag => !flag)
-         }))
-      store = rootStore.recompose(_ => ({
-         counter: rootStore.localLens.focusPath('counter'),
-         todoList: rootStore.localLens.focusPath('todo', 'list')
-      }))
+      rootStore = createRootStore()
+      store = createRecomposedStore(rootStore)
       rootStateTransitions = 0
       stateTransitions = 0
       rootStore.state$.subscribe(newState => {
@@ -105,7 +102,7 @@ describe('LenrixStore.recompose()', () => {
             }),
             ['todoListLength']
          )
-      expect(recomposed.currentComputedState).to.deep.equal({
+      expect(recomposed.currentState).to.deep.equal({
          todoList: initialState.todo.list,
          todoListLength: 3
       })
@@ -120,7 +117,7 @@ describe('LenrixStore.recompose()', () => {
          ['counter']
       )
 
-      expect(focused.currentComputedState.counter).to.equal(
+      expect(focused.currentState.counter).to.equal(
          rootStore.currentState.counter
       )
    })
