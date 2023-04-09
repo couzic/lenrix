@@ -12,44 +12,37 @@ type State = {
 const state: State = {} as any
 
 const store = createStore(state)
-const counterStore = store.focusPath('counter')
 const todoStore = store.focusPath('todo')
 const todoListStore = todoStore.focusPath('list')
-const computingStore = store.compute(s => ({ whatever: 'whatever' }))
 
 const lens = store.localLens
 const todoLens = lens.focusPath('todo')
 
-// Recomposing null @shouldNotCompile
+// @ts-expect-error
 store.recompose(null)
 
-// Recomposing undefined @shouldNotCompile
+// @ts-expect-error
 store.recompose(undefined)
 
-// Recomposing number @shouldNotCompile
+// @ts-expect-error
 store.recompose(42)
 
-// Recomposing string @shouldNotCompile
+// @ts-expect-error
 store.recompose('counter')
 
-// Recomposing array @shouldNotCompile
+// @ts-expect-error
 store.recompose([])
 
-// Recomposing function @shouldNotCompile
+// @ts-expect-error
 store.recompose(() => null)
 
-// Recomposing object @shouldNotCompile
+// @ts-expect-error
 store.recompose({})
 
-// Recomposing with wrong source type Lens @shouldNotCompile
+// @ts-expect-error
 store.recompose(_ => ({ todoList: todoListStore.lens }))
 
-// Recomposing with wrong source type Lens @shouldNotCompile
 todoStore.recompose(_ => ({
+   // @ts-expect-error
    todoList: todoLens.focusPath('list')
-}))
-
-// Recomposing from computed value as if it was part of normalized state @shouldNotCompile
-computingStore.recompose(_ => ({
-   computedValue: _.focusPath('whatever')
 }))

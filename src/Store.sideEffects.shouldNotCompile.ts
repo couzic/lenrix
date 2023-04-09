@@ -22,12 +22,12 @@ interface Actions {
 
 const store = createStore(state).actionTypes<Actions>()
 
-// Registering side effect for unknown action @shouldNotCompile
 store.sideEffects({
+   // @ts-expect-error
    unknown: () => console.log('shouldNotCompile')
 })
 
-// Registering side effect with wrong payload type @shouldNotCompile
 store.sideEffects({
+   // @ts-expect-error
    doString: (s: number) => console.log('shouldNotCompile')
 })

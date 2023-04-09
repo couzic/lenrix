@@ -7,7 +7,9 @@ import { silentLoggerOptions } from './logger/silentLoggerOptions'
 
 const createRootStore = () =>
    createStore(initialState, { logger: silentLoggerOptions })
-      .compute(s => ({ todoListLength: s.todo.list.length }))
+      .computeFromFields(['todo'], ({ todo }) => ({
+         todoListLength: todo.list.length
+      }))
       .actionTypes<{ toggleFlag: void }>()
       .updates(_ => ({
          toggleFlag: () => _.focusPath('flag').update(flag => !flag)
@@ -42,7 +44,7 @@ describe('LenrixStore.pluck()', () => {
    })
 
    it('can pluck computed value', () => {
-      let lengths
+      let lengths: number | undefined
       store.pluck('todoListLength').subscribe(l => (lengths = l))
       expect(lengths).to.equal(3)
    })

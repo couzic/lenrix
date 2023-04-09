@@ -24,6 +24,9 @@ describe('LenrixStore.computeFromField()', () => {
    })
 
    it('initially has computed value in current state', () => {
+      expect(store.currentData.state.nameLength).to.equal(
+         initialState.name.length
+      )
       expect(store.currentState.nameLength).to.equal(initialState.name.length)
    })
 })

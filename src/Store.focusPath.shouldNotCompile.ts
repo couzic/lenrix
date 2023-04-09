@@ -15,27 +15,29 @@ const store = createStore(state)
 const counterStore = store.focusPath('counter')
 const todoStore = store.focusPath('todo')
 const todoListStore = todoStore.focusPath('list')
-const computingStore = store.compute(s => ({ whatever: 'whatever' }))
+const computingStore = store.computeFromField('counter', () => ({
+   whatever: 'whatever'
+}))
 
 const lens = store.localLens
 const todoLens = lens.focusPath('todo')
 
-// Focusing on null key @shouldNotCompile
+// @ts-expect-error
 store.focusPath(null)
 
-// Focusing on undefined key @shouldNotCompile
+// @ts-expect-error
 store.focusPath(undefined)
 
-// Focusing on non-string key @shouldNotCompile
+// @ts-expect-error
 store.focusPath(42)
 
-// Focusing on object key @shouldNotCompile
+// @ts-expect-error
 store.focusPath({})
 
-// Focusing on function key @shouldNotCompile
+// @ts-expect-error
 store.focusPath(() => 'counter')
 
-// Focusing on unknown key @shouldNotCompile
+// @ts-expect-error
 store.focusPath('unknown')
 
 ////////////////////////////////////////////////////////

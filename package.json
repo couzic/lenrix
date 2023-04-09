@@ -1,78 +1,76 @@
 {
-  "name": "lenrix",
-  "version": "0.9.0",
-  "description": "Type-safe, reactive, lens-focused, immutable state management",
-  "keywords": [
-    "typescript",
-    "redux",
-    "rxjs",
-    "lens",
-    "immutable",
-    "state"
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/couzic/lenrix.git"
-  },
-  "homepage": "https://github.com/couzic/lenrix#readme",
-  "bugs": {
-    "url": "https://github.com/couzic/lenrix/issues"
-  },
-  "author": {
-    "name": "Mikael Couzic",
-    "email": "mikaelcouzic@gmail.com",
-    "url": "https://github.com/couzic"
-  },
-  "scripts": {
-    "prebuild": "npm run test && shx rm -rf ./lib",
-    "build": "tsc",
-    "prepare": "npm run build",
-    "doctoc": "doctoc . --notitle --maxlevel 4",
-    "test": "mocha && npm run test-compilation-errors",
-    "test-compilation-errors": "node ./testCompilationErrors.js",
-    "tdd": "mocha --watch"
-  },
-  "files": [
-    "lib",
-    "src"
-  ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "mocha": {
-    "require": "ts-node/register",
-    "extension": [
-      "ts"
-    ],
-    "spec": [
-      "src/**/*.spec.ts"
-    ],
-    "reporter": "dot"
-  },
-  "peerDependencies": {
-    "immutable-lens": "^0.4.1",
-    "redux": "^4.0.0",
-    "rxjs": "^7.0.0"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.3.4",
-    "@types/mocha": "^10.0.1",
-    "@types/sinon": "^10.0.13",
-    "@types/sinon-chai": "^3.2.9",
-    "chai": "^4.3.7",
-    "chalk": "^2.4.2",
-    "doctoc": "^2.2.1",
-    "glob-promise": "^4.2.2",
-    "immutable-lens": "^0.4.2",
-    "mocha": "^10.2.0",
-    "prettier": "^2.8.6",
-    "ramda": "^0.28.0",
-    "redux": "^4.2.1",
-    "rxjs": "^7.8.0",
-    "shx": "^0.3.4",
-    "sinon": "^15.0.2",
-    "sinon-chai": "^3.7.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.2"
-  }
+   "name": "lenrix",
+   "version": "0.10.0-alpha.1",
+   "description": "Type-safe, reactive, lens-focused, immutable state management",
+   "keywords": [
+      "typescript",
+      "redux",
+      "rxjs",
+      "lens",
+      "immutable",
+      "state"
+   ],
+   "license": "MIT",
+   "repository": {
+      "type": "git",
+      "url": "git://github.com/couzic/lenrix.git"
+   },
+   "homepage": "https://github.com/couzic/lenrix#readme",
+   "bugs": {
+      "url": "https://github.com/couzic/lenrix/issues"
+   },
+   "author": {
+      "name": "Mikael Couzic",
+      "email": "mikaelcouzic@gmail.com",
+      "url": "https://github.com/couzic"
+   },
+   "scripts": {
+      "prebuild": "npm run test && shx rm -rf ./lib",
+      "build": "tsc && npm run doctoc",
+      "prepare": "npm run build",
+      "doctoc": "doctoc . --notitle --maxlevel 4",
+      "test": "mocha",
+      "tdd": "mocha --watch"
+   },
+   "files": [
+      "lib",
+      "src"
+   ],
+   "main": "lib/index.js",
+   "types": "lib/index.d.ts",
+   "mocha": {
+      "require": "ts-node/register",
+      "extension": [
+         "ts"
+      ],
+      "spec": [
+         "src/**/*.spec.ts"
+      ],
+      "reporter": "dot"
+   },
+   "peerDependencies": {
+      "immutable-lens": "^0.4.1",
+      "redux": "^4.0.0",
+      "rxjs": "^7.0.0"
+   },
+   "devDependencies": {
+      "@types/chai": "^4.3.4",
+      "@types/mocha": "^10.0.1",
+      "@types/sinon": "^10.0.13",
+      "@types/sinon-chai": "^3.2.9",
+      "chai": "^4.3.7",
+      "chalk": "^2.4.2",
+      "doctoc": "^2.2.1",
+      "immutable-lens": "^0.4.2",
+      "mocha": "^10.2.0",
+      "prettier": "^2.8.7",
+      "ramda": "^0.29.0",
+      "redux": "^4.2.1",
+      "rxjs": "^7.8.0",
+      "shx": "^0.3.4",
+      "sinon": "^15.0.3",
+      "sinon-chai": "^3.7.0",
+      "ts-node": "^10.9.1",
+      "typescript": "^5.0.4"
+   }
 }

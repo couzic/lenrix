@@ -51,9 +51,12 @@ describe('LenrixStore.cherryPick()', () => {
    })
 
    it('can cherry pick computed value', () => {
-      const computedStore = store.compute(({ counter }) => ({
-         computedField: counter
-      }))
+      const computedStore = store.computeFromFields(
+         ['counter'],
+         ({ counter }) => ({
+            computedField: counter
+         })
+      )
       let result
       computedStore
          .cherryPick(_ => ({

@@ -94,7 +94,9 @@ describe('LenrixStore.focusPath()', () => {
 
    it('can focus path with computed values', () => {
       const focused = rootStore
-         .compute(s => ({ todoListLength: s.todo.list.length }))
+         .computeFromFields(['todo'], ({ todo }) => ({
+            todoListLength: todo.list.length
+         }))
          .focusPath(['todo'], ['todoListLength'])
       expect(focused.currentState).to.deep.equal({
          ...initialState.todo,

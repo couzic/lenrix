@@ -64,7 +64,7 @@ describe('Lenrix store with computed value', () => {
       createStore(
          { fieldState: 'fieldState' },
          { logger: silentLoggerOptions }
-      ).compute(() => ({
+      ).computeFromFields(['fieldState'], () => ({
          computed: 'computed'
       }))
    let store: ReturnType<typeof createStoreWithComputedValue>

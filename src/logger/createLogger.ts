@@ -1,6 +1,6 @@
 import { Store } from 'redux'
 
-import { FocusedAction } from '../util/FocusedAction'
+import { FocusedAction } from '../utility-types/FocusedAction'
 import { LenrixError } from './LenrixError'
 import { Logger } from './Logger'
 import { defaultLoggerOptions, LoggerOptions } from './LoggerOptions'
@@ -114,7 +114,7 @@ const createComputeLogger = (
               type: '[COMPUTE]' + loggableKeys(previous, next).join(', ')
            })
       : doNothing
-   return (previous: object, next: object) => {
+   return (previous: object | null | undefined, next: object) => {
       logToConsole(previous, next)
       logToRedux(previous, next)
    }

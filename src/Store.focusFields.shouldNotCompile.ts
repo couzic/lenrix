@@ -12,16 +12,14 @@ type State = {
 const state: State = {} as any
 
 const store = createStore(state)
-const counterStore = store.focusPath('counter')
 const todoStore = store.focusPath('todo')
 const todoListStore = todoStore.focusPath('list')
-const computingStore = store.compute(s => ({ whatever: 'whatever' }))
 
 const lens = store.localLens
 const todoLens = lens.focusPath('todo')
 
-// Focusing unknown field @shouldNotCompile
+// @ts-expect-error
 store.focusFields('unknown')
 
-// Focusing fields on arrayFocusedStore @shouldNotCompile
+// @ts-expect-error
 todoListStore.focusFields('length')

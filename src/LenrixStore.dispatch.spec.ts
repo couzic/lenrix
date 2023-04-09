@@ -1,18 +1,24 @@
 import { expect } from 'chai'
-
-import { initialState } from '../test/State'
 import { createStore } from './createStore'
 import { silentLoggerOptions } from './logger/silentLoggerOptions'
 
 interface Actions {
-   doThis: void
-   doThat: void
+   changeString: string
+   changeNumber: number
 }
 
 const createRootStore = () =>
-   createStore(initialState, {
-      logger: silentLoggerOptions
-   }).actionTypes<Actions>()
+   createStore(
+      { s: '', n: 0 },
+      {
+         logger: silentLoggerOptions
+      }
+   )
+      .actionTypes<Actions>()
+      .updates(_ => ({
+         changeString: _.focusPath('s').setValue(),
+         changeNumber: _.focusPath('n').setValue()
+      }))
 
 describe('LenrixStore.dispatch()', () => {
    let rootStore: ReturnType<typeof createRootStore>
@@ -21,9 +27,8 @@ describe('LenrixStore.dispatch()', () => {
       rootStore = createRootStore()
    })
 
-   it('throws error when dispatching two action types in same object', () => {
-      expect(() =>
-         rootStore.dispatch({ doThis: undefined, doThat: undefined })
-      ).to.throw()
+   it('accepts multiple actions in single dispatch call', () => {
+      rootStore.dispatch({ changeString: 'other', changeNumber: 123 })
+      expect(rootStore.currentState).to.deep.equal({ s: 'other', n: 123 })
    })
 })

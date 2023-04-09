@@ -15,25 +15,22 @@ const store = createStore(state)
 const todoStore = store.focusPath('todo')
 const todoListStore = todoStore.focusPath('list')
 
-const lens = store.localLens
-const todoLens = lens.focusPath('todo')
-
-// Plucking null key @shouldNotCompile
+// @ts-expect-error
 store.pluck(null)
 
-// Plucking undefined key @shouldNotCompile
+// @ts-expect-error
 store.pluck(undefined)
 
-// Plucking non-string primitive key @shouldNotCompile
+// @ts-expect-error
 store.pluck(42)
 
-// Plucking object key @shouldNotCompile
+// @ts-expect-error
 store.pluck({})
 
-// Plucking function key @shouldNotCompile
+// @ts-expect-error
 store.pluck(() => 'counter')
 
-// Plucking unknown key @shouldNotCompile
+// @ts-expect-error
 store.pluck('unknown')
 
 ////////////////////////////////////////////////////////

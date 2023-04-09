@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/mapTo'
-
 import { createStore } from './createStore'
 
 type State = {
@@ -21,40 +19,33 @@ interface Actions {
 
 const store = createStore(state).actionTypes<Actions>()
 
-// Dispatching empty object @shouldNotCompile
+// @ts-expect-error
 store.dispatch({})
 
-// Dispatching unknown action type @shouldNotCompile
+// @ts-expect-error
 store.dispatch({ doUnknown: 5 })
 
-// Dispatching wrong payload type @shouldNotCompile
+// @ts-expect-error
 store.dispatch({ doString: 5 })
 
-// Dispatching additional unknown payload type @shouldNotCompile
-store.dispatch({ doString: '', unknown: '' })
+// @ts-expect-error
+store.dispatch({ doString: '', doUnknown: '' })
 
-// Dispatching null payload @shouldNotCompile
+// @ts-expect-error
 store.dispatch({ doString: null })
 
-// Dispatching undefined payload @shouldNotCompile
+// @ts-expect-error
 store.dispatch({ doString: undefined })
 
-// Dispatching action declared with different payload type @shouldNotCompile
 store
    .actionTypes<{
       doString: number
    }>()
+   // @ts-expect-error
    .dispatch({ doString: 42 })
 
-// Calling dispatcher without param @shouldNotCompile
+// @ts-expect-error
 store.action('doString')()
 
-// Calling dispatcher with wrong optional param @shouldNotCompile
+// @ts-expect-error
 store.action('doOptionalString')(42)
-
-////////////////////////////////////////////////////////
-// @shouldNotButDoesCompile - Require runtime checks //
-//////////////////////////////////////////////////////
-
-// Dispatching two types in same object @shouldNotButDoesCompile
-store.dispatch({ doString: '', doNumber: 5 })

@@ -1,5 +1,4 @@
-import { pipe } from 'rxjs'
-import { map, mapTo } from 'rxjs/operators'
+import { map, pipe } from 'rxjs'
 
 import { createStore } from './createStore'
 
@@ -29,29 +28,33 @@ store.pureEpics({
    doNumber: map(n => ({ doString: String(n) }))
 })
 
-// Mapping to empty object @shouldNotCompile
 store.pureEpics({
-   doString: pipe(mapTo({}))
+   // @ts-expect-error
+   doString: pipe(map(() => ({})))
 })
 
-// Dispatching unknown action type @shouldNotCompile
 store.pureEpics({
-   doString: pipe(mapTo({ doUnknown: undefined }))
+   // @ts-expect-error
+   doString: pipe(
+      map(() => ({
+         doUnknown: undefined
+      }))
+   )
 })
 
-// Mapping to wrong payload type @shouldNotCompile
 store.pureEpics({
-   doString: pipe(mapTo({ doNumber: '42' }))
+   // @ts-expect-error
+   doString: pipe(map(() => ({ doNumber: '42' })))
 })
 
-// Mapping to null payload @shouldNotCompile
 store.pureEpics({
-   doString: pipe(mapTo({ doNumber: null }))
+   // @ts-expect-error
+   doString: pipe(map(() => ({ doNumber: null })))
 })
 
-// Mapping to undefined payload @shouldNotCompile
 store.pureEpics({
-   doString: pipe(mapTo({ doNumber: undefined }))
+   // @ts-expect-error
+   doString: pipe(map(() => ({ doNumber: undefined })))
 })
 
 ////////////////////////////////////////////////////////
@@ -60,10 +63,5 @@ store.pureEpics({
 
 // Mapping with additional unknown payload type @shouldNotButDoesCompile
 store.pureEpics({
-   doString: pipe(mapTo({ doNumber: 42, unknown: '' }))
-})
-
-// Dispatching two types in same object @shouldNotButDoesCompile
-store.pureEpics({
-   doString: pipe(mapTo({ doString: '', doNumber: 5 }))
+   doString: pipe(map(() => ({ doNumber: 42, unknown: '' })))
 })

@@ -95,7 +95,9 @@ describe('LenrixStore.recompose()', () => {
 
    it('can recompose with computed values', () => {
       const recomposed = rootStore
-         .compute(s => ({ todoListLength: s.todo.list.length }))
+         .computeFromFields(['todo'], ({ todo }) => ({
+            todoListLength: todo.list.length
+         }))
          .recompose(
             _ => ({
                todoList: _.focusPath('todo', 'list')

@@ -1,6 +1,5 @@
 import * as chai from 'chai'
-import { pipe } from 'rxjs'
-import { distinctUntilChanged, map, mapTo } from 'rxjs/operators'
+import { distinctUntilChanged, map, pipe } from 'rxjs'
 import { SinonStub, stub } from 'sinon'
 import * as sinonChai from 'sinon-chai'
 
@@ -33,6 +32,7 @@ interface Actions {
    incrementCounter: void
    setCounter: number
    setTodoCount: number
+   reset: {}
 }
 
 const createRootStore = () =>
@@ -48,7 +48,8 @@ const createRootStore = () =>
          buttonClicked: () => state => state
       })
       .pureEpics({
-         buttonClicked: mapTo({ incrementCounter: undefined })
+         buttonClicked: map(() => ({ incrementCounter: undefined })),
+         reset: map(() => ({ setCounter: 0, setTodoCount: 0 }))
       })
 
 type RootStore = ReturnType<typeof createRootStore>
@@ -71,18 +72,15 @@ describe('LenrixStore Epics', () => {
       expect(store.currentState.counter).to.equal(2)
    })
 
-   it('throws error when dispatching two action types in same object', () => {
-      expect(() => {
-         createStore(initialState, { logger: silentLoggerOptions })
-            .actionTypes<Actions>()
-            .pureEpics({
-               buttonClicked: mapTo({
-                  setCounter: 0,
-                  incrementCounter: undefined
-               })
-            })
-            .dispatch({ buttonClicked: undefined, setCounter: 0 })
-      }).to.throw()
+   it('accepts epic mapping to multiple actions in same object', () => {
+      expect(store.currentState.counter).to.equal(0)
+      expect(store.currentState.todo.count).to.equal(0)
+      store.dispatch({ setCounter: 123, setTodoCount: 321 })
+      expect(store.currentState.counter).to.equal(123)
+      expect(store.currentState.todo.count).to.equal(321)
+      store.dispatch({ reset: {} })
+      expect(store.currentState.counter).to.equal(0)
+      expect(store.currentState.todo.count).to.equal(0)
    })
 
    it('gives registered epics access to store currentState', () => {
@@ -104,7 +102,7 @@ describe('LenrixStore Epics', () => {
       store.pureEpics({
          setTodoCount: pipe(
             distinctUntilChanged(),
-            mapTo({ incrementCounter: undefined })
+            map(() => ({ incrementCounter: undefined }))
          )
       })
       store.dispatch({ setTodoCount: 42 })
@@ -116,10 +114,10 @@ describe('LenrixStore Epics', () => {
    it('supports multiple epics for single action', () => {
       expect(store.currentState.counter).to.equal(0)
       store.pureEpics({
-         setTodoCount: mapTo({ incrementCounter: undefined })
+         setTodoCount: map(() => ({ incrementCounter: undefined }))
       })
       store.pureEpics({
-         setTodoCount: mapTo({ incrementCounter: undefined })
+         setTodoCount: map(() => ({ incrementCounter: undefined }))
       })
       store.dispatch({ setTodoCount: 42 })
       expect(store.currentState.counter).to.equal(2)
@@ -130,7 +128,7 @@ describe('LenrixStore Epics', () => {
          stub(console, 'log')
          store.dispatch({ buttonClicked: undefined })
          store.pureEpics({
-            setTodoCount: mapTo({ incrementCounter: undefined })
+            setTodoCount: map(() => ({ incrementCounter: undefined }))
          })
       })
       it('logs warning', () => {

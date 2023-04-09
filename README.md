@@ -1,11 +1,11 @@
 # lenrix
 
-#### 🔎 + Redux + RxJS + TypeScript = ❤️ 
+#### 🔎 + Redux + RxJS + TypeScript = ❤️
 
 ## Table of Contents
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Motivation](#motivation)
 - [Features](#features)
@@ -32,7 +32,6 @@
     - [`recompose()`](#recompose)
     - [Passing fields as readonly values](#passing-fields-as-readonly-values)
   - [Computed values (synchronous)](#computed-values-synchronous)
-    - [`compute()`](#compute)
     - [`computeFromField()`](#computefromfield)
     - [`computeFromFields()`](#computefromfields)
     - [`computeFrom()`](#computefrom)
@@ -67,28 +66,31 @@ Although we agree there must be a better way than classical `redux`, we are not 
 > Making redux great again !
 
 `lenrix` is a `redux` store wrapper that :
- - Dramatically reduces boilerplate
- - Eliminates the need for thunky middleware and selector libraries
- - Makes no compromise on type-safety
- - Embraces reactive programming
- - Prevents unnecessary re-rendering
+
+-  Dramatically reduces boilerplate
+-  Eliminates the need for thunky middleware and selector libraries
+-  Makes no compromise on type-safety
+-  Embraces reactive programming
+-  Prevents unnecessary re-rendering
 
 ## Features
 
- - Declarative API for deep state manipulation, powered by [`immutable-lens`](https://github.com/couzic/immutable-lens)
- - Reactive state and selectors, powered by [`rxjs`](https://github.com/reactivex/rxjs)
- - Relevant reference equality checks performed out of the box
- - Separate functional slices with [Focused Stores](#focus)
- - Epics, just like [`redux-observable`](https://github.com/redux-observable/redux-observable), our favorite redux middleware
+-  Declarative API for deep state manipulation, powered by [`immutable-lens`](https://github.com/couzic/immutable-lens)
+-  Reactive state and selectors, powered by [`rxjs`](https://github.com/reactivex/rxjs)
+-  Relevant reference equality checks performed out of the box
+-  Separate functional slices with [Focused Stores](#focus)
+-  Epics, just like [`redux-observable`](https://github.com/redux-observable/redux-observable), our favorite redux middleware
 
 ## Quickstart
 
 ### Install
+
 ```bash
 npm install --save lenrix redux rxjs immutable-lens
 ```
 
 **`rootStore.ts`**
+
 ```ts
 import { createStore } from 'lenrix'
 
@@ -106,13 +108,14 @@ export const rootStore = createStore(initialRootState)
 ```
 
 **`storeConsumer.ts`**
+
 ```ts
 import { rootStore } from './rootStore'
 
-const message$ = rootStore.pluck('message') // Observable<string> 
+const message$ = rootStore.pluck('message') // Observable<string>
 const slice$ = rootStore.pick('message') // Observable<{message: string}>
 
-rootStore.dispatch({setMessage: 'Hello !!!'})
+rootStore.dispatch({ setMessage: 'Hello !!!' })
 ```
 
 ## API
@@ -120,8 +123,9 @@ rootStore.dispatch({setMessage: 'Hello !!!'})
 ### Create
 
 #### `createStore()`
+
 ```ts
-import {createStore} from 'lenrix'
+import { createStore } from 'lenrix'
 
 const rootStore = createStore({
    user: {
@@ -132,7 +136,9 @@ const rootStore = createStore({
 ```
 
 #### `createFocusableStore()`
+
 Provides the same API as `createStore()` from `redux`.
+
 ```ts
 import {createFocusableStore} from 'lenrix'
 
@@ -150,77 +156,94 @@ export const store = createFocusableStore(
 ### Actions and Updates
 
 #### `actionTypes()`
+
 Declare the store's actions and associated payload types. Calling this method will have absolutely no runtime effect, all it does is provide information to the TypeScript compiler.
+
 ```ts
-const store = createStore({name: 'Bob'})
-   .actionTypes<{
-      setName: string
-   }>()
+const store = createStore({ name: 'Bob' }).actionTypes<{
+   setName: string
+}>()
 ```
 
 #### `updates()`
+
 Once action types are defined, it is possible to register type-safe updates. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for `lens` API documentation.
+
 ```ts
-const store = createStore({name: 'Bob'})
-   .actionTypes<{setName: string}>()
+const store = createStore({ name: 'Bob' })
+   .actionTypes<{ setName: string }>()
    // THESE FOUR CALLS TO updates() ARE ALL EQUIVALENT AND 100% TYPE SAFE
    // PICK THE ONE YOU PREFER
    .updates({
-      setName: (name) => (state) => ({...state, name})
+      setName: name => state => ({ ...state, name })
    })
    .updates(lens => ({
-      setName: (name) => lens.setFields({name})
+      setName: name => lens.setFields({ name })
    }))
    .updates(lens => ({
-      setName: (name) => lens.focusPath('name').setValue(name)
+      setName: name => lens.focusPath('name').setValue(name)
    }))
    // And if really like curry...
    .updates(lens => ({
       setName: lens.focusPath('name').setValue()
    }))
 ```
-**Only *ONE* updater can be registered for a single action type.** Failing to comply with that rule will result in an error:
+
+**Only _ONE_ updater can be registered for a single action type.** Failing to comply with that rule will result in an error:
+
 ```
 Error: Cannot register two updaters for the same action type
 ```
-When an action needs to update the state at a wider scope, move your updater to a store that has larger focus. 
+
+When an action needs to update the state at a wider scope, move your updater to a store that has larger focus.
 
 #### `dispatch()`
+
 Dispatching an action can trigger an [update](#updates), an [epic](#epics), or a [side effect](#sideEffects).
+
 ```ts
-store.dispatch({setName: 'John'}) // Next state will be : {name: 'John'}
+store.dispatch({ setName: 'John' }) // Next state will be : {name: 'John'}
 ```
 
 #### `action()`
+
 Create an action dispatcher, which can be handily used in a `React` component for example.
+
 ```ts
 const setName = store.action('setName')
 setName('John') // Same as store.dispatch({setName: 'John'})
 ```
 
 ### Consuming the state
+
 `lenrix` performs reference equality checks to prevent any unnecessary re-rendering.
 
 The store provides the properties `state$` and `currentState`. However, we recommend you to use either `pluck()`, `pick()` or `cherryPick()` to select as little data as necessary. It will prevent components to re-render because an irrelevant slice of the state has changed.
 
 #### `state$`
-The store's normalized state augmented with its readonly values.
-```ts
-const store = createStore({name: 'Bob'})
 
-store.state$ // Observable<{name: string}> 
+The store's normalized state augmented with its readonly values.
+
+```ts
+const store = createStore({ name: 'Bob' })
+
+store.state$ // Observable<{name: string}>
 ```
 
 #### `currentState`
-Handy for testing.
-```ts
-const store = createStore({name: 'Bob'})
 
-store.currentState.name // 'Bob' 
+Handy for testing.
+
+```ts
+const store = createStore({ name: 'Bob' })
+
+store.currentState.name // 'Bob'
 ```
 
 #### `pluck()`
+
 Conceptually equivalent to `focusPath(...).state$`
+
 ```ts
 const rootStore = createStore({
    user: {
@@ -228,11 +251,13 @@ const rootStore = createStore({
    }
 })
 
-const userName$ = rootStore.pluck('user', 'name') // Observable<string> 
+const userName$ = rootStore.pluck('user', 'name') // Observable<string>
 ```
 
 #### `pick()`
+
 Conceptually equivalent to `focusFields().state$`
+
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -240,14 +265,13 @@ const rootStore = createStore({
    todoList: ['Write README']
 })
 
-const pick$ = rootStore.pick(
-   'user',
-   'todoList'
-) // Observable<{ user: string, todoList: string[] }>
+const pick$ = rootStore.pick('user', 'todoList') // Observable<{ user: string, todoList: string[] }>
 ```
 
 #### `cherryPick()`
+
 Conceptually equivalent to `recompose().state$`. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
+
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -256,7 +280,8 @@ const rootStore = createStore({
    }
 })
 
-const cherryPick$ = rootStore.cherryPick(lens => ({ // immutable-lens
+const cherryPick$ = rootStore.cherryPick(lens => ({
+   // immutable-lens
    counter: lens.focusPath('counter'),
    userName: lens.focusPath('user', 'name')
 })) // Observable<{ counter: number, userName: string }>
@@ -274,8 +299,8 @@ All these stores form a tree of stores, with the one returned by `createStore()`
 
 However, that propagation stops at the stores for which the state slice in their scope has not changed.
 
-
 #### `focusPath()`
+
 ```ts
 const rootStore = createStore({
    user: {
@@ -293,6 +318,7 @@ userNameStore.state$ // Observable<string>
 ```
 
 #### `focusFields()`
+
 ```ts
 const rootStore = createStore({
    counter: 0,
@@ -301,11 +327,13 @@ const rootStore = createStore({
 
 const counterStore = rootStore.focusFields('counter')
 
-counterStore.state$ // Observable<{counter: number}> 
+counterStore.state$ // Observable<{counter: number}>
 ```
 
 #### `recompose()`
+
 Most powerful focus operator. It allows you to create state representations composed of deep properties from distinct state subtrees. See [`immutable-lens`](https://github.com/couzic/immutable-lens) for lens API documentation.
+
 ```ts
 const rootStore = createStore({
    a: {
@@ -324,16 +352,17 @@ const rootStore = createStore({
    }
 })
 
-rootStore
-   .recompose(lens => ({ // immutable-lens
-      d: lens.focusPath('a', 'b', 'c', 'd'),
-      h: lens.focusPath('e', 'f', 'g', 'h')
-   }))
-   .state$ // Observable<{ d: string, h: string }>
+rootStore.recompose(lens => ({
+   // immutable-lens
+   d: lens.focusPath('a', 'b', 'c', 'd'),
+   h: lens.focusPath('e', 'f', 'g', 'h')
+})).state$ // Observable<{ d: string, h: string }>
 ```
 
 #### Passing fields as readonly values
+
 All three focus operators `focusPath()`, `focusFields()` and `recompose()` support passing fields as readonly values.
+
 ```ts
 const rootStore = createStore({
    a: {
@@ -347,59 +376,58 @@ const rootStore = createStore({
 const focusedStore = rootStore.focusPath(['a', 'b', 'c'], ['user'])
 focusedStore.state$ // Observable<{ c: string, user: string }>
 ```
+
 Note that in this example, updates registered on the focused store can't modify the `user` value
 
 ### Computed values (synchronous)
+
 State should be normalized, derived data should be declared as computed values. In traditional redux, you would probably use selectors for that.
 
 `lenrix` performs reference equality checks to prevent unnecessary recomputation.
 
-#### `compute()`
-```ts
-createStore({name: 'Bob'})
-   .compute(state => ({message: 'Hello, ' + state.name}))
-   .pick('message') // Observable<{message: string}>
-```
-
 #### `computeFromField()`
+
 Specify the field used for the computation to avoid useless re-computations.
+
 ```ts
-createStore({name: 'Bob', irrelevant: 'whatever'})
-   .computeFromField(
-      'name',
-      name => ({message: 'Hello, ' + name})
-   )
+createStore({ name: 'Bob', irrelevant: 'whatever' })
+   .computeFromField('name', name => ({ message: 'Hello, ' + name }))
    .pick('message') // Observable<{message: string}>
 ```
 
 #### `computeFromFields()`
+
 Specify the fields used for the computation to avoid useless re-computations.
+
 ```ts
-createStore({name: 'Bob', irrelevant: 'whatever'})
-   .computeFromFields(
-      ['name'],
-      ({name}) => ({message: 'Hello, ' + name})
-   )
+createStore({ name: 'Bob', irrelevant: 'whatever' })
+   .computeFromFields(['name'], ({ name }) => ({ message: 'Hello, ' + name }))
    .pick('message') // Observable<{message: string}>
 ```
 
 #### `computeFrom()`
+
 Define computed values from state slices focused by lenses. The signature is similar to `recompose()` and `cherryPick()`.
+
 ```ts
-createStore({name: 'Bob', irrelevant: 'whatever'})
+createStore({ name: 'Bob', irrelevant: 'whatever' })
    .computeFrom(
-      lens => ({name: lens.focusPath('name')}),
-      ({name}) => ({message: 'Hello, ' + name}))
+      lens => ({ name: lens.focusPath('name') }),
+      ({ name }) => ({ message: 'Hello, ' + name })
+   )
    .pick('message') // Observable<{message: string}>
 ```
+
 ### Computed values (asynchronous)
+
 Every synchronous value-computing operator has an asynchronous equivalent.
 
-Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see [`defaultValues()`](#defaultValues()).
+Note that asynchronously computed values are initially undefined. If you want them to be non-nullable, see [`defaultValues()`](<#defaultValues()>).
 
 #### `compute$()`
+
 ```ts
-import { map, pipe } from 'rxjs/operators'
+import { map, pipe } from 'rxjs'
 
 createStore({name: 'Bob'})
    .compute$(
@@ -413,31 +441,37 @@ createStore({name: 'Bob'})
    )
    .pick('message') // Observable<{message: string | undefined}>
 ```
-#### `computeFromField$()`
-```ts
-import { map } from 'rxjs/operators'
 
-createStore({name: 'Bob', irrelevant: 'whatever'})
+#### `computeFromField$()`
+
+```ts
+import { map } from 'rxjs'
+
+createStore({ name: 'Bob', irrelevant: 'whatever' })
    .computeFromField$(
       'name',
-      map(name => ({message: 'Hello, ' + name}))
+      map(name => ({ message: 'Hello, ' + name }))
    )
    .pick('message') // Observable<{message: string | undefined}>
 ```
-#### `computeFromFields$()`
-```ts
-import { map } from 'rxjs/operators'
 
-createStore({name: 'Bob', irrelevant: 'whatever'})
+#### `computeFromFields$()`
+
+```ts
+import { map } from 'rxjs'
+
+createStore({ name: 'Bob', irrelevant: 'whatever' })
    .computeFromFields$(
       ['name'],
-      map(({name}) => ({message: 'Hello, ' + name}))
+      map(({ name }) => ({ message: 'Hello, ' + name }))
    )
    .pick('message') // Observable<{message: string | undefined}>
 ```
+
 #### `computeFrom$()`
+
 ```ts
-import { map } from 'rxjs/operators'
+import { map } from 'rxjs'
 
 createStore({name: 'Bob', irrelevant: 'whatever'})
    .computeFrom$(
@@ -447,14 +481,14 @@ createStore({name: 'Bob', irrelevant: 'whatever'})
 ```
 
 #### `defaultValues()`
-Define defaults for read-only values.
-```ts
-import { map } from 'rxjs/operators'
 
-createStore({name: 'Bob'})
-   .compute$(
-      map(({name}) => ({message: 'Hello, ' + name}))
-   )
+Define defaults for read-only values.
+
+```ts
+import { map } from 'rxjs'
+
+createStore({ name: 'Bob' })
+   .compute$(map(({ name }) => ({ message: 'Hello, ' + name })))
    .defaultValues({
       message: ''
    })
@@ -462,10 +496,12 @@ createStore({name: 'Bob'})
 ```
 
 ### `epics()`
+
 Let an action dispatch another action, asynchronously. Since this feature is heavily inspired from [`redux-observable`](https://github.com/redux-observable/redux-observable), we encourage you to go check their [documentation](https://redux-observable.js.org/docs/basics/Epics.html).
+
 ```ts
 import { pipe } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { map } from 'rxjs'
 
 createStore({name: '', message: ''})
    .actionTypes<{
@@ -488,7 +524,9 @@ createStore({name: '', message: ''})
 ```
 
 ### `pureEpics()`
-Same as [`epics()`](#epics()), without the [injected `store`](#injected-store) instance.
+
+Same as [`epics()`](<#epics()>), without the [injected `store`](#injected-store) instance.
+
 ```ts
 ...
    .pureEpics({
@@ -497,14 +535,16 @@ Same as [`epics()`](#epics()), without the [injected `store`](#injected-store) i
 ```
 
 ### `sideEffects()`
+
 Declare synchronous side effects to be executed in response to actions. Useful for pushing to browser history, stuff like that...
+
 ```ts
 createStore({ name: '' })
    .actionTypes<{
-      setName: string 
+      setName: string
    }>()
    .updates(lens => ({
-      setName: name => lens.setFields({name})
+      setName: name => lens.setFields({ name })
    }))
    .sideEffects({
       setName: name => console.log(name)
@@ -514,26 +554,27 @@ createStore({ name: '' })
 ### Injected `store`
 
 A light version of the store is made available when using the following operators :
- - [`compute$()`](#compute$)
- - [`computeFrom$()`](#computeFrom$)
- - [`computeFromFields$()`](#computeFromFields$)
- - [`epics()`](#epics)
- - [`sideEffects()`](#sideEffects)
+
+-  [`compute$()`](#compute$)
+-  [`computeFrom$()`](#computeFrom$)
+-  [`computeFromFields$()`](#computeFromFields$)
+-  [`epics()`](#epics)
+-  [`sideEffects()`](#sideEffects)
 
 ```ts
-import { mapTo } from 'rxjs/operators'
+import { map } from 'rxjs'
 
-createStore({name: '', greeting: ''})
+createStore({ name: '', greeting: '' })
    .actionTypes<{
       setName: string
       setGreeting: string
    }>()
    .updates(lens => ({
-      setName: name => lens.setFields({name}),
-      setGreeting: greeting => lens.setFields({greeting})
+      setName: name => lens.setFields({ name }),
+      setGreeting: greeting => lens.setFields({ greeting })
    }))
    .epics(store => ({
-      setName: map(() => ({setGreeting: store.currentState.name}))
+      setName: map(() => ({ setGreeting: store.currentState.name }))
    }))
 ```
 
@@ -542,6 +583,7 @@ createStore({name: '', greeting: ''})
 > Testing an action creator, a reducer and a selector in isolation.
 
 ![Man in three pieces. Legs running in place. Torso doing push-ups. Head reading.](https://cdn-images-1.medium.com/max/1600/0*eCs8GoVZVksoQtQx.gif)
+
 > "Looks like it’s working !"
 
 Testing in `redux` usually implies testing in isolation the pieces that together form the application's state management system. It seems reasonable, since they are supposed to be pure functions.
@@ -551,18 +593,23 @@ Testing in `lenrix` follows a different approach. Well, technically, in most cas
 A `lenrix` store is to be considered a cohesive **unit** of functionality. We want to **test it as a whole**, by interacting with its public API. We do not want to test its internal implementation details.
 
 As a consequence, we believe store testing should essentially consist in :
-- [Dispatching actions](#dispatch)
-- [Asserting state](#asserting-state) (normalized state + computed values)
+
+-  [Dispatching actions](#dispatch)
+-  [Asserting state](#asserting-state) (normalized state + computed values)
 
 In some less frequent cases, testing might also consist in :
-- [Asserting calls on dependencies](#asserting-calls-on-dependencies)
-- [Asserting dispatched actions](#asserting-dispatched-actions)
+
+-  [Asserting calls on dependencies](#asserting-calls-on-dependencies)
+-  [Asserting dispatched actions](#asserting-dispatched-actions)
 
 ### Test Setup
+
 Each test should run in isolation, therefore we need to create a new store for each test. The most straightforward way is to wrap all store creation code in factory functions.
 
 #### Root store
+
 **`RootStore.ts`**
+
 ```ts
 import { createStore } from 'lenrix'
 
@@ -574,12 +621,14 @@ export const initialRootState = {
 
 export type RootState = typeof initialRootState
 
-export const createRootStore = (initialState = initialRootState) => createStore(initialState)
+export const createRootStore = (initialState = initialRootState) =>
+   createStore(initialState)
 
 export type RootStore = ReturnType<typeof createRootStore>
 ```
 
 **`RootStore.spec.ts`**
+
 ```ts
 import 'jest'
 import { createRootStore, RootStore } from './RootStore'
@@ -594,29 +643,33 @@ describe('RootStore', () => {
 ```
 
 ### Asserting state
+
 Most tests should limit themselves to dispatching actions and verifying that the state has correctly updated.
 
 The distinction between normalized state and readonly values should be kept hidden as an implementation detail. Tests should not make assumptions about a value being either readonly or part of the normalized state, as it is subject to change without breaking public API nor general behavior.
 
 **`RootStore.ts`**
+
 ```ts
 import { createStore } from 'lenrix'
 
-export const createRootStore = (initialState = {name: ''}) => createStore(initialState)
-   .actionTypes<{
-      setName: string
-   }>()
-   .updates(lens => ({
-      setName: (name) => lens.setFields({name})
-   }))
-   .compute(({name}) => ({
-      message: 'Hello, ' + name
-   }))
+export const createRootStore = (initialState = { name: '' }) =>
+   createStore(initialState)
+      .actionTypes<{
+         setName: string
+      }>()
+      .updates(lens => ({
+         setName: name => lens.setFields({ name })
+      }))
+      .compute(({ name }) => ({
+         message: 'Hello, ' + name
+      }))
 
 export type RootStore = ReturnType<typeof createRootStore>
 ```
 
 **`RootStore.spec.ts`**
+
 ```ts
 import 'jest'
 import { createRootStore, RootStore } from './RootStore'
@@ -629,13 +682,13 @@ describe('RootStore', () => {
    })
 
    test('updates name when "setName" dispatched', () => {
-      store.dispatch({setName: 'Bob'})
+      store.dispatch({ setName: 'Bob' })
 
       expect(store.currentState.name).toEqual('Bob')
    })
 
    test('updates message when "setName" dispatched', () => {
-      store.dispatch({setName: 'Steve'})
+      store.dispatch({ setName: 'Steve' })
 
       expect(store.currentState.message).toEqual('Hello, Steve')
    })
@@ -648,7 +701,7 @@ describe('RootStore', () => {
 
 ## Logger
 
-<!-- 
+<!--
 Consider a `redux` store. It's an object holding the application's whole state, which can be a massive, complex and deep JavaScript plain object. Such complexity can be hard to maintain, so tricks like `combineReducers()` have been invented to allow some kind of concern separation. The store maintains not only the whole state, but also all the operations that can make changes to that state, in the form of reducers (well, technically there's only one reducer, but let's not bother with the technical details right now). So a store is really :
 > state + operations to change the state
 

@@ -2,19 +2,11 @@ import { Observable } from 'rxjs'
 
 import { LightStore } from './LightStore'
 import { Store } from './Store'
-import { StoreStatus } from './StoreStatus'
-import { ActionObservable } from './util/ActionObservable'
+import { ActionObservable } from './utility-types/ActionObservable'
+import { StoreType } from './utility-types/StoreType'
 
-export class LenrixLightStore<
-   Type extends {
-      state: any
-      readonlyValues: object
-      status: StoreStatus
-      loadingValues: object
-      actions: object
-      dependencies: object
-   }
-> implements LightStore<Type>
+export class LenrixLightStore<Type extends StoreType>
+   implements LightStore<Type>
 {
    constructor(private readonly store: Store<Type>) {}
 

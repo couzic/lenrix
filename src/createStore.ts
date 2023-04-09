@@ -1,24 +1,29 @@
 import { PlainObject, Updater } from 'immutable-lens'
-import { createStore as createReduxStore, Reducer, StoreEnhancer } from 'redux'
-import { BehaviorSubject, merge, Observable, of, Subject } from 'rxjs'
+import { Reducer, StoreEnhancer, createStore as createReduxStore } from 'redux'
 import {
+   Observable,
+   ReplaySubject,
+   Subject,
    catchError,
    distinctUntilChanged,
    filter,
    map,
+   merge,
    mergeMap,
-   skip,
+   of,
+   startWith,
    switchMap
-} from 'rxjs/operators'
+} from 'rxjs'
 
-import { ActionMeta, LenrixStore } from './LenrixStore'
-import { createLogger } from './logger/createLogger'
-import { LoggerOptions } from './logger/LoggerOptions'
+import { LenrixStore } from './LenrixStore'
 import { Store } from './Store'
-import { StoreContext } from './StoreContext'
-import { ActionObject } from './util/ActionObject'
-import { FocusedAction } from './util/FocusedAction'
-import { FocusedHandlers } from './util/FocusedHandlers'
+import { LoggerOptions } from './logger/LoggerOptions'
+import { createLogger } from './logger/createLogger'
+import { ActionMeta } from './utility-types/ActionMeta'
+import { ActionObject } from './utility-types/ActionObject'
+import { FocusedAction } from './utility-types/FocusedAction'
+import { FocusedHandlers } from './utility-types/FocusedHandlers'
+import { StoreContext } from './utility-types/StoreContext'
 
 declare const process:
    | undefined
@@ -36,8 +41,9 @@ export function createFocusableStore<State extends PlainObject>(
 ): Store<{
    state: State
    readonlyValues: {}
-   status: 'loaded'
+   combinedValues: {}
    loadingValues: {}
+   waitingToBeLoaded: false
    actions: {}
    dependencies: {}
 }> {
@@ -103,13 +109,10 @@ export function createFocusableStore<State extends PlainObject>(
       hasDispatched = true
       const meta = {} as any
       const types = Object.keys(action)
-      if (types.length > 1)
-         throw Error(
-            'Lenrix does not support (yet?) dispatch of multiple actions in single object'
-         )
-      const type = types[0]
-      const payload = action[type]
-      dispatchAction({ type, payload }, meta)
+      types.forEach(type => {
+         const payload = action[type]
+         dispatchAction({ type, payload }, meta)
+      })
    }
 
    const dispatchAction = (action: FocusedAction, meta: ActionMeta) => {
@@ -186,14 +189,6 @@ export function createFocusableStore<State extends PlainObject>(
 
    const logger = createLogger(reduxStore, userOptions.logger)
 
-   const stateSubject = new BehaviorSubject(preloadedState)
-
-   const subscription = reduxStore.subscribe(() => {
-      stateSubject.next(reduxStore.getState() as any)
-   })
-
-   const state$ = stateSubject.pipe(distinctUntilChanged(), skip(1))
-
    const registerUpdates = <Actions>(newHandlers: FocusedHandlers<any>) => {
       const actionTypes = Object.keys(newHandlers)
       actionTypes.forEach(actionType => {
@@ -238,7 +233,7 @@ export function createFocusableStore<State extends PlainObject>(
 
    const dispatchCompute = (
       store: Store<any>,
-      previous: object,
+      previous: object | null | undefined,
       next: object
    ) => {
       const meta = {
@@ -279,26 +274,23 @@ export function createFocusableStore<State extends PlainObject>(
       dispatchLoaded
    }
 
-   return new LenrixStore(
-      state$.pipe(
-         map(state => ({
-            state,
-            readonlyValues: {},
-            status: 'loaded',
-            error: undefined
-         }))
-      ),
-      data => data.state as any,
-      {
-         state: preloadedState,
-         readonlyValues: {},
-         status: 'loaded',
-         error: undefined
-      },
-      registerUpdates,
-      context,
-      'root'
-   )
+   const toData = (state: State) => ({
+      state,
+      status: 'initial' as const,
+      error: undefined
+   })
+   const initialData = toData(preloadedState)
+   const data$ = new ReplaySubject<any>(1)
+   const stateSubject = new Subject<State>()
+   stateSubject
+      .pipe(startWith(preloadedState), distinctUntilChanged(), map(toData))
+      .subscribe(data$)
+
+   const subscription = reduxStore.subscribe(() => {
+      stateSubject.next(reduxStore.getState() as any)
+   })
+
+   return new LenrixStore(initialData, data$, registerUpdates, context, 'root')
 }
 
 export function createStore<State extends object>(
@@ -307,10 +299,11 @@ export function createStore<State extends object>(
 ): Store<{
    state: State
    readonlyValues: {}
-   status: 'loaded'
+   combinedValues: {}
    loadingValues: {}
    actions: {}
    dependencies: {}
+   waitingToBeLoaded: false
 }> {
    return createFocusableStore(
       state => state || initialState,

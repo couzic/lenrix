@@ -105,7 +105,9 @@ describe('LenrixStore.focusFields()', () => {
 
    it('can focus fields with computedValues', () => {
       const focused = rootStore
-         .compute(s => ({ todoListLength: s.todo.list.length }))
+         .computeFromFields(['todo'], ({ todo }) => ({
+            todoListLength: todo.list.length
+         }))
          .focusFields(['counter', 'flag'], ['todoListLength'])
       expect(focused.currentState).to.deep.equal({
          counter: initialState.counter,

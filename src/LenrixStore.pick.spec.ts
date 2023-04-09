@@ -24,7 +24,7 @@ describe('LenrixStore.pick()', () => {
    beforeEach(() => {
       store = createRootStore()
       store.state$.subscribe(newState => (state = newState))
-      store.currentLoadableData.status
+      store.currentData.status
    })
 
    it('picks fields', () => {
