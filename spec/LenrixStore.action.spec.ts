@@ -1,8 +1,32 @@
 import { expect } from 'chai'
 
-import { initialState, TodoItem } from '../test/State'
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
+
+export type State = {
+   todo: {
+      input: string
+      list: TodoItem[]
+      count: number
+   }
+}
+
+export interface TodoItem {
+   title: string
+   done: boolean
+}
+
+export const initialState: State = {
+   todo: {
+      input: 'input',
+      list: [
+         { title: 'item0', done: false },
+         { title: 'item1', done: false },
+         { title: 'item2', done: false }
+      ],
+      count: 42
+   }
+}
 
 interface Actions {
    clearTodoList: void
