@@ -2,9 +2,8 @@ import * as chai from 'chai'
 import { distinctUntilChanged, map, pipe } from 'rxjs'
 import { SinonStub, stub } from 'sinon'
 import * as sinonChai from 'sinon-chai'
-
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
 
 chai.use(sinonChai)
 const { expect } = chai

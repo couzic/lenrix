@@ -1,9 +1,8 @@
 import { expect } from 'chai'
 import { UnfocusedLens } from 'immutable-lens'
-
-import { initialState, State } from '../test/State'
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
+import { initialState, State } from './State'
 
 const createRootStore = () =>
    createStore(initialState, { logger: silentLoggerOptions })

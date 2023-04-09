@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-
 import { createStore } from '../src/createStore'
 import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
 

@@ -44,7 +44,7 @@
          "ts"
       ],
       "spec": [
-         "src/**/*.spec.ts"
+         "spec/**/*.spec.ts"
       ],
       "reporter": "dot"
    },

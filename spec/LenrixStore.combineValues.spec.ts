@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Subject, of } from 'rxjs'
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
 
 interface State {
    flag: boolean

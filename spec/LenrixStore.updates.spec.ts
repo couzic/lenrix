@@ -1,9 +1,8 @@
 import * as chai from 'chai'
 import * as sinonChai from 'sinon-chai'
-
-import { initialState } from '../test/State'
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
+import { initialState } from './State'
 
 chai.use(sinonChai)
 const { expect } = chai

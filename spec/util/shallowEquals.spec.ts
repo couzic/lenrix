@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 
-import { shallowEquals } from './shallowEquals'
+import { shallowEquals } from '../../src/util/shallowEquals'
 
 const expectEqual = <T>(a: T, b: T) =>
    expect(shallowEquals(a, b)).to.equal(true)

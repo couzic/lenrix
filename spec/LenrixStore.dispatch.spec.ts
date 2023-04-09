@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { createStore } from './createStore'
-import { silentLoggerOptions } from './logger/silentLoggerOptions'
+import { createStore } from '../src/createStore'
+import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
 
 interface Actions {
    changeString: string
