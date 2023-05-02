@@ -1,8 +1,9 @@
 import { expect } from 'chai'
 import { UnfocusedLens } from 'immutable-lens'
+import { NEVER, Observable, of } from 'rxjs'
 import { createStore } from '../src/createStore'
 import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
-import { initialState, State, TodoState } from './State'
+import { State, TodoState, initialState } from './State'
 
 const createRootStore = () =>
    createStore(initialState, { logger: silentLoggerOptions })
@@ -127,5 +128,37 @@ describe('LenrixStore.focusPath()', () => {
       expect(focused.currentState.counter).to.equal(
          rootStore.currentState.counter
       )
+   })
+
+   it('can focus while passing down loaded values', () => {
+      const store = createStore(
+         { nested: { nestedField: 'some value' } },
+         { logger: silentLoggerOptions }
+      )
+         .loadFromStream(of(null), () =>
+            of({ loadedValue: 'some loaded value' })
+         )
+         .focusPath(['nested'], ['loadedValue'])
+      const data = store.currentData
+      expect(data.status).to.equal('loaded')
+      if (data.status === 'loaded') {
+         const value: string = data.state.loadedValue
+         expect(value).to.equal('some loaded value')
+      }
+   })
+
+   it('passes down loadable values with keys present only when loaded', () => {
+      const store = createStore(
+         { nested: { nestedField: 'some value' } },
+         { logger: silentLoggerOptions }
+      )
+         .loadFromStream(
+            of(null),
+            () => NEVER as Observable<{ loadedValue: 'some loaded value' }>
+         )
+         .focusPath(['nested'], ['loadedValue'])
+      const data = store.currentData
+      expect(data.status).to.equal('loading')
+      expect('loadedValue' in data.state).to.be.false
    })
 })

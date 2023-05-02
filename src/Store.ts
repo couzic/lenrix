@@ -9,8 +9,8 @@ import { FocusedHandlers } from './utility-types/FocusedHandlers'
 import { FocusedReadonlySelection } from './utility-types/FocusedReadonlySelection'
 import { FocusedUpdatableSelection } from './utility-types/FocusedUpdatableSelection'
 import { StoreCurrentData } from './utility-types/StoreCurrentData'
-import { StoreCurrentState } from './utility-types/StoreCurrentState'
-import { StoreData } from './utility-types/StoreData'
+import { PickedStoreData, StoreData } from './utility-types/StoreData'
+import { StoreDataStatus } from './utility-types/StoreDataStatus'
 import { StoreState } from './utility-types/StoreState'
 import { StoreType } from './utility-types/StoreType'
 
@@ -20,28 +20,10 @@ type StoreWithReadonlyValues<
 > = Store<{
    state: Type['state']
    readonlyValues: ReadonlyValues
-   combinedValues: Type['combinedValues']
-   loadingValues: Type['loadingValues']
-   waitingToBeLoaded: Type['waitingToBeLoaded']
    actions: Type['actions']
    dependencies: Type['dependencies']
 }>
 
-type StoreWithCombinedValues<
-   Type extends StoreType,
-   CombinedValues extends PlainObject
-> = Store<{
-   state: Type['state']
-   readonlyValues: Type['readonlyValues']
-   combinedValues: CombinedValues
-   loadingValues: Type['loadingValues']
-   waitingToBeLoaded: Type['waitingToBeLoaded']
-   actions: Type['actions']
-   dependencies: Type['dependencies']
-}>
-
-// TODO this currently is not correct. We should only pass down the combined and loading values that are explicitely specified
-// => migrate to new strategy using single object for key/value mapping, and separate key types
 type StoreWithState<
    Type extends StoreType,
    NewType extends {
@@ -51,9 +33,6 @@ type StoreWithState<
 > = Store<{
    state: NewType['state']
    readonlyValues: NewType['readonlyValues']
-   combinedValues: Type['combinedValues']
-   loadingValues: Type['loadingValues']
-   waitingToBeLoaded: Type['waitingToBeLoaded']
    actions: Type['actions']
    dependencies: Type['dependencies']
 }>
@@ -65,7 +44,8 @@ export interface Store<Type extends StoreType> {
    readonly data$: Observable<StoreData<Type>>
    readonly currentData: StoreCurrentData<Type>
    readonly state$: Observable<StoreState<Type>>
-   readonly currentState: StoreCurrentState<Type>
+   readonly currentState: StoreState<Type>
+   readonly currentStatus: StoreDataStatus
 
    readonly action$: ActionObservable<Type['actions']>
    readonly path: string
@@ -84,9 +64,6 @@ export interface Store<Type extends StoreType> {
    actionTypes<Actions extends PlainObject>(): Store<{
       state: Type['state']
       readonlyValues: Type['readonlyValues']
-      combinedValues: Type['combinedValues']
-      loadingValues: Type['loadingValues']
-      waitingToBeLoaded: Type['waitingToBeLoaded']
       actions: {
          [K in
             | Exclude<keyof Actions, keyof Type['actions']>
@@ -139,10 +116,20 @@ export interface Store<Type extends StoreType> {
    // READ //
    /////////
 
-   pick<K extends keyof StoreState<Type>>(
+   pickState<K extends keyof StoreState<Type>>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       ...keys: K[]
    ): Observable<{ [P in K]: StoreState<Type>[P] }>
+
+   pickLoadedState<K extends keyof StoreState<Type>>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      ...keys: K[]
+   ): Observable<{ [P in K]: StoreState<Type, 'loaded'>[P] }>
+
+   pick<K extends keyof StoreState<Type>>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      ...keys: K[]
+   ): Observable<PickedStoreData<Type, K>>
 
    cherryPick<Selection>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
@@ -191,91 +178,120 @@ export interface Store<Type extends StoreType> {
    /////////
 
    loadFromFields<
-      K extends keyof StoreState<Type>,
-      LoadingValues extends PlainObject
+      K extends keyof (Type['state'] & Type['readonlyValues']),
+      LoadableValues extends PlainObject
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       load: (fields: {
-         [P in K]: StoreState<Type>[P]
-      }) => Observable<LoadingValues>
-   ): Store<{
-      state: Type['state']
-      readonlyValues: Type['readonlyValues']
-      combinedValues: Type['combinedValues']
-      loadingValues: Type['loadingValues'] & LoadingValues
-      waitingToBeLoaded: false
-      actions: Type['actions']
-      dependencies: Type['dependencies']
-   }>
+         [P in K]: StoreState<Type, 'loaded'>[P]
+      }) => Observable<LoadableValues>
+   ): StoreWithReadonlyValues<
+      Type,
+      {
+         [K in keyof (Type['readonlyValues'] &
+            LoadableValues)]: K extends keyof LoadableValues
+            ? LoadableValues[K]
+            : K extends keyof Type['readonlyValues']
+            ? Type['readonlyValues'][K]
+            : never
+      }
+   >
 
-   waitUntilLoaded(): Store<{
-      state: Type['state']
-      readonlyValues: Type['readonlyValues']
-      combinedValues: Type['combinedValues']
-      loadingValues: Type['loadingValues']
-      waitingToBeLoaded: true
-      actions: Type['actions']
-      dependencies: Type['dependencies']
-   }>
+   loadFromStream<Input, LoadableValues extends PlainObject>(
+      this: Store<Type & { state: PlainObject<Type['state']> }>,
+      input$: Observable<Input>,
+      load: (input: Input) => Observable<LoadableValues>
+   ): StoreWithReadonlyValues<
+      Type,
+      {
+         [K in keyof (Type['readonlyValues'] &
+            LoadableValues)]: K extends keyof LoadableValues
+            ? LoadableValues[K]
+            : K extends keyof Type['readonlyValues']
+            ? Type['readonlyValues'][K]
+            : never
+      }
+   >
+
+   // TODO
+   //
+   // loadOnStartup<LoadableValues extends PlainObject>(
+   //    this: Store<Type & { state: PlainObject<Type['state']> }>,
+   //    loadableValues$: Observable<LoadableValues>
+   // ): StoreWithReadonlyValues<
+   //    Type,
+   //    {
+   //       [K in keyof (Type['readonlyValues'] &
+   //          LoadableValues)]: K extends keyof LoadableValues
+   //          ? LoadableValues[K]
+   //          : K extends keyof Type['readonlyValues']
+   //          ? Type['readonlyValues'][K]
+   //          : never
+   //    }
+   // >
 
    //////////////
    // COMPUTE //
    ////////////
 
-   computeFrom<
-      Selection extends PlainObject,
-      ComputedValues extends PlainObject
-   >(
-      this: Store<Type & { state: PlainObject<Type['state']> }>,
-      selection: FocusedReadonlySelection<Type, Selection>,
-      computer: (
-         selection: Selection,
-         store: LightStore<Type>
-      ) => ComputedValues
-   ): StoreWithReadonlyValues<
-      Type,
-      {
-         [K in keyof (Type['readonlyValues'] &
-            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
-      }
-   >
+   // computeFrom<
+   //    Selection extends PlainObject,
+   //    ComputedValues extends PlainObject
+   // >(
+   //    this: Store<Type & { state: PlainObject<Type['state']> }>,
+   //    selection: FocusedReadonlySelection<Type, Selection>,
+   //    computer: (
+   //       selection: Selection,
+   //       store: LightStore<Type>
+   //    ) => ComputedValues
+   // ): StoreWithReadonlyValues<
+   //    Type,
+   //    {
+   //       [K in keyof (Type['readonlyValues'] &
+   //          ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[K]
+   //    }
+   // >
 
    computeFromFields<
-      K extends keyof StoreState<Type>,
+      K extends keyof (Type['state'] & Type['readonlyValues']),
       ComputedValues extends PlainObject
    >(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       fields: K[],
       computer: (
-         fields: { [P in K]: StoreState<Type>[P] },
+         fields: Pick<StoreState<Type, 'loaded'>, K>,
          store: LightStore<Type>
       ) => ComputedValues
    ): StoreWithReadonlyValues<
       Type,
       {
          [P in keyof (Type['readonlyValues'] &
-            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
+            ComputedValues)]: P extends keyof ComputedValues
+            ? ComputedValues[P]
+            : P extends keyof Type['readonlyValues']
+            ? Type['readonlyValues'][P]
+            : never
       }
    >
 
-   computeFromField<
-      K extends keyof StoreState<Type>,
-      ComputedValues extends PlainObject
-   >(
-      this: Store<Type & { state: PlainObject<Type['state']> }>,
-      field: K,
-      computer: (
-         field: StoreState<Type>[K],
-         store: LightStore<Type>
-      ) => ComputedValues
-   ): StoreWithReadonlyValues<
-      Type,
-      {
-         [P in keyof (Type['readonlyValues'] &
-            ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
-      }
-   >
+   // computeFromField<
+   //    K extends keyof StoreState<Type>,
+   //    ComputedValues extends PlainObject
+   // >(
+   //    this: Store<Type & { state: PlainObject<Type['state']> }>,
+   //    field: K,
+   //    computer: (
+   //       field: StoreState<Type>[K],
+   //       store: LightStore<Type>
+   //    ) => ComputedValues
+   // ): StoreWithReadonlyValues<
+   //    Type,
+   //    {
+   //       [P in keyof (Type['readonlyValues'] &
+   //          ComputedValues)]: (Type['readonlyValues'] & ComputedValues)[P]
+   //    }
+   // >
 
    //////////////
    // COMBINE //
@@ -284,11 +300,15 @@ export interface Store<Type extends StoreType> {
    combineValues<CombinedValues extends PlainObject>(
       this: Store<Type & { state: PlainObject<Type['state']> }>,
       combinedValues$: Observable<CombinedValues>
-   ): StoreWithCombinedValues<
+   ): StoreWithReadonlyValues<
       Type,
       {
-         [K in keyof (Type['combinedValues'] &
-            CombinedValues)]: (Type['combinedValues'] & CombinedValues)[K]
+         [K in keyof (Type['readonlyValues'] &
+            CombinedValues)]: K extends keyof CombinedValues
+            ? CombinedValues[K]
+            : K extends keyof Type['readonlyValues']
+            ? Type['readonlyValues'][K]
+            : never
       }
    >
 
@@ -381,7 +401,7 @@ export interface Store<Type extends StoreType> {
       Type,
       {
          state: Type['state'][SK]
-         readonlyValues: { [P in CK]: StoreState<Type>[P] }
+         readonlyValues: { [P in CK]: StoreState<Type, 'loaded'>[P] }
       }
    >
 
@@ -423,7 +443,7 @@ export interface Store<Type extends StoreType> {
       Type,
       {
          state: Type['state'][K1][K2]
-         readonlyValues: { [P in CK]: StoreState<Type>[P] }
+         readonlyValues: { [P in CK]: StoreState<Type, 'loaded'>[P] }
       }
    >
 
@@ -469,7 +489,7 @@ export interface Store<Type extends StoreType> {
       Type,
       {
          state: Type['state'][K1][K2][K3]
-         readonlyValues: { [P in CK]: StoreState<Type>[P] }
+         readonlyValues: { [P in CK]: StoreState<Type, 'loaded'>[P] }
       }
    >
 }

@@ -122,7 +122,7 @@ describe('LenrixStore.loadFromFields()', () => {
       }
       expect(data.error).to.be.instanceOf(Error)
    })
-   describe('when child loading store created', () => {
+   describe('when parallel loading store created', () => {
       let childResult$: Subject<ChildResult>
       const createChildLoadingStore = (rootStore: RootStore) =>
          rootStore.loadFromFields(['todo'], ({ todo }) =>
@@ -162,6 +162,50 @@ describe('LenrixStore.loadFromFields()', () => {
          })
          it('is loaded', () => {
             expect(childLoadingStore.currentData.status).to.equal('loaded')
+         })
+      })
+   })
+   describe('when sequence loading store created', () => {
+      let childResult$: Subject<ChildResult>
+      let loadFromResult: (_: { toto: 'tata' }) => Observable<ChildResult>
+      const createChildLoadingStore = (
+         rootStore: RootStore,
+         loader: typeof loadFromResult
+      ) => rootStore.loadFromFields(['toto'], loader)
+      type ChildLoadingStore = ReturnType<typeof createChildLoadingStore>
+      let childLoadingStore: ChildLoadingStore
+      beforeEach(() => {
+         childResult$ = new Subject()
+         loadFromResult = stub().returns(childResult$)
+         childLoadingStore = createChildLoadingStore(rootStore, loadFromResult)
+      })
+      it('is loading', () => {
+         expect(rootStore.currentData.status).to.equal('loading')
+         expect(childLoadingStore.currentData.status).to.equal('loading')
+      })
+      it('does not call child loaded just yet', () => {
+         expect(loadFromResult).not.to.have.been.called
+      })
+      describe('when root store result received', () => {
+         beforeEach(() => {
+            result$.next({ toto: 'tata' })
+         })
+         it('calls loader', () => {
+            expect(loadFromResult).to.have.been.called
+         })
+         it('is still loading', () => {
+            expect(childLoadingStore.currentData.status).to.equal('loading')
+         })
+         describe('when child store result received', () => {
+            beforeEach(() => {
+               childResult$.next({ childResultField: 'childResultFieldValue' })
+            })
+            it('is loaded', () => {
+               expect(childLoadingStore.currentData.status).to.equal('loaded')
+               expect(childLoadingStore.currentState.childResultField).to.equal(
+                  'childResultFieldValue'
+               )
+            })
          })
       })
    })

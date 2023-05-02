@@ -11,6 +11,7 @@ import {
    distinctUntilChanged,
    filter,
    map,
+   merge,
    mergeWith,
    Observable,
    of,
@@ -32,7 +33,7 @@ import { ActionObservable } from './utility-types/ActionObservable'
 import { FocusedHandlers } from './utility-types/FocusedHandlers'
 import { FocusedReadonlySelection } from './utility-types/FocusedReadonlySelection'
 import { StoreContext } from './utility-types/StoreContext'
-import { StoreData } from './utility-types/StoreData'
+import { PickedStoreData, StoreData } from './utility-types/StoreData'
 import { StoreState } from './utility-types/StoreState'
 import { StoreType } from './utility-types/StoreType'
 
@@ -57,6 +58,10 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
 
    get currentState() {
       return this.lastData.state
+   }
+
+   get currentStatus() {
+      return this.lastData.status
    }
 
    get action$(): ActionObservable<Type['actions']> {
@@ -152,16 +157,73 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
    // READ //
    /////////
 
-   public pick<K extends keyof StoreState<Type>>(
+   public pickState<K extends keyof StoreState<Type>>(
       ...keys: K[]
    ): Observable<Pick<StoreState<Type>, K>> {
       return this.state$.pipe(
          map(state => {
             const subset = {} as any
-            keys.forEach(key => (subset[key] = state[key]))
+            keys.forEach(key => {
+               if (key in state) subset[key] = state[key]
+            })
             return subset
          }),
          distinctUntilChanged(shallowEquals)
+      )
+   }
+
+   public pickLoadedState<K extends keyof StoreState<Type>>(
+      ...keys: K[]
+   ): Observable<Pick<StoreState<Type, 'loaded'>, K>> {
+      return this.state$.pipe(
+         filter(state => {
+            let allFieldsLoaded = true
+            keys.forEach(key => {
+               if (!(key in state)) {
+                  allFieldsLoaded = false
+               }
+            })
+            return allFieldsLoaded
+         }),
+         map(state => {
+            const subset = {} as any
+            keys.forEach(key => {
+               if (key in state) {
+                  subset[key] = state[key]
+               }
+            })
+            return subset
+         }),
+         distinctUntilChanged(shallowEquals)
+      )
+   }
+
+   public pick<K extends keyof StoreState<Type>>(
+      ...keys: K[]
+   ): Observable<PickedStoreData<Type, K>> {
+      return this.data$.pipe(
+         map(data => {
+            const { state } = data
+            let allFieldsLoaded = true
+            const subset = {} as any
+            keys.forEach(key => {
+               if (key in state) {
+                  subset[key] = state[key]
+               } else {
+                  allFieldsLoaded = false
+               }
+            })
+            const status =
+               data.status === 'loading' && allFieldsLoaded
+                  ? 'loaded'
+                  : data.status
+            return {
+               ...data,
+               state: subset,
+               status: status as any
+            }
+         }),
+         distinctUntilChanged(dataEquals)
       )
    }
 
@@ -192,29 +254,33 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
    // LOAD //
    /////////
 
+   private selectFields$<
+      K extends keyof (Type['state'] & Type['readonlyValues'])
+   >(fields: K[]) {
+      return this.data$.pipe(
+         map(data => {
+            const selection = {} as any
+            const { state } = data
+            fields.forEach(field => {
+               if (field in state) {
+                  selection[field] = state[field]
+               }
+            })
+            return { data, selection }
+         })
+      )
+   }
+
    public loadFromFields<
-      K extends keyof Type['state'] | keyof Type['readonlyValues'],
-      LoadedValues extends object
+      K extends keyof (Type['state'] & Type['readonlyValues']),
+      LoadableValues extends object
    >(
       fields: K[],
       load: (fields: {
-         [P in K]: StoreState<Type>[P]
-      }) => Observable<LoadedValues>
+         [P in K]: StoreState<Type, 'loaded'>[P]
+      }) => Observable<LoadableValues>
    ): any {
-      const selectFields = (
-         data: StoreData<Type>
-      ): {
-         data: StoreData<Type>
-         selection: Pick<StoreState<Type>, K>
-      } => {
-         const selection = {} as any
-         const outputState = data.state
-         fields.forEach(field => (selection[field] = outputState[field]))
-         return { data, selection }
-      }
-      const selection$ = this.data$.pipe(
-         filter(data => data.status !== 'error'),
-         map(selectFields),
+      const selection$ = this.selectFields$(fields).pipe(
          distinctUntilChanged((previous, next) =>
             shallowEquals(previous.selection, next.selection)
          )
@@ -225,11 +291,26 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
          ),
          map(({ data }) => ({
             state: data.state,
-            status: 'loading' as const
+            status:
+               data.status === 'error'
+                  ? ('error' as const)
+                  : ('loading' as const)
          }))
       )
       const loadedValuesOrError$ = selection$.pipe(
-         map(_ => _.selection),
+         filter(({ data, selection }) => {
+            const { status } = data
+            if (status === 'loaded') return true
+            let allFieldsLoaded = true
+            fields.forEach(field => {
+               const fieldLoaded = field in selection
+               if (!fieldLoaded) {
+                  allFieldsLoaded = false
+               }
+            })
+            return allFieldsLoaded
+         }),
+         map(_ => _.selection as any),
          switchMap(load),
          tap(loadedValues =>
             this.context.dispatchLoaded(this as any, loadedValues)
@@ -297,15 +378,42 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
       )
    }
 
-   public waitUntilLoaded(): any {
+   loadFromStream<Input, LoadableValues extends PlainObject>(
+      input$: Observable<Input>,
+      load: (input: Input) => Observable<LoadableValues>
+   ): any {
       const data$ = new ReplaySubject<any>(1)
-      this.data$.pipe(filter(_ => _.status === 'loaded')).subscribe(data$)
+
+      // TODO Share input$ to prevent double execution
+      const loading$ = input$.pipe(
+         map(() => ({ status: 'loading', loadedValues: {} }))
+      )
+      const loaded$ = input$.pipe(
+         switchMap(input => load(input)),
+         map(loadedValues => ({ status: 'loaded', loadedValues }))
+      )
+      combineLatest(
+         [merge(loading$, loaded$), this.data$],
+         ({ status, loadedValues }, data) => ({
+            ...data,
+            // TODO Handle error in loader
+            status:
+               data.status === 'error' || data.status === 'loading'
+                  ? data.status
+                  : status,
+            state:
+               status === 'loaded'
+                  ? { ...data.state, ...loadedValues }
+                  : data.state
+         })
+      ).subscribe(data$)
+
       return new LenrixStore(
          this.currentData,
          data$,
          this.registerHandlers,
          this.context,
-         this.path + '.waitUntilLoaded()'
+         this.path + '.loadFromStream()'
       )
    }
 
@@ -313,91 +421,58 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
    // COMPUTE //
    ////////////
 
-   public computeFrom<
-      Selection extends PlainObject,
-      readonlyValues extends PlainObject
-   >(
-      selection: FocusedReadonlySelection<Type, Selection>,
-      computer: (
-         selection: Selection,
-         store: LightStore<Type>
-      ) => readonlyValues
-   ): any {
-      const select = (data: StoreData<Type>): Selection =>
-         cherryPick(data.state, selection(this.localLens))
-      return this.computeFromSelector(select, computer, 'computeFrom')
-   }
-
-   public computeFromFields<
-      K extends keyof StoreState<Type>,
-      readonlyValues extends PlainObject
+   computeFromFields<
+      K extends keyof (Type['state'] & Type['readonlyValues']),
+      ComputedValues extends PlainObject
    >(
       fields: K[],
       computer: (
-         fields: Pick<StoreState<Type>, K>,
+         fields: Pick<StoreState<Type, 'loaded'>, K>,
          store: LightStore<Type>
-      ) => readonlyValues
-   ): any {
-      const select = (data: StoreData<Type>): Pick<StoreState<Type>, K> => {
-         const selected = {} as any
-         const outputState = data.state
-         fields.forEach(field => (selected[field] = outputState[field]))
-         return selected
-      }
-      return this.computeFromSelector(select, computer, 'computeFromFields')
-   }
-
-   public computeFromField<
-      K extends keyof StoreState<Type>,
-      readonlyValues extends PlainObject
-   >(
-      field: K,
-      computer: (
-         field: StoreState<Type>[K],
-         store: LightStore<Type>
-      ) => readonlyValues
-   ): any {
-      const select = (data: StoreData<Type>): StoreState<Type>[K] => {
-         const outputState = data.state
-         return outputState[field] // TODO Pass down selection comparator, because currently it will be shallowEqual()
-      }
-      return this.computeFromSelector(select, computer, 'computeFromField')
-   }
-
-   private computeFromSelector<
-      Selection extends PlainObject,
-      ComputedValues extends PlainObject
-   >(
-      selector: (data: StoreData<Type>) => Selection,
-      computer: (
-         selection: Selection,
-         store: LightStore<Type>
-      ) => ComputedValues,
-      functionName: string
+      ) => ComputedValues
    ): any {
       const data$ = new ReplaySubject<any>(1)
-      const computedValues$ = this.data$.pipe(
-         map(selector),
-         distinctUntilChanged(shallowEquals), // TODO Inject comparator function
-         map(selection => computer(selection, this.light)),
+
+      const computedValues$ = this.selectFields$(fields).pipe(
+         map(_ => _.selection),
+         distinctUntilChanged(shallowEquals),
+         map(selection => {
+            let allFieldsLoaded = true
+            fields.forEach(field => {
+               const fieldLoaded = field in selection
+               if (!fieldLoaded) {
+                  allFieldsLoaded = false
+               }
+            })
+            if (allFieldsLoaded) {
+               return computer(selection, this.light)
+               // catchError((error: Error) => of({ error }))
+            } else {
+               return {}
+            }
+         }),
          scan((previous, next) => {
             this.context.dispatchCompute(this as any, previous, next)
             return next
          })
       )
+
       this.data$
          .pipe(
             withLatestFrom(computedValues$),
             map(([data, computedValues]) => {
+               if (Object.keys(computedValues).length === 0) {
+                  return data
+               }
                let error: Error | undefined
                if (computedValues === undefined) {
                   error = new Error(
-                     `LenrixStore.${functionName}() provided function MUST return an object (empty objects are allowed)`
+                     `LenrixStore.computeFromFields() provided function MUST return an object (empty objects are allowed)`
                   )
                }
                if (typeof computedValues === 'function') {
                   error = new Error(
-                     `LenrixStore.${functionName}() do not accept higher order functions as arguments`
+                     `LenrixStore.computeFromFields() do not accept higher order functions as arguments`
                   )
                }
                if (error !== undefined) {
@@ -415,12 +490,13 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
             })
          )
          .subscribe(data$)
+
       return new LenrixStore(
          this.currentData,
          data$,
          this.registerHandlers,
          this.context,
-         this.path + `.${functionName}()`
+         this.path + `.computeFromFields(${fields.join(', ')})`
       )
    }
 
@@ -460,7 +536,9 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
          const readonlyValues: Partial<StoreState<Type>> = {}
          readonlyValueKeys.forEach(key => {
             // TODO Prevent state field and readonly values from having same name (dangerous clash)
-            readonlyValues[key] = data.state[key]
+            if (key in data.state) {
+               readonlyValues[key] = data.state[key]
+            }
          })
          return Array.isArray(state) || typeof state !== 'object'
             ? { ...data, state }
@@ -512,10 +590,10 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
       }
       const data$ = new ReplaySubject<any>(1)
       this.data$
-         .pipe(map(toPickedData), distinctUntilChanged(dataEquals))
+         .pipe(map(toPickedData), distinctUntilChanged(dataEquals as any))
          .subscribe(data$)
       return new LenrixStore(
-         toPickedData(this.currentData),
+         toPickedData(this.currentData as any) as any,
          data$,
          this.registerHandlers as any,
          this.context,

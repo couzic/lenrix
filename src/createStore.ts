@@ -41,9 +41,6 @@ export function createFocusableStore<State extends PlainObject>(
 ): Store<{
    state: State
    readonlyValues: {}
-   combinedValues: {}
-   loadingValues: {}
-   waitingToBeLoaded: false
    actions: {}
    dependencies: {}
 }> {
@@ -290,7 +287,13 @@ export function createFocusableStore<State extends PlainObject>(
       stateSubject.next(reduxStore.getState() as any)
    })
 
-   return new LenrixStore(initialData, data$, registerUpdates, context, 'root')
+   return new LenrixStore(
+      initialData as any,
+      data$,
+      registerUpdates,
+      context,
+      'root'
+   )
 }
 
 export function createStore<State extends object>(
@@ -299,11 +302,8 @@ export function createStore<State extends object>(
 ): Store<{
    state: State
    readonlyValues: {}
-   combinedValues: {}
-   loadingValues: {}
    actions: {}
    dependencies: {}
-   waitingToBeLoaded: false
 }> {
    return createFocusableStore(
       state => state || initialState,

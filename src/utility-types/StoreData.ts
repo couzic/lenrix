@@ -7,25 +7,38 @@ import { StoreType } from './StoreType'
 // Careful, might need to think this through, since in some cases at runtime the downstream value might be undefined, so the upstream one might appear
 
 export type StoreData<Type extends StoreType> =
-   Type['waitingToBeLoaded'] extends true
-      ? {
-           status: 'loaded'
-           state: StoreState<Type, 'loaded'>
-           error: undefined
-        }
-      :
-           | {
-                status: 'initial' | 'loading'
-                state: StoreState<Type, 'initial' | 'loaded'>
-                error: undefined
-             }
-           | {
-                status: 'loaded'
-                state: StoreState<Type, 'loaded'>
-                error: undefined
-             }
-           | {
-                status: 'error'
-                state: StoreState<Type, 'error'>
-                error: Error
-             }
+   | {
+        status: 'initial' | 'loading' // TODO remove all reference to 'initial' ?
+        state: StoreState<Type, 'initial' | 'loaded'>
+        error: undefined
+     }
+   | {
+        status: 'loaded'
+        state: StoreState<Type, 'loaded'>
+        error: undefined
+     }
+   | {
+        status: 'error'
+        state: StoreState<Type, 'error'>
+        error: Error
+     }
+
+export type PickedStoreData<
+   Type extends StoreType,
+   K extends keyof StoreState<Type>
+> =
+   | {
+        status: 'initial' | 'loading' // TODO remove all reference to 'initial' ?
+        state: Pick<StoreState<Type, 'initial' | 'loaded'>, K>
+        error: undefined
+     }
+   | {
+        status: 'loaded'
+        state: Pick<StoreState<Type, 'loaded'>, K>
+        error: undefined
+     }
+   | {
+        status: 'error'
+        state: Pick<StoreState<Type, 'error'>, K>
+        error: Error
+     }

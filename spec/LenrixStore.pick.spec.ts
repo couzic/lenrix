@@ -1,8 +1,8 @@
 import { expect } from 'chai'
-import { createLens } from 'immutable-lens'
+import { delay, of } from 'rxjs'
 import { createStore } from '../src/createStore'
 import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
-import { initialState, State } from './State'
+import { initialState } from './State'
 
 const createRootStore = () =>
    createStore(initialState, { logger: silentLoggerOptions })
@@ -14,23 +14,16 @@ const createRootStore = () =>
 type RootStore = ReturnType<typeof createRootStore>
 
 describe('LenrixStore.pick()', () => {
-   const lens = createLens<State>()
-   const todoListLens = lens.focusPath('todo', 'list')
-
    let store: RootStore
-   let state: State
 
    beforeEach(() => {
       store = createRootStore()
-      store.state$.subscribe(newState => (state = newState))
-      store.currentData.status
    })
 
-   it('picks fields', () => {
-      const counterPick$ = store.pick('counter')
-      let counterPick = {} as any
-      counterPick$.subscribe(value => (counterPick = value))
-      expect(counterPick).to.deep.equal({ counter: 42 })
+   it('picks fields from normalized state', () => {
+      let picked = {} as any
+      store.pick('counter').subscribe(value => (picked = value))
+      expect(picked.state).to.deep.equal({ counter: 42 })
    })
 
    it('does not emit when updating unrelated slice of parent state', () => {
@@ -41,5 +34,28 @@ describe('LenrixStore.pick()', () => {
       store.dispatch({ toggleFlag: undefined })
 
       expect(transitions).to.equal(1)
+   })
+
+   describe('when picking values computed from loading fields', () => {
+      const createComputingStore = (store: RootStore) =>
+         store
+            .loadFromFields(['counter'], ({ counter }) =>
+               of({ loadedCounter: counter }).pipe(delay(1000))
+            )
+            .computeFromFields(['todo'], ({ todo }) => ({
+               todoListLength: todo.list.length
+            }))
+
+      let computingStore: ReturnType<typeof createComputingStore>
+      beforeEach(() => {
+         computingStore = createComputingStore(store)
+      })
+      it('', () => {
+         let picked = {} as any
+         computingStore
+            .pick('todoListLength')
+            .subscribe(value => (picked = value))
+         console.log(picked)
+      })
    })
 })

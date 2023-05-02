@@ -1,31 +1,39 @@
 import { StoreType } from './StoreType'
 
-export type StoreCurrentData<Type extends StoreType> = {
-   state: Omit<
-      Type['state'],
-      | keyof Type['readonlyValues']
-      | keyof Type['combinedValues']
-      | keyof Type['loadingValues']
-   > &
-      Type['readonlyValues'] & {
-         [K in keyof Type['combinedValues']]:
-            | Type['combinedValues'][K]
-            | undefined
-      }
-} & (
+export type StoreCurrentData<Type extends StoreType> =
    | {
         status: 'initial' | 'loading'
-        state: Record<keyof Type['loadingValues'], undefined>
+        state: {
+           [K in keyof (Type['state'] &
+              Type['readonlyValues'])]: K extends keyof Type['readonlyValues']
+              ? Type['readonlyValues'][K] | undefined // Actually, it's not the value that can be undefined, it's the key that can be absent
+              : K extends keyof Type['state']
+              ? Type['state'][K]
+              : never
+        }
         error: undefined
      }
    | {
         status: 'loaded'
-        state: Type['loadingValues']
+        state: {
+           [K in keyof (Type['state'] &
+              Type['readonlyValues'])]: K extends keyof Type['readonlyValues']
+              ? Type['readonlyValues'][K]
+              : K extends keyof Type['state']
+              ? Type['state'][K]
+              : never
+        }
         error: undefined
      }
    | {
         status: 'error'
-        state: Record<keyof Type['loadingValues'], undefined>
+        state: {
+           [K in keyof (Type['state'] &
+              Type['readonlyValues'])]: K extends keyof Type['readonlyValues']
+              ? Type['readonlyValues'][K] | undefined // Actually, it's not the value that can be undefined, it's the key that can be absent
+              : K extends keyof Type['state']
+              ? Type['state'][K]
+              : never
+        }
         error: Error
      }
-)
