@@ -247,3 +247,34 @@ it('loads from loading field', () => {
    expect(state.data.evolvesFrom.name).to.equal('pichu')
    expect(store.currentStatus).to.equal('loaded')
 })
+
+it('loads in parallel from loadable field', () => {
+   const pokemon$ = new Subject<any>()
+   const evolvesFrom$ = new Subject<any>()
+   const evolvesTo$ = new Subject<any>()
+
+   const store = createStore(
+      { pokemonName: 'pikachu' },
+      { logger: silentLoggerOptions }
+   )
+      .loadFromFields(['pokemonName'], {
+         pokemon: ({ pokemonName }) => pokemon$
+      })
+      .loadFromFields(['pokemon'], {
+         evolvesFrom: ({ pokemon }) => evolvesFrom$,
+         evolvesTo: ({ pokemon }) => evolvesTo$
+      })
+
+   pokemon$.next({ name: 'pikachu' })
+   expect(store.currentStatus).to.equal('loading')
+   expect(store.currentData.pokemon.name).to.equal('pikachu')
+
+   evolvesFrom$.next({ name: 'pichu' })
+   expect(store.currentStatus).to.equal('loading')
+   expect(store.currentData.evolvesFrom.name).to.equal('pichu')
+   expect(store.currentData.evolvesTo).to.be.undefined
+
+   evolvesTo$.next({ name: 'raichu' })
+   expect(store.currentStatus).to.equal('loaded')
+   expect(store.currentData.evolvesTo.name).to.equal('raichu')
+})

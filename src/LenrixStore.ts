@@ -228,7 +228,7 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
                mergeAll(),
                scan((acc, loadableValues) => {
                   return { ...acc, ...loadableValues } as any
-               }, {})
+               }, loadingValues)
             )
          ),
          tap(loadedValues =>
