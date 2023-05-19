@@ -1,6 +1,6 @@
 {
    "name": "lenrix",
-   "version": "0.10.0-alpha.6",
+   "version": "0.10.0-alpha.11",
    "description": "Type-safe, reactive, lens-focused, immutable state management",
    "keywords": [
       "typescript",
@@ -61,7 +61,7 @@
       "chai": "^4.3.7",
       "chalk": "^2.4.2",
       "doctoc": "^2.2.1",
-      "immutable-lens": "^0.4.2",
+      "immutable-lens": "^0.4.3",
       "mocha": "^10.2.0",
       "prettier": "^2.8.7",
       "ramda": "^0.29.0",

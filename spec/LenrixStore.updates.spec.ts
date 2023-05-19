@@ -29,21 +29,21 @@ describe('LenrixStore.updates()', () => {
    })
 
    it('applies updates declared using no-lens object', () => {
-      expect(rootStore.currentState.counter).to.equal(42)
+      expect(rootStore.currentData.counter).to.equal(42)
       rootStore.dispatch({ resetCounter: undefined })
-      expect(rootStore.currentState.counter).to.equal(0)
+      expect(rootStore.currentData.counter).to.equal(0)
    })
 
    describe('on root store', () => {
       it('updates on dispatch', () => {
          rootStore.dispatch({ clearTodoList: undefined })
 
-         expect(rootStore.currentState.todo.list).to.be.empty
+         expect(rootStore.currentData.todo.list).to.be.empty
       })
 
       it('root actions can be dispatched from path focused store', () => {
          rootStore.focusPath('todo').dispatch({ clearTodoList: undefined })
-         expect(rootStore.currentState.todo.list).to.be.empty
+         expect(rootStore.currentData.todo.list).to.be.empty
       })
    })
 
@@ -58,7 +58,7 @@ describe('LenrixStore.updates()', () => {
       it('applies update registered on root store', () => {
          store.dispatch({ clearTodoList: undefined })
 
-         expect(store.currentState.list).to.be.empty
+         expect(store.currentData.list).to.be.empty
       })
 
       it('applies update registered on focused store', () => {
@@ -69,7 +69,7 @@ describe('LenrixStore.updates()', () => {
             }))
             .dispatch({ clearList: undefined })
 
-         expect(store.currentState.list).to.be.empty
+         expect(store.currentData.list).to.be.empty
       })
    })
 
@@ -84,7 +84,7 @@ describe('LenrixStore.updates()', () => {
       it('applies update registered on root store', () => {
          store.dispatch({ clearTodoList: undefined })
 
-         expect(store.currentState.todo.list).to.be.empty
+         expect(store.currentData.todo.list).to.be.empty
       })
 
       it('applies update registered on focused store', () => {
@@ -95,36 +95,7 @@ describe('LenrixStore.updates()', () => {
             }))
             .dispatch({ clearList: undefined })
 
-         expect(store.currentState.todo.list).to.be.empty
-      })
-   })
-
-   describe('on recomposed store', () => {
-      const createRecomposedStore = (rootStore: RootStore) =>
-         rootStore.recompose(_ => ({
-            todoList: _.focusPath('todo', 'list')
-         }))
-      let store: ReturnType<typeof createRecomposedStore>
-      beforeEach(() => {
-         store = createRecomposedStore(rootStore)
-      })
-
-      it('applies update registered on root store', () => {
-         store.dispatch({ clearTodoList: undefined })
-
-         expect(store.currentState.todoList).to.be.empty
-      })
-
-      it('applies update registered on recomposed store', () => {
-         store
-            .actionTypes<{ clearRecomposedTodoList: void }>()
-            .updates(_ => ({
-               clearRecomposedTodoList: () =>
-                  _.focusPath('todoList').setValue([])
-            }))
-            .dispatch({ clearRecomposedTodoList: undefined })
-
-         expect(store.currentState.todoList).to.be.empty
+         expect(store.currentData.todo.list).to.be.empty
       })
    })
 
@@ -150,7 +121,7 @@ describe('LenrixStore.updates()', () => {
       store.dispatch({ setName: 'Bob' })
       store.dispatch({ setName: 'Steve' })
 
-      expect(store.currentState.name).to.equal('Steve')
+      expect(store.currentData.name).to.equal('Steve')
    })
 
    // it('catches error thrown by updater', () => {

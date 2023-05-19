@@ -14,6 +14,11 @@ type RootStore = ReturnType<typeof createRootStore>
 const createFocusedStore = (rootStore: RootStore) =>
    rootStore.focusFields('counter', 'todo')
 
+const initialPickedState: PickedState = {
+   counter: initialState.counter,
+   todo: initialState.todo
+}
+
 type FocusedStore = ReturnType<typeof createFocusedStore>
 
 describe('LenrixStore.focusFields()', () => {
@@ -26,11 +31,6 @@ describe('LenrixStore.focusFields()', () => {
    let rootStateTransitions: number
    let stateTransitions: number
 
-   const initialPickedState: PickedState = {
-      counter: initialState.counter,
-      todo: initialState.todo
-   }
-
    beforeEach(() => {
       rootStore = createRootStore()
       store = createFocusedStore(rootStore)
@@ -38,11 +38,11 @@ describe('LenrixStore.focusFields()', () => {
       lens = store.localLens
       rootStateTransitions = 0
       stateTransitions = 0
-      rootStore.state$.subscribe(newState => {
+      rootStore.data$.subscribe(newState => {
          rootState = newState
          ++rootStateTransitions
       })
-      store.state$.subscribe(newState => {
+      store.data$.subscribe(newState => {
          state = newState
          ++stateTransitions
       })
@@ -57,7 +57,7 @@ describe('LenrixStore.focusFields()', () => {
    //////////
 
    it('holds initial state as current state', () => {
-      expect(store.currentState).to.deep.equal(initialPickedState)
+      expect(store.currentData).to.deep.equal(initialPickedState)
    })
 
    it('holds initial state as state stream', () => {
@@ -88,7 +88,7 @@ describe('LenrixStore.focusFields()', () => {
 
    it('can focus fields with spread keys', () => {
       const focused = rootStore.focusFields('counter', 'flag')
-      expect(focused.currentState).to.deep.equal({
+      expect(focused.currentData).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag
       })
@@ -96,7 +96,7 @@ describe('LenrixStore.focusFields()', () => {
 
    it('can focus fields with key array', () => {
       const focused = rootStore.focusFields(['counter', 'flag'])
-      expect(focused.currentState).to.deep.equal({
+      expect(focused.currentData).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag
       })
@@ -104,22 +104,14 @@ describe('LenrixStore.focusFields()', () => {
 
    it('can focus fields with computedValues', () => {
       const focused = rootStore
-         .computeFromFields(['todo'], ({ todo }) => ({
-            todoListLength: todo.list.length
-         }))
-         .focusFields(['counter', 'flag'], ['todoListLength'])
-      expect(focused.currentState).to.deep.equal({
+         .computeFromFields(['todo'], {
+            todoListLength: ({ todo }) => todo.list.length
+         })
+         .focusFields(['counter', 'flag', 'todoListLength'])
+      expect(focused.currentData).to.deep.equal({
          counter: initialState.counter,
          flag: initialState.flag,
          todoListLength: 3
       })
-   })
-
-   it('can store fields as readonly-values', () => {
-      const focused = rootStore.focusFields(['flag'], ['counter'])
-
-      expect(focused.currentState.counter).to.equal(
-         rootStore.currentState.counter
-      )
    })
 })

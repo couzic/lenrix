@@ -62,42 +62,42 @@ describe('LenrixStore Epics', () => {
 
    it('dispatches actions', () => {
       store.dispatch({ buttonClicked: undefined })
-      expect(store.currentState.counter).to.equal(1)
+      expect(store.currentData.counter).to.equal(1)
    })
 
    it('dispatches actions for every dispatched epic', () => {
       store.dispatch({ buttonClicked: undefined })
       store.dispatch({ buttonClicked: undefined })
-      expect(store.currentState.counter).to.equal(2)
+      expect(store.currentData.counter).to.equal(2)
    })
 
    it('accepts epic mapping to multiple actions in same object', () => {
-      expect(store.currentState.counter).to.equal(0)
-      expect(store.currentState.todo.count).to.equal(0)
+      expect(store.currentData.counter).to.equal(0)
+      expect(store.currentData.todo.count).to.equal(0)
       store.dispatch({ setCounter: 123, setTodoCount: 321 })
-      expect(store.currentState.counter).to.equal(123)
-      expect(store.currentState.todo.count).to.equal(321)
+      expect(store.currentData.counter).to.equal(123)
+      expect(store.currentData.todo.count).to.equal(321)
       store.dispatch({ reset: {} })
-      expect(store.currentState.counter).to.equal(0)
-      expect(store.currentState.todo.count).to.equal(0)
+      expect(store.currentData.counter).to.equal(0)
+      expect(store.currentData.todo.count).to.equal(0)
    })
 
    it('gives registered epics access to store currentState', () => {
-      expect(store.currentState.todo.list.length).to.equal(0)
-      expect(store.currentState.todo.count).to.equal(0)
+      expect(store.currentData.todo.list.length).to.equal(0)
+      expect(store.currentData.todo.count).to.equal(0)
 
       store.epics(s => ({
          setCounter: map(() => ({
-            setTodoCount: s.currentState.counter
+            setTodoCount: s.currentData.counter
          }))
       }))
       store.dispatch({ setCounter: 42 })
 
-      expect(store.currentState.todo.count).to.equal(42)
+      expect(store.currentData.todo.count).to.equal(42)
    })
 
    it('supports distinctUntilChanged()', () => {
-      expect(store.currentState.counter).to.equal(0)
+      expect(store.currentData.counter).to.equal(0)
       store.pureEpics({
          setTodoCount: pipe(
             distinctUntilChanged(),
@@ -105,13 +105,13 @@ describe('LenrixStore Epics', () => {
          )
       })
       store.dispatch({ setTodoCount: 42 })
-      expect(store.currentState.counter).to.equal(1)
+      expect(store.currentData.counter).to.equal(1)
       store.dispatch({ setTodoCount: 42 })
-      expect(store.currentState.counter).to.equal(1)
+      expect(store.currentData.counter).to.equal(1)
    })
 
    it('supports multiple epics for single action', () => {
-      expect(store.currentState.counter).to.equal(0)
+      expect(store.currentData.counter).to.equal(0)
       store.pureEpics({
          setTodoCount: map(() => ({ incrementCounter: undefined }))
       })
@@ -119,7 +119,7 @@ describe('LenrixStore Epics', () => {
          setTodoCount: map(() => ({ incrementCounter: undefined }))
       })
       store.dispatch({ setTodoCount: 42 })
-      expect(store.currentState.counter).to.equal(2)
+      expect(store.currentData.counter).to.equal(2)
    })
 
    describe('when registering epics after first action has been dispatched', () => {
@@ -155,6 +155,6 @@ describe('LenrixStore Epics', () => {
       store.dispatch({ setCounter: 99999999 }) // Error
       store.dispatch({ setCounter: 1 }) // OK
 
-      expect(store.currentState.counter).to.equal(1)
+      expect(store.currentData.counter).to.equal(1)
    })
 })

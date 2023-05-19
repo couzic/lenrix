@@ -53,14 +53,14 @@ describe('LenrixStore.action()', () => {
    it('dispatches action with void payload', () => {
       rootStore.action('clearTodoList')()
 
-      expect(rootStore.currentState.todo.list).to.be.empty
+      expect(rootStore.currentData.todo.list).to.be.empty
    })
 
    it('dispatches defined payload', () => {
       const todoItem = { title: 'title', done: false }
       rootStore.action('addTodo')(todoItem)
 
-      expect(rootStore.currentState.todo.list).to.have.length(4)
-      expect(rootStore.currentState.todo.list[3]).to.equal(todoItem)
+      expect(rootStore.currentData.todo.list).to.have.length(4)
+      expect(rootStore.currentData.todo.list[3]).to.equal(todoItem)
    })
 })

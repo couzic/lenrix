@@ -29,6 +29,6 @@ describe('LenrixStore.dispatch()', () => {
 
    it('accepts multiple actions in single dispatch call', () => {
       rootStore.dispatch({ changeString: 'other', changeNumber: 123 })
-      expect(rootStore.currentState).to.deep.equal({ s: 'other', n: 123 })
+      expect(rootStore.currentData).to.deep.equal({ s: 'other', n: 123 })
    })
 })

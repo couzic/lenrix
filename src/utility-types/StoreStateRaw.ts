@@ -1,16 +1,16 @@
 import { StoreDataKey } from './StoreDataKey'
 import { StoreType } from './StoreType'
 
-export type StoreState<Type extends StoreType> =
-   | LoadingState<Type>
-   | ErrorState<Type>
-   | LoadedState<Type>
+/**
+ * Essentially a normalized StoreState (status, errors and data are derived from it)
+ */
+export type StoreStateRaw<Type extends StoreType> =
+   | LoadingStateRaw<Type>
+   | ErrorStateRaw<Type>
+   | LoadedStateRaw<Type>
 
 // TODO prevent key clashes between loadableValues & (state & values) both compile and run time
-export type LoadingState<Type extends StoreType> = {
-   status: 'loading'
-   errors: []
-   data: LoadingData<Type>
+export type LoadingStateRaw<Type extends StoreType> = {
    reduxState: Type['reduxState']
    values: Type['values']
    loadableValues: {
@@ -25,10 +25,7 @@ export type LoadingState<Type extends StoreType> = {
 }
 
 // TODO prevent key clashes between loadableValues & (state & values) both compile and run time
-export type ErrorState<Type extends StoreType> = {
-   status: 'error'
-   errors: Error[]
-   data: LoadingData<Type>
+export type ErrorStateRaw<Type extends StoreType> = {
    reduxState: Type['reduxState']
    values: Type['values'] // TODO sync computed values can be in error ? { [K in keyof Type['values']]: Type['values'][K] | Error }
    loadableValues: {
@@ -44,10 +41,7 @@ export type ErrorState<Type extends StoreType> = {
 }
 
 // TODO prevent key clashes between loadableValues & state & values both compile and run time
-export type LoadedState<Type extends StoreType> = {
-   status: 'loaded'
-   errors: []
-   data: LoadedData<Type>
+export type LoadedStateRaw<Type extends StoreType> = {
    reduxState: Type['reduxState']
    values: Type['values']
    loadableValues: {
@@ -59,40 +53,14 @@ export type LoadedState<Type extends StoreType> = {
    }
 }
 
-export type StoreData<Type extends StoreType> =
-   | LoadingData<Type>
-   | LoadedData<Type>
-
-export type LoadingData<Type extends StoreType> = {
-   [K in StoreDataKey<Type>]: K extends keyof Type['loadableValues']
-      ? Type['loadableValues'][K] | undefined
-      : K extends keyof Type['values']
-      ? Type['values'][K]
-      : K extends keyof Type['reduxState']
-      ? Type['reduxState'][K]
-      : never
-}
-
-export type LoadedData<Type extends StoreType> = {
-   [K in StoreDataKey<Type>]: K extends keyof Type['loadableValues']
-      ? Type['loadableValues'][K]
-      : K extends keyof Type['values']
-      ? Type['values'][K]
-      : K extends keyof Type['reduxState']
-      ? Type['reduxState'][K]
-      : never
-}
-
-export type PickedLoadedState<
+export type PickedStateRaw<
    Type extends StoreType,
    K extends StoreDataKey<Type>
-> = LoadedState<{
-   reduxState: {
-      [K in Exclude<
-         keyof Type['reduxState'],
-         keyof Type['values'] | keyof Type['loadableValues']
-      >]: Type['reduxState'][K]
-   }
+> = StoreStateRaw<{
+   reduxState: Pick<
+      Type['reduxState'],
+      Exclude<K, keyof Type['values'] | keyof Type['loadableValues']>
+   >
    values: Pick<Type['values'], Exclude<K, keyof Type['loadableValues']>>
    loadableValues: Pick<Type['loadableValues'], K>
    actions: Type['actions']

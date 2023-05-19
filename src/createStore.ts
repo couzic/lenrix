@@ -23,6 +23,7 @@ import { ActionMeta } from './utility-types/ActionMeta'
 import { ActionObject } from './utility-types/ActionObject'
 import { FocusedAction } from './utility-types/FocusedAction'
 import { FocusedHandlers } from './utility-types/FocusedHandlers'
+import { IsPlainObject } from './utility-types/IsPlainObject'
 import { StoreContext } from './utility-types/StoreContext'
 
 declare const process:
@@ -33,17 +34,20 @@ declare const process:
         }
      }
 
-export function createFocusableStore<State extends PlainObject>(
-   reducer: Reducer<State>,
-   preloadedState: State,
-   enhancer?: StoreEnhancer<State>,
+export function createFocusableStore<ReduxState>(
+   reducer: Reducer<ReduxState>,
+   preloadedReduxState: ReduxState,
+   enhancer?: StoreEnhancer<ReduxState>,
    options?: { logger?: LoggerOptions }
-): Store<{
-   state: State
-   readonlyValues: {}
-   actions: {}
-   dependencies: {}
-}> {
+): IsPlainObject<ReduxState> extends true
+   ? Store<{
+        reduxState: PlainObject<ReduxState>
+        values: {}
+        loadableValues: {}
+        actions: {}
+        dependencies: {}
+     }>
+   : never {
    const action$ = new Subject<any>()
    ;(action$ as any).ofType = (type: string) =>
       action$.pipe(
@@ -144,7 +148,8 @@ export function createFocusableStore<State extends PlainObject>(
 
    const userOptions = options || {}
 
-   const updateHandlers: Record<string, (payload: any) => Updater<State>> = {}
+   const updateHandlers: Record<string, (payload: any) => Updater<ReduxState>> =
+      {}
    const epicHandlers: Record<
       string,
       Array<{
@@ -157,11 +162,11 @@ export function createFocusableStore<State extends PlainObject>(
       { handler: (payload: any, store: Store<any>) => void; store: Store<any> }
    > = {}
 
-   const augmentedReducer: Reducer<State> = (state, action) => {
+   const augmentedReducer: Reducer<ReduxState> = (state, action) => {
       const updateHandler = updateHandlers[action.type]
       if (updateHandler) {
          try {
-            return updateHandler(action.payload)(state || preloadedState)
+            return updateHandler(action.payload)(state || preloadedReduxState)
          } catch (e) {
             logger.error({
                source: {
@@ -171,7 +176,7 @@ export function createFocusableStore<State extends PlainObject>(
                },
                nativeError: e as any
             })
-            return state || preloadedState
+            return state || preloadedReduxState
          }
       } else {
          return reducer(state, action)
@@ -180,7 +185,7 @@ export function createFocusableStore<State extends PlainObject>(
 
    const reduxStore = createReduxStore(
       augmentedReducer as any,
-      preloadedState as any,
+      preloadedReduxState as any,
       enhancer
    )
 
@@ -271,37 +276,45 @@ export function createFocusableStore<State extends PlainObject>(
       dispatchLoaded
    }
 
-   const toData = (state: State) => ({
-      state,
-      status: 'initial' as const,
+   const toStoreState = (reduxState: ReduxState) => ({
+      reduxState,
+      data: reduxState,
+      values: {},
+      loadableValues: {},
+      status: 'loaded' as const,
       error: undefined
    })
-   const initialData = toData(preloadedState)
-   const data$ = new ReplaySubject<any>(1)
-   const stateSubject = new Subject<State>()
-   stateSubject
-      .pipe(startWith(preloadedState), distinctUntilChanged(), map(toData))
-      .subscribe(data$)
+   const initialState = toStoreState(preloadedReduxState)
+   const state$ = new ReplaySubject<any>(1)
+   const reduxState$ = new ReplaySubject<ReduxState>(1)
+   reduxState$
+      .pipe(
+         startWith(preloadedReduxState),
+         distinctUntilChanged(),
+         map(toStoreState)
+      )
+      .subscribe(state$)
 
    const subscription = reduxStore.subscribe(() => {
-      stateSubject.next(reduxStore.getState() as any)
+      reduxState$.next(reduxStore.getState() as any)
    })
 
    return new LenrixStore(
-      initialData as any,
-      data$,
+      initialState as any,
+      state$,
       registerUpdates,
       context,
       'root'
-   )
+   ) as any
 }
 
-export function createStore<State extends object>(
-   initialState: State,
+export function createStore<ReduxState extends object>(
+   initialState: PlainObject<ReduxState>,
    options?: { logger?: LoggerOptions }
 ): Store<{
-   state: State
-   readonlyValues: {}
+   reduxState: PlainObject<ReduxState>
+   values: {}
+   loadableValues: {}
    actions: {}
    dependencies: {}
 }> {
@@ -310,5 +323,5 @@ export function createStore<State extends object>(
       initialState,
       undefined,
       options
-   )
+   ) as any
 }

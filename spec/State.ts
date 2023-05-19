@@ -6,6 +6,11 @@ export type State = {
    sorting: {
       order: 'ascending' | 'descending'
    }
+   a: {
+      b: {
+         c: number
+      }
+   }
 }
 
 export type TodoState = {
@@ -42,5 +47,6 @@ export const initialState: State = {
    flag: false,
    sorting: {
       order: 'ascending'
-   }
+   },
+   a: { b: { c: 42 } }
 }

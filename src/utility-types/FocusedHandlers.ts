@@ -6,5 +6,5 @@ import { StoreType } from './StoreType'
 export type FocusedHandlers<Type extends StoreType> = {
    [ActionType in keyof Type['actions']]?: (
       payload: Type['actions'][ActionType]
-   ) => FocusedUpdater<Type> | Updater<Type['state']>
+   ) => FocusedUpdater<Type> | Updater<Type['reduxState']>
 }

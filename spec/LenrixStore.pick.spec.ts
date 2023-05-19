@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { delay, of } from 'rxjs'
+import { NEVER, Observable } from 'rxjs'
 import { createStore } from '../src/createStore'
 import { silentLoggerOptions } from '../src/logger/silentLoggerOptions'
 import { initialState } from './State'
@@ -22,8 +22,11 @@ describe('LenrixStore.pick()', () => {
 
    it('picks fields from normalized state', () => {
       let picked = {} as any
-      store.pick('counter').subscribe(value => (picked = value))
-      expect(picked.state).to.deep.equal({ counter: 42 })
+      let picked$ = store.pick('counter')
+      picked$.subscribe(state => {
+         picked = state
+      })
+      expect(picked.data).to.deep.equal({ counter: 42 })
    })
 
    it('does not emit when updating unrelated slice of parent state', () => {
@@ -36,26 +39,32 @@ describe('LenrixStore.pick()', () => {
       expect(transitions).to.equal(1)
    })
 
-   describe('when picking values computed from loading fields', () => {
+   describe('when picking loading and computed fields', () => {
+      let picked: any
       const createComputingStore = (store: RootStore) =>
          store
-            .loadFromFields(['counter'], ({ counter }) =>
-               of({ loadedCounter: counter }).pipe(delay(1000))
-            )
-            .computeFromFields(['todo'], ({ todo }) => ({
-               todoListLength: todo.list.length
-            }))
+            .loadFromFields(['counter'], {
+               loadedCounter: () => NEVER as Observable<{ counter: number }>
+            })
+            .computeFromFields(['todo'], {
+               todoListLength: ({ todo }) => todo.list.length
+            })
 
       let computingStore: ReturnType<typeof createComputingStore>
       beforeEach(() => {
          computingStore = createComputingStore(store)
-      })
-      it('', () => {
-         let picked = {} as any
          computingStore
-            .pick('todoListLength')
-            .subscribe(value => (picked = value))
-         console.log(picked)
+            .pick('loadedCounter', 'todoListLength')
+            .subscribe(value => {
+               picked = value
+            })
+         store.action('toggleFlag')()
+      })
+      it('emits both', () => {
+         expect(picked.data).to.deep.equal({
+            todoListLength: 3,
+            loadedCounter: undefined
+         })
       })
    })
 })

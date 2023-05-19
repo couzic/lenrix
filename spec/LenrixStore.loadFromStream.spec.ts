@@ -22,17 +22,9 @@ const initialState: State = {
    flag: false
 }
 
-interface Result {
-   toto: 'tata'
-}
-
-interface ChildResult {
-   childResultField: 'childResultFieldValue'
-}
-
 const createRootStore = (
    input$: Observable<string>,
-   loadFromInput: (input: string) => Observable<Result>
+   loadFromInput: (input: string) => Observable<'tata'>
 ) =>
    createStore(initialState, { logger: silentLoggerOptions })
       .actionTypes<{
@@ -45,45 +37,45 @@ const createRootStore = (
          setFlag: _.focusPath('flag').setValue(),
          setTodoInput: _.focusPath('todo', 'input').setValue()
       }))
-      .loadFromStream(input$, loadFromInput)
+      .loadFromStream(input$, { toto: loadFromInput })
 
 type RootStore = ReturnType<typeof createRootStore>
 
 describe('LenrixStore.loadFromStream()', () => {
-   let result$: Subject<Result>
+   let tata$: Subject<'tata'>
    let rootStore: RootStore
    let input$: Subject<string>
-   let loadFromInput: (input: string) => Observable<Result>
+   let loadFromInput: (input: string) => Observable<'tata'>
    beforeEach(() => {
-      result$ = new Subject()
+      tata$ = new Subject()
       input$ = new Subject()
-      loadFromInput = stub().returns(result$)
+      loadFromInput = stub().returns(tata$)
       rootStore = createRootStore(input$, loadFromInput)
    })
    it('initially does not call loader', () => {
-      const data = rootStore.currentData
-      expect(data.status).not.to.equal('loading')
-      expect(data.state.toto).to.be.undefined
+      const state = rootStore.currentState
+      expect(state.data.toto).to.be.undefined
       expect(loadFromInput).not.to.have.been.called
    })
+   // TODO ensure no double execution (share input$)
    describe('when input stream emits', () => {
       beforeEach(() => {
          input$.next('a')
       })
       it('loads', () => {
-         const data = rootStore.currentData
-         expect(data.status).to.equal('loading')
-         expect(data.state.toto).to.be.undefined
+         const state = rootStore.currentState
+         expect(state.status).to.equal('loading')
+         expect(state.data.toto).to.be.undefined
          expect(loadFromInput).to.have.been.calledOnceWithExactly('a')
       })
       describe('when result loaded', () => {
          beforeEach(() => {
-            result$.next({ toto: 'tata' })
+            tata$.next('tata')
          })
          it('is loaded', () => {
-            const data = rootStore.currentData
-            expect(data.status).to.equal('loaded')
-            expect(data.state.toto).to.equal('tata')
+            const state = rootStore.currentState
+            expect(state.status).to.equal('loaded')
+            expect(state.data.toto).to.equal('tata')
          })
       })
    })

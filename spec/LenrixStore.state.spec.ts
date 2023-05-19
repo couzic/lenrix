@@ -20,7 +20,7 @@ describe('LenrixStore when unfocused', () => {
       lens = store.localLens
       stateTransitions = 0
       store.state$.subscribe(newState => {
-         state = newState
+         state = newState.reduxState
          ++stateTransitions
       })
    })
@@ -30,8 +30,13 @@ describe('LenrixStore when unfocused', () => {
    })
 
    it('holds initial state as current state', () => {
-      expect(store.currentState).to.equal(initialState)
-      expect(store.currentState).to.deep.equal(initialState)
+      expect(store.currentState.errors).to.be.empty
+      expect(store.currentState.status).to.equal('loaded')
+      expect(store.currentState.values).to.deep.equal({})
+      expect(store.currentState.loadableValues).to.deep.equal({})
+      expect(store.currentState.reduxState).to.deep.equal(initialState)
+      expect(store.currentState.data).to.deep.equal(initialState)
+      expect(store.currentData).to.deep.equal(initialState)
    })
 
    it('holds initial state as state stream', () => {
@@ -63,15 +68,13 @@ describe('Lenrix store with computed value', () => {
       createStore(
          { fieldState: 'fieldState' },
          { logger: silentLoggerOptions }
-      ).computeFromFields(['fieldState'], () => ({
-         computed: 'computed'
-      }))
+      ).computeFromFields(['fieldState'], { computed: () => 'computed' })
    let store: ReturnType<typeof createStoreWithComputedValue>
    beforeEach(() => {
       store = createStoreWithComputedValue()
    })
    it('has computed value in current state', () => {
-      expect(store.currentState).to.deep.equal({
+      expect(store.currentData).to.deep.equal({
          fieldState: 'fieldState',
          computed: 'computed'
       })
@@ -79,7 +82,7 @@ describe('Lenrix store with computed value', () => {
    it('has computed value in state steam', () => {
       let lastState: any
       store.state$.subscribe(state => (lastState = state))
-      expect(lastState).to.deep.equal({
+      expect(lastState.data).to.deep.equal({
          fieldState: 'fieldState',
          computed: 'computed'
       })
