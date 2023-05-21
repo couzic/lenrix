@@ -25,6 +25,7 @@ import { FocusedAction } from './utility-types/FocusedAction'
 import { FocusedHandlers } from './utility-types/FocusedHandlers'
 import { IsPlainObject } from './utility-types/IsPlainObject'
 import { StoreContext } from './utility-types/StoreContext'
+import { StoreStateRaw } from './utility-types/StoreStateRaw'
 
 declare const process:
    | undefined
@@ -276,13 +277,10 @@ export function createFocusableStore<ReduxState>(
       dispatchLoaded
    }
 
-   const toStoreState = (reduxState: ReduxState) => ({
+   const toStoreState = (reduxState: ReduxState): StoreStateRaw<any> => ({
       reduxState,
-      data: reduxState,
       values: {},
-      loadableValues: {},
-      status: 'loaded' as const,
-      error: undefined
+      loadableValues: {}
    })
    const initialState = toStoreState(preloadedReduxState)
    const state$ = new ReplaySubject<any>(1)

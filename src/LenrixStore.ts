@@ -11,6 +11,7 @@ import {
    of,
    ReplaySubject,
    scan,
+   startWith,
    switchMap,
    tap,
    withLatestFrom
@@ -320,6 +321,74 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
          this.registerHandlers,
          this.context,
          this.path + '.loadFromStream()'
+      )
+   }
+
+   load<LoadableValues>(loaders: {
+      [LK in keyof LoadableValues]: Observable<LoadableValues[LK]>
+   }): any {
+      const loadableKeys = Object.keys(loaders) as (keyof LoadableValues)[]
+
+      const allLoading = {} as Record<
+         keyof LoadableValues,
+         { status: 'loading'; error: undefined; value: undefined }
+      >
+      loadableKeys.forEach(
+         key =>
+            (allLoading[key] = {
+               status: 'loading',
+               error: undefined,
+               value: undefined
+            })
+      )
+
+      const initialState = {
+         ...this.__rawState,
+         loadableValues: { ...this.__rawState.loadableValues, ...allLoading }
+      }
+      // TODO dispatchLoading()
+
+      const rawState$ = new ReplaySubject<any>(1)
+
+      const loadableValues$ = merge(
+         loadableKeys.map(key =>
+            loaders[key].pipe(
+               map(result => ({
+                  [key]: {
+                     status: 'loaded',
+                     value: result,
+                     error: undefined
+                  }
+               })),
+               catchError((error: Error) =>
+                  of({
+                     [key]: { status: 'error', value: undefined, error }
+                  })
+               )
+            )
+         )
+      ).pipe(
+         mergeAll(),
+         scan((acc, loadableValues) => {
+            return { ...acc, ...loadableValues } as any
+         }, allLoading),
+         startWith(allLoading)
+      )
+
+      combineLatest(
+         [this.rawState$, loadableValues$],
+         (state, loadableValues) => ({
+            ...state,
+            loadableValues: { ...state.loadableValues, ...loadableValues }
+         })
+      ).subscribe(rawState$)
+
+      return new LenrixStore(
+         initialState,
+         rawState$,
+         this.registerHandlers,
+         this.context,
+         this.path + '.load()'
       )
    }
 

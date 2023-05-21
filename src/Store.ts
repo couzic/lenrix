@@ -196,22 +196,11 @@ export interface Store<Type extends StoreType> {
       ? StoreWithLoadableValues<Type, LoadableValues>
       : never
 
-   // TODO
-   //
-   // loadOnStartup<LoadableValues extends PlainObject>(
-   //    this: Store<Type & { state: PlainObject<Type['state']> }>,
-   //    loadableValues$: Observable<LoadableValues>
-   // ): StoreWithReadonlyValues<
-   //    Type,
-   //    {
-   //       [K in keyof (Type['readonlyValues'] &
-   //          LoadableValues)]: K extends keyof LoadableValues
-   //          ? LoadableValues[K]
-   //          : K extends keyof Type['readonlyValues']
-   //          ? Type['readonlyValues'][K]
-   //          : never
-   //    }
-   // >
+   load<LoadableValues>(loaders: {
+      [LK in keyof LoadableValues]: Observable<LoadableValues[LK]>
+   }): IsPlainObject<typeof loaders> extends true // TODO ensure compilation error when passing function
+      ? StoreWithLoadableValues<Type, LoadableValues>
+      : never
 
    //////////////
    // COMPUTE //
