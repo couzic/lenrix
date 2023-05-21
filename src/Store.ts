@@ -246,16 +246,19 @@ export interface Store<Type extends StoreType> {
            { [CK in keyof Computers]: ReturnType<Computers[CK]> }
         >
 
-   //////////////
-   // COMBINE //
-   ////////////
-
-   // TODO rename computeFromStream() ?
-   combineStream<CombinedValues>(combinedStreams: {
-      [K in keyof CombinedValues]: Observable<CombinedValues[K]>
-   }): IsPlainObject<CombinedValues> extends true
-      ? StoreWithValues<Type, CombinedValues>
-      : never
+   computeFromStream<
+      Input,
+      Computers extends Record<
+         string,
+         (input: Input, store: LightStore<Type>) => any
+      >
+   >(
+      input$: Observable<Input>,
+      computers: Computers
+   ): StoreWithLoadableValues<
+      Type,
+      { [CK in keyof Computers]: ReturnType<Computers[CK]> }
+   >
 
    ////////////
    // FOCUS //

@@ -255,7 +255,6 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
       )
    }
 
-   // TODO This DOES NOT work ! Missing a scan() ?
    loadFromStream<Input, LoadableValues extends object>(
       input$: Observable<Input>,
       loaders: {
@@ -279,7 +278,6 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
             })
       )
 
-      // TODO Share input$ to prevent double execution !!!
       const loadableValues$ = input$.pipe(
          switchMap(input =>
             merge(
@@ -418,27 +416,60 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
       )
    }
 
-   //////////////
-   // COMBINE //
-   ////////////
-
-   // TODO computeFromStream ?
-   combineStream<CombinedValues extends object>(combinedStreams: {
-      [K in keyof CombinedValues]: Observable<CombinedValues[K]>
-   }): any {
+   computeFromStream<Input, Computers extends object>(
+      input$: Observable<Input>,
+      computers: Computers
+   ): any {
       const rawState$ = new ReplaySubject<any>(1)
-      const keys = Object.keys(combinedStreams) as Array<keyof CombinedValues>
-      // TODO combine all observables, then scan to aggregate
-      // combineLatest([this.data$, combinedValues$], (data, combinedValues) => ({
-      //    ...data,
-      //    state: { ...data.state, ...combinedValues }
-      // })).subscribe(state$)
+
+      const computedKeys = Object.keys(computers) as (keyof Computers)[]
+
+      const allLoading = {} as Record<
+         keyof Computers,
+         { status: 'loading'; error: undefined; value: undefined }
+      >
+      computedKeys.forEach(
+         key =>
+            (allLoading[key] = {
+               status: 'loading',
+               error: undefined,
+               value: undefined
+            })
+      )
+
+      const computedValues$ = input$.pipe(
+         map(input => {
+            const computedValues = {} as any
+            computedKeys.forEach(key => {
+               computedValues[key] = {
+                  status: 'loaded',
+                  value: (computers[key] as any)(input),
+                  error: undefined
+               }
+            })
+            return computedValues
+         })
+      )
+
+      combineLatest(
+         [this.rawState$, computedValues$],
+         (state, computedValues) => ({
+            ...state,
+            loadableValues: { ...state.loadableValues, ...computedValues }
+         })
+      ).subscribe(rawState$)
+
+      const initialState = {
+         ...this.__rawState,
+         loadableValues: { ...this.__rawState.loadableValues, ...allLoading }
+      }
+
       return new LenrixStore(
-         this.__rawState,
+         initialState,
          rawState$,
          this.registerHandlers,
          this.context,
-         this.path + '.computeFrom$()'
+         this.path + '.computeFromStream()'
       )
    }
 
@@ -492,7 +523,7 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
       const keys: StoreDataKey<Type>[] = Array.isArray(params[0])
          ? [...params[0], ...(params[1] || [])]
          : params // Handle spread keys
-      const path = this.path + '.pick(' + keys.join(',') + ')'
+      const path = this.path + '.focusFields(' + keys.join(',') + ')'
 
       const rawState$ = new ReplaySubject<any>(1)
       this.pickFromState$(keys).subscribe(rawState$)

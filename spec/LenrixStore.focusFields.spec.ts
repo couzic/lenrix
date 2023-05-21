@@ -49,7 +49,7 @@ describe('LenrixStore.focusFields()', () => {
    })
 
    it('has path', () => {
-      expect(store.path).to.equal('root.pick(counter,todo)')
+      expect(store.path).to.equal('root.focusFields(counter,todo)')
    })
 
    ////////////
