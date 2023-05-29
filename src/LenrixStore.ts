@@ -252,7 +252,90 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
          rawState$,
          this.registerHandlers,
          this.context,
-         this.path + '.loadFromFields()'
+         this.path + `.loadFromFields(${loadableKeys.join(', ')})`
+      )
+   }
+
+   loadFromFields$<K extends StoreDataKey<Type>, LoadableValues>(
+      keys: K[],
+      loaders: {
+         [LVK in keyof LoadableValues]: (
+            fields$: Observable<{
+               [FK in K]: FK extends keyof Type['loadableValues']
+                  ? Type['loadableValues'][FK]
+                  : FK extends keyof Type['values']
+                  ? Type['values'][FK]
+                  : FK extends keyof Type['reduxState']
+                  ? Type['reduxState'][FK]
+                  : never
+            }>
+         ) => Observable<LoadableValues[LVK]>
+      }
+   ): any {
+      const loadableKeys = Object.keys(loaders) as (keyof LoadableValues)[]
+      const loadingValues = {} as Record<keyof LoadableValues, any>
+      loadableKeys.forEach(key => {
+         loadingValues[key] = {
+            status: 'loading',
+            error: undefined,
+            value: undefined
+         }
+      })
+
+      const pickedState$ = this.pickFromState$(keys).pipe()
+
+      const loading$ = pickedState$.pipe(map(() => loadingValues))
+
+      const data$ = pickedState$.pipe(
+         filter(isLoaded),
+         map(toData),
+         tap(data => this.context.dispatchLoading(this as any, data))
+      ) // TODO Share !!! Otherwise, dispatchLoading will be called multiple times !
+
+      const loadedOrError$ = merge(
+         loadableKeys.map(key =>
+            loaders[key](data$ as any).pipe(
+               map(result => ({
+                  [key]: {
+                     status: 'loaded',
+                     value: result,
+                     error: undefined
+                  }
+               })),
+               catchError((error: Error) =>
+                  of({
+                     [key]: { status: 'error', value: undefined, error }
+                  })
+               )
+            )
+         )
+      ).pipe(
+         mergeAll(),
+         scan((acc, loadableValues) => {
+            return { ...acc, ...loadableValues } as any
+         }, loadingValues),
+         tap(loadedValues =>
+            this.context.dispatchLoaded(this as any, loadedValues)
+         )
+      )
+
+      const loadableValues$ = merge(loading$, loadedOrError$)
+      const rawState$ = new ReplaySubject<any>(1)
+
+      combineLatest([this.rawState$, loadableValues$])
+         .pipe(
+            map(([state, loadableValues]) => ({
+               ...state,
+               loadableValues: { ...state.loadableValues, ...loadableValues }
+            }))
+         )
+         .subscribe(rawState$)
+      return new LenrixStore(
+         this.__rawState,
+         rawState$,
+         this.registerHandlers,
+         this.context,
+         this.path + `.loadFromFields$(${loadableKeys.join(', ')})`
       )
    }
 

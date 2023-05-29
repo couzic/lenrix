@@ -171,15 +171,34 @@ export interface Store<Type extends StoreType> {
    loadFromFields<K extends StoreDataKey<Type>, LoadableValues>(
       fields: K[],
       loaders: {
-         [LK in keyof LoadableValues]: (fields: {
-            [IK in K]: IK extends keyof Type['loadableValues']
-               ? Type['loadableValues'][IK]
-               : IK extends keyof Type['values']
-               ? Type['values'][IK]
-               : IK extends keyof Type['reduxState']
-               ? Type['reduxState'][IK]
+         [LVK in keyof LoadableValues]: (fields: {
+            [FK in K]: FK extends keyof Type['loadableValues']
+               ? Type['loadableValues'][FK]
+               : FK extends keyof Type['values']
+               ? Type['values'][FK]
+               : FK extends keyof Type['reduxState']
+               ? Type['reduxState'][FK]
                : never
-         }) => Observable<LoadableValues[LK]>
+         }) => Observable<LoadableValues[LVK]>
+      }
+   ): IsPlainObject<LoadableValues> extends true
+      ? StoreWithLoadableValues<Type, LoadableValues>
+      : never
+
+   loadFromFields$<K extends StoreDataKey<Type>, LoadableValues>(
+      fields: K[],
+      loaders: {
+         [LVK in keyof LoadableValues]: (
+            fields$: Observable<{
+               [FK in K]: FK extends keyof Type['loadableValues']
+                  ? Type['loadableValues'][FK]
+                  : FK extends keyof Type['values']
+                  ? Type['values'][FK]
+                  : FK extends keyof Type['reduxState']
+                  ? Type['reduxState'][FK]
+                  : never
+            }>
+         ) => Observable<LoadableValues[LVK]>
       }
    ): IsPlainObject<LoadableValues> extends true
       ? StoreWithLoadableValues<Type, LoadableValues>
