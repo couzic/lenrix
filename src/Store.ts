@@ -360,6 +360,28 @@ export interface Store<Type extends StoreType> {
       : StoreWithReduxState<Type, Type['reduxState'][K1][K2]>
 
    focusPath<
+      K1 extends keyof Type['reduxState'],
+      K2 extends keyof Type['reduxState'][K1],
+      K3 extends keyof Type['reduxState'][K1][K2]
+   >(
+      key1: K1,
+      key2: K2,
+      key3: K3
+   ): IsPlainObject<Type['reduxState'][K1][K2][K3]> extends false
+      ? never
+      : StoreWithReduxState<Type, Type['reduxState'][K1][K2][K3]>
+
+   focusPath<
+      K1 extends keyof Type['reduxState'],
+      K2 extends keyof Type['reduxState'][K1],
+      K3 extends keyof Type['reduxState'][K1][K2]
+   >(
+      path: [K1, K2, K3]
+   ): IsPlainObject<Type['reduxState'][K1][K2]> extends false
+      ? never
+      : StoreWithReduxState<Type, Type['reduxState'][K1][K2][K3]>
+
+   focusPath<
       RSK extends keyof Type['reduxState'],
       K extends StoreDataKey<Type>
    >(
@@ -395,7 +417,7 @@ export interface Store<Type extends StoreType> {
    focusPath<
       RSK1 extends keyof Type['reduxState'],
       RSK2 extends keyof Type['reduxState'][RSK1],
-      K extends keyof (Type['reduxState'] & Type['values'])
+      K extends StoreDataKey<Type>
    >(
       path: [RSK1, RSK2],
       keys: K[]
@@ -405,6 +427,41 @@ export interface Store<Type extends StoreType> {
            actions: Type['actions']
            dependencies: Type['dependencies']
            reduxState: PlainObject<Type['reduxState'][RSK1][RSK2]>
+           values: {
+              [VK in Extract<
+                 Exclude<
+                    keyof Type['reduxState'] | keyof Type['values'],
+                    keyof Type['loadableValues']
+                 >,
+                 K
+              >]: VK extends keyof Type['values']
+                 ? Type['values'][VK]
+                 : VK extends keyof Type['reduxState']
+                 ? Type['reduxState'][VK]
+                 : never
+           }
+           loadableValues: {
+              [LVK in Extract<
+                 keyof Type['loadableValues'],
+                 K
+              >]: Type['loadableValues'][LVK]
+           }
+        }>
+
+   focusPath<
+      RSK1 extends keyof Type['reduxState'],
+      RSK2 extends keyof Type['reduxState'][RSK1],
+      RSK3 extends keyof Type['reduxState'][RSK1][RSK2],
+      K extends StoreDataKey<Type>
+   >(
+      path: [RSK1, RSK2, RSK3],
+      keys: K[]
+   ): IsPlainObject<Type['reduxState'][RSK1][RSK2][RSK3]> extends false
+      ? never
+      : Store<{
+           actions: Type['actions']
+           dependencies: Type['dependencies']
+           reduxState: PlainObject<Type['reduxState'][RSK1][RSK2][RSK3]>
            values: {
               [VK in Extract<
                  Exclude<

@@ -222,7 +222,7 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
                         of({
                            [key]: { status: 'error', value: undefined, error }
                         })
-                     )
+                     ) // TODO Recover from Error
                   )
                )
             ).pipe(
@@ -306,7 +306,7 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
                   of({
                      [key]: { status: 'error', value: undefined, error }
                   })
-               )
+               ) // TODO Recover from Error
             )
          )
       ).pipe(
@@ -447,7 +447,7 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
                   of({
                      [key]: { status: 'error', value: undefined, error }
                   })
-               )
+               ) // TODO Recover from Error
             )
          )
       ).pipe(
