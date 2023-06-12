@@ -143,4 +143,13 @@ describe('LenrixStore.focusPath()', () => {
       expect(state.status).to.equal('loading')
       expect(state.data.loadedValue).to.be.undefined
    })
+
+   it('passes down redux state fields', () => {
+      const store = createStore(
+         { nested: { nestedField: 'some value' }, name: 'bob' },
+         { logger: silentLoggerOptions }
+      ).focusPath(['nested'], ['name'])
+      const state = store.currentState
+      expect(state.data.name).to.equal('bob')
+   })
 })

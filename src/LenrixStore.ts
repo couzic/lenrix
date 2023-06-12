@@ -642,6 +642,14 @@ export class LenrixStore<Type extends StoreType> implements Store<Type> {
                'Can NOT focus on redux state slice that is not a plain object'
             )
          const pickedState = pickRawState(state, passedDownKeys)
+         passedDownKeys.forEach(key => {
+            if (key in state.reduxState) {
+               // TODO warn if key already in values ?
+               ;(pickedState.values as any)[key] = (state.reduxState as any)[
+                  key
+               ]
+            }
+         })
          return {
             ...pickedState,
             reduxState
